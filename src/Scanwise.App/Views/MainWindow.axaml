@@ -1,0 +1,95 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ui="using:FluentAvalonia.UI.Controls"
+        xmlns:vm="using:Scanwise.App.ViewModels"
+        xmlns:v="using:Scanwise.App.Views"
+        x:Class="Scanwise.App.Views.MainWindow"
+        x:DataType="vm:MainViewModel"
+        Title="{Binding WindowTitle}"
+        Icon="/Assets/scanwise.ico"
+        Width="1320" Height="860" MinWidth="420" MinHeight="520"
+        WindowStartupLocation="CenterScreen"
+        DragDrop.AllowDrop="True">
+
+  <Window.KeyBindings>
+    <KeyBinding Gesture="Ctrl+N" Command="{Binding ScanCommand}" />
+    <KeyBinding Gesture="Ctrl+Shift+N" Command="{Binding ScanStartFreshCommand}" />
+    <KeyBinding Gesture="Ctrl+S" Command="{Binding SaveCommand}" />
+    <KeyBinding Gesture="Ctrl+Shift+S" Command="{Binding SaveAsCommand}" />
+    <KeyBinding Gesture="Ctrl+O" Command="{Binding ImportCommand}" />
+    <KeyBinding Gesture="Ctrl+Z" Command="{Binding UndoCommand}" />
+    <KeyBinding Gesture="Ctrl+Y" Command="{Binding RedoCommand}" />
+    <KeyBinding Gesture="Ctrl+Shift+Z" Command="{Binding RedoCommand}" />
+    <KeyBinding Gesture="Escape" Command="{Binding CancelOperationCommand}" />
+  </Window.KeyBindings>
+
+  <ui:NavigationView x:Name="Nav"
+                     PaneDisplayMode="LeftCompact"
+                     IsPaneToggleButtonVisible="False"
+                     IsSettingsVisible="False"
+                     IsBackButtonVisible="False"
+                     OpenPaneLength="220"
+                     CompactPaneLength="56">
+    <ui:NavigationView.MenuItems>
+      <ui:NavigationViewItem x:Name="NavScan" Content="Scan" Tag="Scan" IconSource="Scan" ToolTip.Tip="Scan options" />
+      <ui:NavigationViewItem x:Name="NavPages" Content="Pages" Tag="Pages" IconSource="Library" ToolTip.Tip="Pages">
+        <ui:NavigationViewItem.InfoBadge>
+          <ui:InfoBadge Value="{Binding Pages.Count}" IsVisible="{Binding HasPages}" />
+        </ui:NavigationViewItem.InfoBadge>
+      </ui:NavigationViewItem>
+      <ui:NavigationViewItem x:Name="NavEditor" Content="Edit" Tag="Editor" IconSource="ImageEdit" ToolTip.Tip="Edit page"
+                             IsVisible="{Binding ShowEditorNavItem}" />
+    </ui:NavigationView.MenuItems>
+    <ui:NavigationView.FooterMenuItems>
+      <ui:NavigationViewItem x:Name="NavFolder" Content="Open save folder" Tag="Folder" IconSource="OpenFolder" SelectsOnInvoked="False"
+                             ToolTip.Tip="Open the folder where scans are saved" />
+      <ui:NavigationViewItem x:Name="NavHelp" Content="Help" Tag="Help" IconSource="Help" ToolTip.Tip="Help" />
+      <ui:NavigationViewItem x:Name="NavSettings" Content="Settings" Tag="Settings" IconSource="Settings" ToolTip.Tip="Settings" />
+    </ui:NavigationView.FooterMenuItems>
+
+    <Grid RowDefinitions="Auto,Auto,*">
+      <!-- Progress for scans, saves and imports. -->
+      <Border Grid.Row="0" IsVisible="{Binding IsBusy}" Padding="16,8" Background="{DynamicResource PaneBackground}">
+        <Grid ColumnDefinitions="*,Auto">
+          <StackPanel Spacing="4">
+            <TextBlock Text="{Binding BusyText}" FontWeight="SemiBold" />
+            <ProgressBar IsIndeterminate="{Binding IsProgressIndeterminate}" Value="{Binding Progress}" Maximum="100" />
+          </StackPanel>
+          <Button Grid.Column="1" Margin="12,0,0,0" Content="Cancel" Command="{Binding CancelOperationCommand}"
+                  IsVisible="{Binding CanCancel}" VerticalAlignment="Center" />
+        </Grid>
+      </Border>
+
+      <ui:InfoBar Grid.Row="1" Margin="12,8,12,0"
+                  IsOpen="{Binding IsStatusOpen, Mode=TwoWay}"
+                  Title="{Binding StatusTitle}"
+                  Message="{Binding StatusMessage}"
+                  Severity="{Binding StatusSeverity}"
+                  IsClosable="True">
+        <ui:InfoBar.ActionButton>
+          <StackPanel Orientation="Horizontal" Spacing="6" IsVisible="{Binding StatusHasFileActions}">
+            <Button Content="Open" Command="{Binding OpenLastSavedCommand}" />
+            <Button Content="Show in folder" Command="{Binding ShowLastSavedInFolderCommand}" />
+          </StackPanel>
+        </ui:InfoBar.ActionButton>
+      </ui:InfoBar>
+
+      <!-- Workspace: scan options | pages | editor. Column widths are set from code for each layout. -->
+      <Grid Grid.Row="2" x:Name="Workspace" IsVisible="{Binding IsWorkspace}">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="340" />
+          <ColumnDefinition Width="260" />
+          <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <v:ScanOptionsView Grid.Column="0" x:Name="ScanPane" DataContext="{Binding}" IsVisible="{Binding ShowScanPane}" />
+        <v:PageListView Grid.Column="1" x:Name="PagesPane" DataContext="{Binding}" IsVisible="{Binding ShowPagesPane}" />
+        <v:EditorView Grid.Column="2" x:Name="EditorPane" DataContext="{Binding}" IsVisible="{Binding ShowEditorPane}" />
+      </Grid>
+
+      <Panel Grid.Row="2" IsVisible="{Binding ShowSettings}">
+        <v:SettingsView DataContext="{Binding SettingsPage}" />
+      </Panel>
+      <v:HelpView Grid.Row="2" IsVisible="{Binding ShowHelp}" />
+    </Grid>
+  </ui:NavigationView>
+</Window>

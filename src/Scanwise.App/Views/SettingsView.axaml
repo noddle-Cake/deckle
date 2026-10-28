@@ -1,0 +1,168 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="using:FluentAvalonia.UI.Controls"
+             xmlns:vm="using:Scanwise.App.ViewModels"
+             xmlns:m="using:Scanwise.App.Models"
+             x:Class="Scanwise.App.Views.SettingsView"
+             x:DataType="vm:SettingsViewModel">
+  <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+    <StackPanel Margin="32,24" Spacing="6" MaxWidth="920" HorizontalAlignment="Stretch">
+      <TextBlock Classes="title" FontSize="28" Text="Settings" Margin="0,0,0,12" />
+
+      <TextBlock Classes="heading" Text="Saving" Margin="0,8,0,4" />
+      <ui:SettingsExpander Header="Save location" Description="{Binding SaveFolder}" IconSource="Folder" IsExpanded="True">
+        <ui:SettingsExpander.Footer>
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <Button Content="Change folder…" Command="{Binding ChooseFolderCommand}" />
+            <Button Content="Open" Command="{Binding OpenFolderCommand}" />
+          </StackPanel>
+        </ui:SettingsExpander.Footer>
+        <ui:SettingsExpanderItem Content="Ask where to save every time" Description="Shows a save dialog for each new file instead of using the folder.">
+          <ui:SettingsExpanderItem.Footer>
+            <ToggleSwitch IsChecked="{Binding AskEveryTime}" OnContent="" OffContent="" />
+          </ui:SettingsExpanderItem.Footer>
+        </ui:SettingsExpanderItem>
+      </ui:SettingsExpander>
+
+      <ui:SettingsExpander Header="After scanning" Description="What happens to new pages" IconSource="Scan" IsExpanded="True">
+        <ui:SettingsExpanderItem Content="Save automatically" Description="Write every scan to a file straight away. When off, use Save (Ctrl+S).">
+          <ui:SettingsExpanderItem.Footer>
+            <ToggleSwitch IsChecked="{Binding AutoSave}" OnContent="" OffContent="" />
+          </ui:SettingsExpanderItem.Footer>
+        </ui:SettingsExpanderItem>
+        <ui:SettingsExpanderItem Content="Add new scans to the current document" Description="PDF and TIFF scans keep growing one file. When off, every scan starts a new document.">
+          <ui:SettingsExpanderItem.Footer>
+            <ToggleSwitch IsChecked="{Binding AddToExisting}" OnContent="" OffContent="" />
+          </ui:SettingsExpanderItem.Footer>
+        </ui:SettingsExpanderItem>
+        <ui:SettingsExpanderItem Content="Restore pages after closing" Description="Pages that are still in the list come back the next time you open the app.">
+          <ui:SettingsExpanderItem.Footer>
+            <ToggleSwitch IsChecked="{Binding RestoreSession}" OnContent="" OffContent="" />
+          </ui:SettingsExpanderItem.Footer>
+        </ui:SettingsExpanderItem>
+      </ui:SettingsExpander>
+
+      <ui:SettingsExpander Header="File names" Description="{Binding NamingPreview}" IconSource="Rename" IsExpanded="True">
+        <ui:SettingsExpander.Footer>
+          <ComboBox ItemsSource="{Binding NamingPresets}" SelectedItem="{Binding NamingPreset}" MinWidth="160" />
+        </ui:SettingsExpander.Footer>
+        <ui:SettingsExpanderItem IsVisible="{Binding IsCustomNaming}">
+          <StackPanel Spacing="8">
+            <TextBox Text="{Binding CustomPattern}" Watermark="e.g. Invoice {year}-{month}-{day} {nnn}" />
+            <TextBlock Classes="caption" Text="Click a building block to add it. {n} and {nnn} count up to the first free number; otherwise a number in brackets is added when a name is taken." />
+            <ItemsControl ItemsSource="{Binding Tokens}">
+              <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                  <WrapPanel />
+                </ItemsPanelTemplate>
+              </ItemsControl.ItemsPanel>
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="m:NamingTokenChip">
+                  <Button Margin="0,0,6,6" Padding="10,4" CornerRadius="12" Content="{Binding Label}" ToolTip.Tip="{Binding Token}"
+                          Command="{Binding $parent[ItemsControl].((vm:SettingsViewModel)DataContext).InsertTokenCommand}"
+                          CommandParameter="{Binding Token}" />
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+        </ui:SettingsExpanderItem>
+      </ui:SettingsExpander>
+
+      <TextBlock Classes="heading" Text="Text recognition" Margin="0,16,0,4" />
+      <ui:SettingsExpander Header="Rotate pages automatically" Description="Turns upside-down and sideways pages upright after scanning, using text recognition." IconSource="Rotate" IsExpanded="True">
+        <ui:SettingsExpander.Footer>
+          <ToggleSwitch IsChecked="{Binding AutoRotate}" OnContent="" OffContent="" IsEnabled="{Binding OcrAvailable}" />
+        </ui:SettingsExpander.Footer>
+        <ui:SettingsExpanderItem Content="Orientation detection" Description="Installs Tesseract's orientation data (about 10 MB). Faster and more reliable than reading the page four times." IsVisible="{Binding !HasOsd}">
+          <ui:SettingsExpanderItem.Footer>
+            <Button Content="Download" Command="{Binding DownloadOcrLanguageCommand}" CommandParameter="osd" IsEnabled="{Binding OcrAvailable}" />
+          </ui:SettingsExpanderItem.Footer>
+        </ui:SettingsExpanderItem>
+      </ui:SettingsExpander>
+
+      <ui:SettingsExpander Header="OCR language" Description="{Binding OcrStatus}" IconSource="Character" IsExpanded="True">
+        <ui:SettingsExpander.Footer>
+          <ComboBox ItemsSource="{Binding OcrLanguages}" SelectedItem="{Binding OcrLanguage}" MinWidth="120" IsEnabled="{Binding OcrAvailable}" />
+        </ui:SettingsExpander.Footer>
+        <ui:SettingsExpanderItem Content="Add a language" Description="Three-letter Tesseract code, e.g. deu, fra, spa, ita, por, chi_sim, jpn.">
+          <ui:SettingsExpanderItem.Footer>
+            <StackPanel Orientation="Horizontal" Spacing="6">
+              <TextBox Text="{Binding DownloadLanguage}" Width="100" Watermark="deu" />
+              <Button Content="Download" Command="{Binding DownloadOcrLanguageCommand}" CommandParameter="{x:Null}" IsEnabled="{Binding OcrAvailable}" />
+            </StackPanel>
+          </ui:SettingsExpanderItem.Footer>
+        </ui:SettingsExpanderItem>
+        <ui:SettingsExpanderItem IsVisible="{Binding IsDownloading}">
+          <ProgressBar Value="{Binding DownloadProgress}" Maximum="100" />
+        </ui:SettingsExpanderItem>
+      </ui:SettingsExpander>
+
+      <TextBlock Classes="heading" Text="Output" Margin="0,16,0,4" />
+      <ui:SettingsExpander Header="PDF" Description="Searchable text, archiving and passwords" IconSource="Document">
+        <ui:SettingsExpanderItem Content="Make PDFs searchable" Description="Adds an invisible text layer so you can search and copy text. Slower to save.">
+          <ui:SettingsExpanderItem.Footer>
+            <ToggleSwitch IsChecked="{Binding PdfOcr}" OnContent="" OffContent="" IsEnabled="{Binding OcrAvailable}" />
+          </ui:SettingsExpanderItem.Footer>
+        </ui:SettingsExpanderItem>
+        <ui:SettingsExpanderItem Content="PDF type">
+          <ui:SettingsExpanderItem.Footer>
+            <ComboBox ItemsSource="{Binding PdfStandards}" SelectedItem="{Binding PdfStandard}" MinWidth="200" />
+          </ui:SettingsExpanderItem.Footer>
+        </ui:SettingsExpanderItem>
+        <ui:SettingsExpanderItem Content="Title">
+          <ui:SettingsExpanderItem.Footer>
+            <TextBox Text="{Binding PdfTitle}" Width="240" />
+          </ui:SettingsExpanderItem.Footer>
+        </ui:SettingsExpanderItem>
+        <ui:SettingsExpanderItem Content="Author">
+          <ui:SettingsExpanderItem.Footer>
+            <TextBox Text="{Binding PdfAuthor}" Width="240" />
+          </ui:SettingsExpanderItem.Footer>
+        </ui:SettingsExpanderItem>
+        <ui:SettingsExpanderItem Content="Protect with a password" Description="Not available for PDF/A." IsEnabled="{Binding CanEncrypt}">
+          <ui:SettingsExpanderItem.Footer>
+            <StackPanel Orientation="Horizontal" Spacing="8">
+              <TextBox Text="{Binding PdfPassword}" PasswordChar="•" Width="160" Watermark="Password" IsEnabled="{Binding PdfEncrypt}" />
+              <ToggleSwitch IsChecked="{Binding PdfEncrypt}" OnContent="" OffContent="" />
+            </StackPanel>
+          </ui:SettingsExpanderItem.Footer>
+        </ui:SettingsExpanderItem>
+      </ui:SettingsExpander>
+
+      <ui:SettingsExpander Header="Images" Description="JPG quality and TIFF compression" IconSource="Image">
+        <ui:SettingsExpanderItem Content="JPG quality" Description="{Binding JpegQuality, StringFormat='{}{0} (higher = better quality, larger files)'}">
+          <ui:SettingsExpanderItem.Footer>
+            <Slider Minimum="30" Maximum="100" Value="{Binding JpegQuality}" Width="200" />
+          </ui:SettingsExpanderItem.Footer>
+        </ui:SettingsExpanderItem>
+        <ui:SettingsExpanderItem Content="TIFF compression">
+          <ui:SettingsExpanderItem.Footer>
+            <ComboBox ItemsSource="{Binding TiffCompressions}" SelectedItem="{Binding TiffCompression}" MaxWidth="320" />
+          </ui:SettingsExpanderItem.Footer>
+        </ui:SettingsExpanderItem>
+      </ui:SettingsExpander>
+
+      <TextBlock Classes="heading" Text="Appearance" Margin="0,16,0,4" />
+      <ui:SettingsExpander Header="Theme" IconSource="ColorBackground">
+        <ui:SettingsExpander.Footer>
+          <ComboBox ItemsSource="{Binding Themes}" SelectedItem="{Binding Theme}" MinWidth="180" />
+        </ui:SettingsExpander.Footer>
+      </ui:SettingsExpander>
+
+      <TextBlock Classes="heading" Text="About" Margin="0,16,0,4" />
+      <ui:SettingsExpander Header="Scanwise" Description="{Binding Version, StringFormat='Version {0} · Mozilla Public License 2.0'}" IconSource="Scan">
+        <ui:SettingsExpanderItem>
+          <StackPanel Spacing="6">
+            <TextBlock TextWrapping="Wrap">Scanwise combines the interface ideas of Scanner by Simon Knuth with the scanning engine of NAPS2.</TextBlock>
+            <TextBlock Classes="caption" TextWrapping="Wrap">Built with NAPS2.Sdk (LGPL-2.1, Ben Olden-Cooligan and contributors), Tesseract OCR (Apache-2.0), Avalonia and FluentAvalonia (MIT), ImageSharp (Six Labors Split License), LibTiff.NET (BSD) and PDFium (BSD).</TextBlock>
+            <StackPanel Orientation="Horizontal" Spacing="12">
+              <HyperlinkButton Content="Scanner" Command="{Binding OpenUrlCommand}" CommandParameter="https://github.com/simon-knuth/scanner" />
+              <HyperlinkButton Content="NAPS2" Command="{Binding OpenUrlCommand}" CommandParameter="https://github.com/cyanfish/naps2" />
+              <HyperlinkButton Content="Tesseract" Command="{Binding OpenUrlCommand}" CommandParameter="https://github.com/tesseract-ocr/tesseract" />
+            </StackPanel>
+          </StackPanel>
+        </ui:SettingsExpanderItem>
+      </ui:SettingsExpander>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

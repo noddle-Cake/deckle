@@ -1,0 +1,82 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="using:FluentAvalonia.UI.Controls"
+             x:Class="Scanwise.App.Views.HelpView">
+  <UserControl.Styles>
+    <Style Selector="Expander">
+      <Setter Property="HorizontalAlignment" Value="Stretch" />
+      <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+    </Style>
+    <Style Selector="Expander TextBlock">
+      <Setter Property="TextWrapping" Value="Wrap" />
+    </Style>
+  </UserControl.Styles>
+  <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+    <StackPanel Margin="32,24" Spacing="8" MaxWidth="920">
+      <TextBlock Classes="title" FontSize="28" Text="Help" Margin="0,0,0,12" />
+
+      <Expander Header="My scanner is not found" IsExpanded="True">
+        <StackPanel Spacing="8">
+          <TextBlock>Turn the scanner on, connect it by USB or to the same network as this computer, then press the refresh button next to the scanner list. Network scanners can take up to 30 seconds to appear.</TextBlock>
+          <TextBlock><Run FontWeight="SemiBold">Windows:</Run> install the manufacturer's driver. WIA and TWAIN scanners are listed separately. If one doesn't work, try the other.</TextBlock>
+          <TextBlock><Run FontWeight="SemiBold">Linux:</Run> Scanwise uses SANE. Install sane-backends (and your scanner's backend, e.g. hplip, sane-airscan or brscan) and check that "scanimage -L" lists the scanner. Your user may need to be in the "scanner" or "lp" group.</TextBlock>
+          <TextBlock><Run FontWeight="SemiBold">macOS:</Run> most network scanners work without drivers (shown as "Network (eSCL)"). USB scanners need a SANE backend.</TextBlock>
+          <TextBlock>Driverless network scanning (eSCL/AirScan) works with most printers and scanners from the last ten years.</TextBlock>
+        </StackPanel>
+      </Expander>
+
+      <Expander Header="Which resolution should I choose?">
+        <TextBlock>300 dpi is the right choice for almost all documents and gives the best text recognition. Use 150–200 dpi for quick copies you only read on screen, and 600 dpi or more for photos you want to enlarge or print. Doubling the resolution makes files about four times larger.</TextBlock>
+      </Expander>
+
+      <Expander Header="Which file format should I use?">
+        <StackPanel Spacing="6">
+          <TextBlock><Run FontWeight="SemiBold">PDF</Run> – documents. All pages go into one file, can be made searchable (Settings → PDF), and opens everywhere.</TextBlock>
+          <TextBlock><Run FontWeight="SemiBold">JPG</Run> – photos. Small files, one per page, slightly lossy.</TextBlock>
+          <TextBlock><Run FontWeight="SemiBold">PNG</Run> – lossless images, one per page. Good for drawings and screenshots of text.</TextBlock>
+          <TextBlock><Run FontWeight="SemiBold">TIF</Run> – lossless, all pages in one file. Used by archives and fax workflows.</TextBlock>
+          <TextBlock><Run FontWeight="SemiBold">BMP</Run> – uncompressed images, for older software that needs them.</TextBlock>
+        </StackPanel>
+      </Expander>
+
+      <Expander Header="Scanning two-sided documents without a duplex scanner">
+        <TextBlock>Scan all front sides with the feeder. Then flip the stack over, open the arrow next to Scan and choose "Scan and insert between pages…". Keep "New pages come in reverse order" checked if you flipped the whole stack. The back sides are slotted in after their front sides. You can also fix the order later with Pages → More → Page order → Interleave.</TextBlock>
+      </Expander>
+
+      <Expander Header="Pages come out upside down or crooked">
+        <TextBlock>Turn on "Rotate pages automatically" in Settings to fix upside-down and sideways pages, and "Straighten crooked pages" under More options to fix small tilts. Automatic rotation needs Tesseract OCR; the one-click orientation data download in Settings makes it faster and more reliable. You can always rotate pages yourself in the page list or the editor.</TextBlock>
+      </Expander>
+
+      <Expander Header="Choosing only part of the glass">
+        <TextBlock>Choose Flatbed as the source and press Preview. Drag a rectangle around the area you want. Later flatbed scans use only that area until you choose "Scan the whole page again" under More options.</TextBlock>
+      </Expander>
+
+      <Expander Header="Saving, file names and profiles">
+        <TextBlock>Scans are saved automatically to your save location (see the folder button at the bottom left). In Settings you can choose to be asked every time, and build your own file names from blocks such as date, time, resolution and a running number. Profiles keep a complete set of scan options: save your current options as a profile with the … button at the top of the Scan pane.</TextBlock>
+      </Expander>
+
+      <Expander Header="Keyboard shortcuts">
+        <Grid ColumnDefinitions="Auto,24,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto">
+          <TextBlock Grid.Row="0" Text="Ctrl+N" FontWeight="SemiBold" />
+          <TextBlock Grid.Row="0" Grid.Column="2" Text="Scan" />
+          <TextBlock Grid.Row="1" Text="Ctrl+Shift+N" FontWeight="SemiBold" />
+          <TextBlock Grid.Row="1" Grid.Column="2" Text="Scan into a new document" />
+          <TextBlock Grid.Row="2" Text="Ctrl+S / Ctrl+Shift+S" FontWeight="SemiBold" />
+          <TextBlock Grid.Row="2" Grid.Column="2" Text="Save / Save as" />
+          <TextBlock Grid.Row="3" Text="Ctrl+O" FontWeight="SemiBold" />
+          <TextBlock Grid.Row="3" Grid.Column="2" Text="Import images or PDFs" />
+          <TextBlock Grid.Row="4" Text="Ctrl+Z / Ctrl+Y" FontWeight="SemiBold" />
+          <TextBlock Grid.Row="4" Grid.Column="2" Text="Undo / redo" />
+          <TextBlock Grid.Row="5" Text="Delete, Ctrl+A" FontWeight="SemiBold" />
+          <TextBlock Grid.Row="5" Grid.Column="2" Text="Delete selected pages, select all (page list)" />
+          <TextBlock Grid.Row="6" Text="R / Shift+R" FontWeight="SemiBold" />
+          <TextBlock Grid.Row="6" Grid.Column="2" Text="Rotate selected pages right / left (page list)" />
+          <TextBlock Grid.Row="7" Text="Page Up / Page Down" FontWeight="SemiBold" />
+          <TextBlock Grid.Row="7" Grid.Column="2" Text="Previous / next page (editor)" />
+          <TextBlock Grid.Row="8" Text="Ctrl+wheel, Ctrl+0" FontWeight="SemiBold" />
+          <TextBlock Grid.Row="8" Grid.Column="2" Text="Zoom, fit to window (editor)" />
+        </Grid>
+      </Expander>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

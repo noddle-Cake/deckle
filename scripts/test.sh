@@ -6,4 +6,6 @@ root="$(cd "$(dirname "$0")/.." && pwd)"
 sane_dir="$(mktemp -d)"
 trap 'rm -rf "$sane_dir"' EXIT
 echo test > "$sane_dir/dll.conf"
+# A colored pattern instead of the default solid black page (better screenshots, meaningful deskew).
+printf 'test-picture "Color pattern"\n' > "$sane_dir/test.conf"
 SANE_CONFIG_DIR="$sane_dir" dotnet test "$root/Scanwise.sln" "$@"

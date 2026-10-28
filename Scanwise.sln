@@ -13,6 +13,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{327BB6E3
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Scanwise.Core.Tests", "tests\Scanwise.Core.Tests\Scanwise.Core.Tests.csproj", "{EB5F40CA-3550-46C4-9635-79B5CF6FEFA1}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Scanwise.App.Tests", "tests\Scanwise.App.Tests\Scanwise.App.Tests.csproj", "{57E8F7A3-B0AA-4ECA-990F-32D7EF91A74D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -34,10 +36,15 @@ Global
 		{EB5F40CA-3550-46C4-9635-79B5CF6FEFA1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EB5F40CA-3550-46C4-9635-79B5CF6FEFA1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EB5F40CA-3550-46C4-9635-79B5CF6FEFA1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{57E8F7A3-B0AA-4ECA-990F-32D7EF91A74D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{57E8F7A3-B0AA-4ECA-990F-32D7EF91A74D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{57E8F7A3-B0AA-4ECA-990F-32D7EF91A74D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{57E8F7A3-B0AA-4ECA-990F-32D7EF91A74D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{98498AB3-91A3-4D4D-A7A3-5475BB4BB6BF} = {DA147C74-7865-4A14-8BAB-E9770C83A433}
 		{0AD7A20A-38E3-499E-B82A-A3BEC6977DD6} = {DA147C74-7865-4A14-8BAB-E9770C83A433}
 		{EB5F40CA-3550-46C4-9635-79B5CF6FEFA1} = {327BB6E3-F975-4EF5-AF80-F4E50F65EC21}
+		{57E8F7A3-B0AA-4ECA-990F-32D7EF91A74D} = {327BB6E3-F975-4EF5-AF80-F4E50F65EC21}
 	EndGlobalSection
 EndGlobal

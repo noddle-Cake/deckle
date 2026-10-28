@@ -1,0 +1,26 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="using:FluentAvalonia.UI.Controls"
+             x:Class="Scanwise.App.Views.Dialogs.BatchScanDialog"
+             Width="400">
+  <StackPanel Spacing="14">
+    <TextBlock TextWrapping="Wrap">Run the same scan several times, with the current scan options.</TextBlock>
+    <ui:NumberBox x:Name="CountBox" Header="Number of scans" Minimum="1" Maximum="999" Value="3" SpinButtonPlacementMode="Inline" />
+    <StackPanel Spacing="4">
+      <TextBlock Classes="heading">Between scans</TextBlock>
+      <RadioButton x:Name="PromptRadio" GroupName="between" IsChecked="True" Content="Ask before each scan" />
+      <StackPanel Orientation="Horizontal" Spacing="8">
+        <RadioButton x:Name="DelayRadio" GroupName="between" Content="Wait" VerticalAlignment="Center" />
+        <ui:NumberBox x:Name="DelayBox" Minimum="0" Maximum="3600" Value="5" Width="110" SpinButtonPlacementMode="Compact"
+                      IsEnabled="{Binding #DelayRadio.IsChecked}" />
+        <TextBlock Text="seconds" VerticalAlignment="Center" />
+      </StackPanel>
+    </StackPanel>
+    <StackPanel Spacing="4">
+      <TextBlock Classes="heading">Save</TextBlock>
+      <RadioButton x:Name="SingleRadio" GroupName="output" IsChecked="True" Content="All scans in one file" />
+      <RadioButton x:Name="PerScanRadio" GroupName="output" Content="Each scan in its own file" />
+      <TextBlock Classes="caption">Files go to your save location using your file naming pattern.</TextBlock>
+    </StackPanel>
+  </StackPanel>
+</UserControl>

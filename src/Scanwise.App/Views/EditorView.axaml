@@ -1,0 +1,159 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="using:FluentAvalonia.UI.Controls"
+             xmlns:vm="using:Scanwise.App.ViewModels"
+             xmlns:c="using:Scanwise.App.Controls"
+             x:Class="Scanwise.App.Views.EditorView"
+             x:DataType="vm:MainViewModel">
+  <Grid RowDefinitions="Auto,*" DataContext="{Binding Editor}" x:DataType="vm:EditorViewModel" Background="{DynamicResource CanvasBackground}">
+
+    <!-- Toolbar -->
+    <Border Grid.Row="0" Padding="8,6" Background="{DynamicResource PaneBackground}" BorderBrush="{DynamicResource CardBorder}" BorderThickness="0,0,0,1">
+      <Grid ColumnDefinitions="Auto,*,Auto">
+        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+          <Button Classes="icon" Command="{Binding PreviousCommand}" IsEnabled="{Binding CanGoPrevious}" ToolTip.Tip="Previous page (Page Up)">
+            <ui:SymbolIcon Symbol="Previous" />
+          </Button>
+          <TextBlock Text="{Binding PageTitle}" VerticalAlignment="Center" Margin="6,0" MinWidth="110" TextAlignment="Center" />
+          <Button Classes="icon" Command="{Binding NextCommand}" IsEnabled="{Binding CanGoNext}" ToolTip.Tip="Next page (Page Down)">
+            <ui:SymbolIcon Symbol="Next" />
+          </Button>
+        </StackPanel>
+
+        <WrapPanel Grid.Column="1" HorizontalAlignment="Center" IsEnabled="{Binding HasPage}">
+          <Button Classes="icon" Command="{Binding RotateLeftCommand}" ToolTip.Tip="Rotate left">
+            <ui:SymbolIcon Symbol="RotateCounterClockwise" />
+          </Button>
+          <Button Classes="icon" Command="{Binding RotateRightCommand}" ToolTip.Tip="Rotate right">
+            <ui:SymbolIcon Symbol="RotateClockwise" />
+          </Button>
+          <Button Classes="icon" Command="{Binding Rotate180Command}" ToolTip.Tip="Rotate 180°">
+            <TextBlock Text="180°" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center" />
+          </Button>
+          <ToggleButton Classes="icon" Padding="8" Background="Transparent" BorderThickness="0" Command="{Binding StartCropCommand}" IsChecked="{Binding IsCropping, Mode=OneWay}" ToolTip.Tip="Crop">
+            <ui:SymbolIcon Symbol="Crop" FontSize="18" />
+          </ToggleButton>
+          <ToggleButton Classes="icon" Padding="8" Background="Transparent" BorderThickness="0" Command="{Binding StartAdjustCommand}" IsChecked="{Binding IsAdjusting, Mode=OneWay}" ToolTip.Tip="Adjust colors, brightness and straighten">
+            <ui:SymbolIcon Symbol="ColorBackground" FontSize="18" />
+          </ToggleButton>
+          <Button Classes="icon" Command="{Binding DeleteCommand}" ToolTip.Tip="Delete page">
+            <ui:SymbolIcon Symbol="Delete" />
+          </Button>
+        </WrapPanel>
+
+        <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" IsEnabled="{Binding HasPage}">
+          <Button Classes="icon" Command="{Binding ZoomOutCommand}" ToolTip.Tip="Zoom out (Ctrl+-)">
+            <ui:SymbolIcon Symbol="ZoomOut" />
+          </Button>
+          <Button Classes="icon" Command="{Binding ZoomFitCommand}" ToolTip.Tip="Fit to window (Ctrl+0)" MinWidth="52">
+            <TextBlock Text="{Binding ZoomLabel}" FontSize="12" />
+          </Button>
+          <Button Classes="icon" Command="{Binding ZoomInCommand}" ToolTip.Tip="Zoom in (Ctrl+=)">
+            <ui:SymbolIcon Symbol="ZoomIn" />
+          </Button>
+        </StackPanel>
+      </Grid>
+    </Border>
+
+    <Grid Grid.Row="1" ColumnDefinitions="*,Auto">
+      <!-- Page -->
+      <ScrollViewer x:Name="Scroller" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+        <Viewbox Width="{Binding DisplayWidth}" Height="{Binding DisplayHeight}" Margin="16"
+                 HorizontalAlignment="Center" VerticalAlignment="Center" Stretch="Fill" IsVisible="{Binding HasPage}">
+          <Border BoxShadow="0 2 10 0 #50000000">
+            <Grid Width="{Binding PreviewPixels.Width}" Height="{Binding PreviewPixels.Height}">
+              <Image Source="{Binding Preview}" Stretch="Fill" />
+              <c:CropOverlay IsVisible="{Binding IsCropping}"
+                             LeftEdge="{Binding CropLeft}" TopEdge="{Binding CropTop}"
+                             RightEdge="{Binding CropRight}" BottomEdge="{Binding CropBottom}"
+                             AspectRatio="{Binding LockedAspect}" DisplayScale="{Binding EffectiveZoom}" />
+            </Grid>
+          </Border>
+        </Viewbox>
+      </ScrollViewer>
+
+      <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="10" IsVisible="{Binding !HasPage}">
+        <ui:SymbolIcon Symbol="ImageEdit" FontSize="44" Opacity="0.4" />
+        <TextBlock Text="Select a page to view and edit it" Opacity="0.7" />
+      </StackPanel>
+
+      <ui:ProgressRing Width="28" Height="28" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="16"
+                       IsIndeterminate="True" IsVisible="{Binding IsRendering}" />
+
+      <!-- Tool panel -->
+      <Border Grid.Column="1" Width="280" IsVisible="{Binding IsToolOpen}" Background="{DynamicResource PaneBackground}"
+              BorderBrush="{DynamicResource CardBorder}" BorderThickness="1,0,0,0">
+        <Grid RowDefinitions="*,Auto">
+          <ScrollViewer>
+            <StackPanel Margin="16" Spacing="14">
+              <!-- Crop -->
+              <StackPanel Spacing="12" IsVisible="{Binding IsCropping}">
+                <TextBlock Classes="title" Text="Crop" />
+                <StackPanel Spacing="6">
+                  <TextBlock Classes="heading" Text="Aspect ratio" />
+                  <Grid ColumnDefinitions="*,Auto">
+                    <ComboBox ItemsSource="{Binding AspectRatios}" SelectedItem="{Binding AspectRatio}" HorizontalAlignment="Stretch" />
+                    <Button Grid.Column="1" Classes="icon" Margin="4,0,0,0" Command="{Binding FlipAspectCommand}" ToolTip.Tip="Switch portrait / landscape">
+                      <ui:SymbolIcon Symbol="Rotate" />
+                    </Button>
+                  </Grid>
+                </StackPanel>
+                <CheckBox IsChecked="{Binding CropSimilarPages}">
+                  <StackPanel>
+                    <TextBlock Text="Crop similar pages" />
+                    <TextBlock Classes="caption" Text="Apply the same crop to every page with this page's size." />
+                  </StackPanel>
+                </CheckBox>
+                <TextBlock Classes="caption" Text="Drag the handles, or drag inside the page to draw a new area." />
+              </StackPanel>
+
+              <!-- Adjust -->
+              <StackPanel Spacing="10" IsVisible="{Binding IsAdjusting}">
+                <TextBlock Classes="title" Text="Adjust" />
+                <StackPanel>
+                  <TextBlock Text="Straighten" />
+                  <Slider Minimum="-30" Maximum="30" Value="{Binding Straighten}" ToolTip.Tip="Half-degree steps" />
+                </StackPanel>
+                <StackPanel>
+                  <TextBlock Text="Brightness" />
+                  <Slider Minimum="-100" Maximum="100" Value="{Binding Brightness}" />
+                </StackPanel>
+                <StackPanel>
+                  <TextBlock Text="Contrast" />
+                  <Slider Minimum="-100" Maximum="100" Value="{Binding Contrast}" />
+                </StackPanel>
+                <StackPanel>
+                  <TextBlock Text="Saturation" />
+                  <Slider Minimum="-100" Maximum="100" Value="{Binding Saturation}" />
+                </StackPanel>
+                <StackPanel>
+                  <TextBlock Text="Hue" />
+                  <Slider Minimum="-100" Maximum="100" Value="{Binding Hue}" />
+                </StackPanel>
+                <StackPanel>
+                  <TextBlock Text="Sharpen" />
+                  <Slider Minimum="0" Maximum="100" Value="{Binding Sharpen}" />
+                </StackPanel>
+                <CheckBox Content="Grayscale" IsChecked="{Binding Grayscale}" />
+                <CheckBox Content="Black and white" IsChecked="{Binding BlackAndWhite}" />
+                <StackPanel IsVisible="{Binding BlackAndWhite}">
+                  <TextBlock Text="Threshold" />
+                  <Slider Minimum="-100" Maximum="100" Value="{Binding BlackWhiteThreshold}" />
+                </StackPanel>
+                <CheckBox Content="Apply to all selected pages" IsChecked="{Binding AdjustSelectedPages}" />
+                <Button Content="Reset" Command="{Binding ResetAdjustCommand}" />
+              </StackPanel>
+            </StackPanel>
+          </ScrollViewer>
+          <Grid Grid.Row="1" Margin="16,8,16,16" ColumnDefinitions="*,8,*">
+            <Button Grid.Column="0" HorizontalAlignment="Stretch" Content="Cancel" Command="{Binding CancelToolCommand}" />
+            <Button Grid.Column="2" HorizontalAlignment="Stretch" Classes="accent" Content="Apply"
+                    Command="{Binding ApplyCropCommand}" IsVisible="{Binding IsCropping}" />
+            <Button Grid.Column="2" HorizontalAlignment="Stretch" Classes="accent" Content="Apply"
+                    Command="{Binding ApplyAdjustCommand}" IsVisible="{Binding IsAdjusting}" />
+          </Grid>
+        </Grid>
+      </Border>
+    </Grid>
+  </Grid>
+</UserControl>

@@ -138,48 +138,56 @@ Status: `[ ]` todo · `[x]` done · `[~]` partial/deferred (see note)
 - [x] SANE integration: discover `test` device, scan flatbed + feeder (skipped if no libsane)
 
 ### Phase 3: UI shell (Scanner look)
-- [ ] App bootstrap: DI container, FluentAvaloniaTheme, theme from settings (system/light/dark), single-window
-- [ ] Shell: left-compact NavigationView: Scan · Pages (badge = page count) · Editor; footer: Open save folder, Help, Settings. Adaptive layout: ≥1100px 3 panes (options | pages | editor), ≥775px 2 panes, narrow = one pane with top nav (Scanner's breakpoints).
-- [ ] Status InfoBar + progress ("Scanning page 2…", "Auto-rotating…", "Saving PDF…") with cancel
-- [ ] Error dialog with friendly device-error text + "Get help" link
+- [x] App bootstrap: composition root (`AppServices`, no DI container needed), FluentAvaloniaTheme, theme from settings (system/light/dark), single-window
+- [x] Shell: left-compact NavigationView: Scan · Pages (badge = page count) · Editor; footer: Open save folder, Help, Settings. Adaptive layout: ≥1100px 3 panes (options | pages | editor), ≥775px 2 panes, narrow = one pane with top nav (Scanner's breakpoints).
+- [x] Status InfoBar + progress ("Scanning page 2…", "Auto-rotating…", "Saving PDF…") with cancel
+- [x] Error dialog with friendly device-error text + "Get help" link
 
 ### Phase 4: Scan options pane
-- [ ] Profile dropdown (Save as new / Rename / Delete)
-- [ ] Scanner dropdown with live discovery, refresh, driver badge (SANE/ESCL/WIA/TWAIN), "no scanner found" help
-- [ ] Source radio buttons (only supported ones enabled), feeder: duplex
-- [ ] Format: PDF / JPG / PNG / TIF / BMP
-- [ ] Color: Color / Grayscale / Black & white (only supported)
-- [ ] Resolution dropdown from caps with "recommended" hint (300 for text)
-- [ ] Page size: Auto/A4/Letter/Legal/A5/A3/B5/B4/Custom
-- [ ] Expander "More options": brightness/contrast sliders with reset, auto-deskew, auto-rotate, skip blank pages, OCR (searchable PDF) + language
-- [ ] Split Scan button: Scan · Add to current document · Start fresh · Merge into existing pages (Scanner's scan merge dialog: insert position, reverse order) · Batch scan…
+- [x] Profile dropdown (Save as new / Rename / Delete)
+- [x] Scanner dropdown with live discovery, refresh, driver badge (SANE/ESCL/WIA/TWAIN), "no scanner found" help
+- [x] Source radio buttons (only supported ones enabled), feeder: duplex
+- [x] Format: PDF / JPG / PNG / TIF / BMP
+- [x] Color: Color / Grayscale / Black & white (only supported)
+- [x] Resolution dropdown from caps with "recommended" hint (300 for text)
+- [x] Page size: Auto/A4/Letter/Legal/A5/A3/B5/B4/Custom
+- [x] Expander "More options": brightness/contrast sliders with reset, auto-deskew, auto-rotate, skip blank pages, OCR (searchable PDF) + language
+- [x] Split Scan button: Scan · Add to current document · Start fresh · Merge into existing pages (Scanner's scan merge dialog: insert position, reverse order) · Batch scan…
 
 ### Phase 5: Pages + editor
-- [ ] Page list: thumbnail grid, multi-select (ctrl/shift), drag-drop reorder, drop files to import, context menu (rotate, delete, duplicate, move, export selected, open in default app); toolbar: select all, rotate, delete, reverse, interleave/deinterleave, import, save as
-- [ ] Undo/redo (Ctrl+Z/Ctrl+Y) wired to PageDocument
-- [ ] Editor: large preview with zoom/pan, prev/next, rotate 90/180/270, crop with handles + aspect presets (Scanner's list, with flip) + "apply to similar pages", adjustments panel (brightness, contrast, hue, saturation, sharpen, grayscale, B&W threshold) with live preview, deskew, delete, save
+- [x] Page list: thumbnail grid, multi-select (ctrl/shift), drag-drop reorder, drop files to import, context menu (rotate, delete, duplicate, move, export selected, open in default app); toolbar: select all, rotate, delete, reverse, interleave/deinterleave, import, save as
+- [x] Undo/redo (Ctrl+Z/Ctrl+Y) wired to PageDocument
+- [x] Editor: large preview with zoom/pan, prev/next, rotate 90/180/270, crop with handles + aspect presets (Scanner's list, with flip) + "apply to similar pages", adjustments panel (brightness, contrast, hue, saturation, sharpen, grayscale, B&W threshold) with live preview, deskew, delete, save
 - [~] Draw/highlight (pen, highlighter, eraser, colors) burned into the image: phase 7 stretch
 
 ### Phase 6: Settings + saving flow
-- [ ] Settings view (Scanner layout, grouped cards): Save location (folder / ask every time + browse + open), File naming (presets + custom chip editor with live preview), Auto-rotate (toggle + OCR language), After scan (auto-save, add vs start fresh), PDF (OCR, PDF/A, metadata, password), Image quality (JPEG quality, TIFF compression), Appearance (theme), About/licenses
-- [ ] Save flow: auto-save after scan per settings; "Save as…" (file picker with format filter); success InfoBar with "Open file"/"Show in folder"
-- [ ] Batch scan dialog
-- [ ] Help view: short topics (scanner not found, choosing resolution, formats, scan merge, OCR languages)
+- [x] Settings view (Scanner layout, grouped cards): Save location (folder / ask every time + browse + open), File naming (presets + custom chip editor with live preview), Auto-rotate (toggle + OCR language), After scan (auto-save, add vs start fresh), PDF (OCR, PDF/A, metadata, password), Image quality (JPEG quality, TIFF compression), Appearance (theme), About/licenses
+- [x] Save flow: auto-save after scan per settings; "Save as…" (file picker with format filter); success InfoBar with "Open file"/"Show in folder"
+- [x] Batch scan dialog
+- [x] Help view: short topics (scanner not found, choosing resolution, formats, scan merge, OCR languages)
 
 ### Phase 7: Polish
-- [ ] Keyboard shortcuts (Ctrl+N scan, Ctrl+S save, Ctrl+O import, Del, Ctrl+A, Ctrl+Z/Y, R rotate)
-- [ ] App icon, window title with page count
-- [ ] Session recovery prompt on start
+- [x] Keyboard shortcuts (Ctrl+N scan, Ctrl+S save, Ctrl+O import, Del, Ctrl+A, Ctrl+Z/Y, R rotate)
+- [x] App icon, window title with page count
+- [x] Session recovery prompt on start
 - [~] Draw/highlight tool
 - [~] Apple ICA driver (`net8.0-macos` TFM) — needs a Mac to build/test
 
 ### Phase 8: Ship
-- [ ] Headless UI smoke test (Avalonia.Headless): shell opens, navigation works, scan via SANE test device adds pages, save writes a file; render screenshots to verify layout
+- [x] Headless UI smoke test (Avalonia.Headless): shell opens, navigation works, scan via SANE test device adds pages, save writes a file; render screenshots to verify layout
 - [ ] `scripts/publish.sh`: self-contained single-folder builds for linux-x64, linux-arm64, win-x64, osx-x64, osx-arm64
 - [ ] README: features, install, build, OS notes (SANE packages, Tesseract languages), credits to Scanner and NAPS2
 - [ ] Final review pass (`/code-review`-style self review), all tests green, commit
 
 ## Verification log
+
+- 2026-10-28: Headless UI tests (Avalonia.Headless + Skia, real rendering) 6/6: layout breakpoints, SANE scan →
+  auto-save PDF, append to the same PDF, crop, adjust, save, feeder → one JPG per page, delete + undo of a
+  multi-selection, session restore after restart, and the merge/batch/region dialogs. I reviewed the screenshots
+  (`SCANWISE_SCREENSHOTS=dir scripts/test.sh`).
+- 2026-10-28: Bug found by the UI test and fixed: binding ListBox.SelectedItem collapsed a multi-selection to one
+  page, so Delete removed one page instead of the whole selection. The editor's page is now derived from
+  selection changes instead.
 
 - 2026-10-28: Core test suite: 50/50 passing (`scripts/test.sh`, with `SCANWISE_TEST_OSD_DIR` set). Covers the
   SANE test device (flatbed, feeder, region crop), OSD and text-comparison auto-rotate at 0/90/180/270, OCR PDF,
