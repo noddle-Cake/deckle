@@ -1,15 +1,19 @@
 using Avalonia;
+using System.Collections.ObjectModel;
+using Color = Avalonia.Media.Color;
+using Colors = Avalonia.Media.Colors;
 using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using NAPS2.Images;
 using NAPS2.Images.Transforms;
 using Scanwise.App.Services;
+using Scanwise.Core.Processing;
 using Scanwise.Core.Pages;
 
 namespace Scanwise.App.ViewModels;
 
-public enum EditorTool { None, Crop, Adjust }
+public enum EditorTool { None, Crop, Adjust, Draw }
 
 /// <summary>
 /// Single-page editor: Scanner's crop (with aspect-ratio presets) and rotate, plus NAPS2's image adjustments.
@@ -31,6 +35,7 @@ public sealed partial class EditorViewModel : ObservableObject
         _pages = pages;
         pages.SelectionChanged += (_, _) => Show(pages.SelectedItem);
         services.Document.Changed += (_, _) => OnDocumentChanged();
+        Strokes.CollectionChanged += (_, _) => OnPropertyChanged(nameof(HasStrokes));
     }
 
     public IReadOnlyList<Choice<double?>> AspectRatios { get; } =
@@ -81,6 +86,113 @@ public sealed partial class EditorViewModel : ObservableObject
     [ObservableProperty] private int _blackWhiteThreshold;
     [ObservableProperty] private bool _adjustSelectedPages;
     [ObservableProperty] private int _straighten;
+
+    // Draw (Scanner's Windows Ink tools).
+    public ObservableCollection<InkStroke> Strokes { get; } = [];
+
+    public IReadOnlyList<Models.InkColorOption> InkColors { get; } =
+    [
+        new(Color.FromRgb(0xE0, 0x1B, 0x24), "Red"),
+        new(Color.FromRgb(0x1C, 0x71, 0xD8), "Blue"),
+        new(Color.FromRgb(0x10, 0x10, 0x10), "Black"),
+        new(Color.FromRgb(0x26, 0xA2, 0x69), "Green"),
+        new(Color.FromRgb(0xF6, 0xD3, 0x2D), "Yellow"),
+        new(Color.FromRgb(0xFF, 0x78, 0xC8), "Pink"),
+    ];
+
+    public IReadOnlyList<Choice<double>> InkWidths { get; } =
+    [
+        new(0.002, "Fine"),
+        new(0.004, "Medium"),
+        new(0.008, "Thick"),
+        new(0.02, "Marker"),
+    ];
+
+    [ObservableProperty] private Models.InkColorOption? _inkColor;
+    [ObservableProperty] private Choice<double>? _inkWidth;
+    [ObservableProperty] private bool _isHighlighter;
+
+    public Color SelectedInkColor => InkColor?.Value ?? Colors.Red;
+    public double SelectedInkWidth => IsHighlighter ? Math.Max(0.02, InkWidth?.Value ?? 0.02) : InkWidth?.Value ?? 0.004;
+    public bool IsDrawing => Tool == EditorTool.Draw;
+
+    /// <summary>Radio-button side of <see cref="IsHighlighter"/>; only "checked" is acted on, which avoids a binding loop.</summary>
+    public bool IsPen
+    {
+        get => !IsHighlighter;
+        set
+        {
+            if (value)
+            {
+                IsHighlighter = false;
+            }
+        }
+    }
+    public bool HasStrokes => Strokes.Count > 0;
+
+    partial void OnInkColorChanged(Models.InkColorOption? value) => OnPropertyChanged(nameof(SelectedInkColor));
+    partial void OnInkWidthChanged(Choice<double>? value) => OnPropertyChanged(nameof(SelectedInkWidth));
+
+    partial void OnIsHighlighterChanged(bool value)
+    {
+        // Switching to the highlighter picks yellow, like a real one.
+        InkColor = value ? InkColors.First(c => c.Label == "Yellow") : InkColors[0];
+        OnPropertyChanged(nameof(SelectedInkWidth));
+        OnPropertyChanged(nameof(IsPen));
+    }
+
+    [RelayCommand]
+    private void StartDraw()
+    {
+        if (Current is null)
+        {
+            return;
+        }
+        CancelTool();
+        Strokes.Clear();
+        InkColor ??= InkColors[0];
+        InkWidth ??= InkWidths[1];
+        Tool = EditorTool.Draw;
+    }
+
+    [RelayCommand]
+    private void UndoStroke()
+    {
+        if (Strokes.Count > 0)
+        {
+            Strokes.RemoveAt(Strokes.Count - 1);
+        }
+    }
+
+    [RelayCommand]
+    private void ClearStrokes() => Strokes.Clear();
+
+    [RelayCommand]
+    private async Task ApplyDraw()
+    {
+        if (Current is null || Tool != EditorTool.Draw)
+        {
+            return;
+        }
+        var strokes = Strokes.ToList();
+        var page = Current.Page;
+        Tool = EditorTool.None;
+        Strokes.Clear();
+        if (strokes.Count == 0)
+        {
+            return;
+        }
+        IsRendering = true;
+        try
+        {
+            var burned = await Annotator.BurnAsync(_services.Context.Scanning, page.Image, strokes, _services.Paths.TempDir);
+            _services.Document.Update([page.Id], _ => burned);
+        }
+        finally
+        {
+            IsRendering = false;
+        }
+    }
 
     public bool HasPage => Current is not null;
     public bool IsCropping => Tool == EditorTool.Crop;
@@ -516,6 +628,7 @@ public sealed partial class EditorViewModel : ObservableObject
     [RelayCommand]
     private void CancelTool()
     {
+        Strokes.Clear();
         var wasAdjusting = Tool == EditorTool.Adjust;
         Tool = EditorTool.None;
         if (wasAdjusting)
@@ -529,6 +642,7 @@ public sealed partial class EditorViewModel : ObservableObject
     {
         OnPropertyChanged(nameof(IsCropping));
         OnPropertyChanged(nameof(IsAdjusting));
+        OnPropertyChanged(nameof(IsDrawing));
         OnPropertyChanged(nameof(IsToolOpen));
     }
 }

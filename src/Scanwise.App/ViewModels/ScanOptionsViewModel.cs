@@ -374,11 +374,7 @@ public sealed partial class ScanOptionsViewModel : ObservableObject
         Settings.Source = value;
         if (!_loading)
         {
-            if (value != ScanSource.Flatbed && Settings.Region is not null)
-            {
-                // Regions only make sense on the glass.
-                HasRegion = Settings.Region is not null;
-            }
+            // The preview region is kept but only applied to flatbed scans (see ScannerService.ScanAsync).
             RebuildResolutions();
         }
         RaiseDerived();

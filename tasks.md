@@ -158,7 +158,7 @@ Status: `[ ]` todo · `[x]` done · `[~]` partial/deferred (see note)
 - [x] Page list: thumbnail grid, multi-select (ctrl/shift), drag-drop reorder, drop files to import, context menu (rotate, delete, duplicate, move, export selected, open in default app); toolbar: select all, rotate, delete, reverse, interleave/deinterleave, import, save as
 - [x] Undo/redo (Ctrl+Z/Ctrl+Y) wired to PageDocument
 - [x] Editor: large preview with zoom/pan, prev/next, rotate 90/180/270, crop with handles + aspect presets (Scanner's list, with flip) + "apply to similar pages", adjustments panel (brightness, contrast, hue, saturation, sharpen, grayscale, B&W threshold) with live preview, deskew, delete, save
-- [~] Draw/highlight (pen, highlighter, eraser, colors) burned into the image: phase 7 stretch
+- [x] Draw/highlight (pen, highlighter, colors, thickness, undo stroke) burned into the image; undoable via the document
 
 ### Phase 6: Settings + saving flow
 - [x] Settings view (Scanner layout, grouped cards): Save location (folder / ask every time + browse + open), File naming (presets + custom chip editor with live preview), Auto-rotate (toggle + OCR language), After scan (auto-save, add vs start fresh), PDF (OCR, PDF/A, metadata, password), Image quality (JPEG quality, TIFF compression), Appearance (theme), About/licenses
@@ -170,16 +170,22 @@ Status: `[ ]` todo · `[x]` done · `[~]` partial/deferred (see note)
 - [x] Keyboard shortcuts (Ctrl+N scan, Ctrl+S save, Ctrl+O import, Del, Ctrl+A, Ctrl+Z/Y, R rotate)
 - [x] App icon, window title with page count
 - [x] Session recovery prompt on start
-- [~] Draw/highlight tool
 - [~] Apple ICA driver (`net8.0-macos` TFM) — needs a Mac to build/test
 
 ### Phase 8: Ship
 - [x] Headless UI smoke test (Avalonia.Headless): shell opens, navigation works, scan via SANE test device adds pages, save writes a file; render screenshots to verify layout
-- [ ] `scripts/publish.sh`: self-contained single-folder builds for linux-x64, linux-arm64, win-x64, osx-x64, osx-arm64
-- [ ] README: features, install, build, OS notes (SANE packages, Tesseract languages), credits to Scanner and NAPS2
-- [ ] Final review pass (`/code-review`-style self review), all tests green, commit
+- [x] `scripts/publish.sh`: self-contained single-folder builds for linux-x64, linux-arm64, win-x64, osx-x64, osx-arm64
+- [x] README: features, install, build, OS notes (SANE packages, Tesseract languages), credits to Scanner and NAPS2
+- [x] Final review pass (`/code-review`-style self review), all tests green, commit
 
 ## Verification log
+
+- 2026-10-28: Full suite 57/57 with no skips (51 core + 6 UI). `scripts/publish.sh` produces Release
+  self-contained builds for linux-x64, linux-arm64, win-x64 (includes the NAPS2 TWAIN worker), osx-x64 and
+  osx-arm64 (bundled libsane, Tesseract, PDFium). The linux-x64 binary starts and reaches X11 init. It wasn't
+  run interactively on Windows or macOS (no machines here).
+- 2026-10-28: Bug found and fixed: a two-way `!IsHighlighter` binding on a radio group caused an infinite
+  binding loop (caught as a hung UI test, diagnosed with dotnet-stack).
 
 - 2026-10-28: Headless UI tests (Avalonia.Headless + Skia, real rendering) 6/6: layout breakpoints, SANE scan →
   auto-save PDF, append to the same PDF, crop, adjust, save, feeder → one JPG per page, delete + undo of a

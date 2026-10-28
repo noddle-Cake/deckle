@@ -3,6 +3,7 @@
              xmlns:ui="using:FluentAvalonia.UI.Controls"
              xmlns:vm="using:Scanwise.App.ViewModels"
              xmlns:c="using:Scanwise.App.Controls"
+             xmlns:m="using:Scanwise.App.Models"
              x:Class="Scanwise.App.Views.EditorView"
              x:DataType="vm:MainViewModel">
   <Grid RowDefinitions="Auto,*" DataContext="{Binding Editor}" x:DataType="vm:EditorViewModel" Background="{DynamicResource CanvasBackground}">
@@ -36,6 +37,9 @@
           <ToggleButton Classes="icon" Padding="8" Background="Transparent" BorderThickness="0" Command="{Binding StartAdjustCommand}" IsChecked="{Binding IsAdjusting, Mode=OneWay}" ToolTip.Tip="Adjust colors, brightness and straighten">
             <ui:SymbolIcon Symbol="ColorBackground" FontSize="18" />
           </ToggleButton>
+          <ToggleButton Classes="icon" Padding="8" Background="Transparent" BorderThickness="0" Command="{Binding StartDrawCommand}" IsChecked="{Binding IsDrawing, Mode=OneWay}" ToolTip.Tip="Draw and highlight">
+            <ui:SymbolIcon Symbol="Highlight" FontSize="18" />
+          </ToggleButton>
           <Button Classes="icon" Command="{Binding DeleteCommand}" ToolTip.Tip="Delete page">
             <ui:SymbolIcon Symbol="Delete" />
           </Button>
@@ -67,6 +71,9 @@
                              LeftEdge="{Binding CropLeft}" TopEdge="{Binding CropTop}"
                              RightEdge="{Binding CropRight}" BottomEdge="{Binding CropBottom}"
                              AspectRatio="{Binding LockedAspect}" DisplayScale="{Binding EffectiveZoom}" />
+              <c:InkCanvas IsVisible="{Binding IsDrawing}" Strokes="{Binding Strokes}"
+                           InkColor="{Binding SelectedInkColor}" InkWidth="{Binding SelectedInkWidth}"
+                           IsHighlighter="{Binding IsHighlighter}" />
             </Grid>
           </Border>
         </Viewbox>
@@ -105,6 +112,39 @@
                   </StackPanel>
                 </CheckBox>
                 <TextBlock Classes="caption" Text="Drag the handles, or drag inside the page to draw a new area." />
+              </StackPanel>
+
+              <!-- Draw -->
+              <StackPanel Spacing="12" IsVisible="{Binding IsDrawing}">
+                <TextBlock Classes="title" Text="Draw" />
+                <StackPanel Orientation="Horizontal" Spacing="16">
+                  <RadioButton GroupName="ink" Content="Pen" IsChecked="{Binding IsPen}" />
+                  <RadioButton GroupName="ink" Content="Highlighter" IsChecked="{Binding IsHighlighter}" />
+                </StackPanel>
+                <StackPanel Spacing="6">
+                  <TextBlock Classes="heading" Text="Color" />
+                  <ListBox Classes="swatches" ItemsSource="{Binding InkColors}" SelectedItem="{Binding InkColor}" Background="Transparent">
+                    <ListBox.ItemsPanel>
+                      <ItemsPanelTemplate>
+                        <WrapPanel />
+                      </ItemsPanelTemplate>
+                    </ListBox.ItemsPanel>
+                    <ListBox.ItemTemplate>
+                      <DataTemplate x:DataType="m:InkColorOption">
+                        <Ellipse Width="22" Height="22" ToolTip.Tip="{Binding Label}" Stroke="#40000000" StrokeThickness="1" Fill="{Binding Brush}" />
+                      </DataTemplate>
+                    </ListBox.ItemTemplate>
+                  </ListBox>
+                </StackPanel>
+                <StackPanel Spacing="6">
+                  <TextBlock Classes="heading" Text="Thickness" />
+                  <ComboBox ItemsSource="{Binding InkWidths}" SelectedItem="{Binding InkWidth}" HorizontalAlignment="Stretch" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                  <Button Content="Undo stroke" Command="{Binding UndoStrokeCommand}" IsEnabled="{Binding HasStrokes}" />
+                  <Button Content="Clear" Command="{Binding ClearStrokesCommand}" IsEnabled="{Binding HasStrokes}" />
+                </StackPanel>
+                <TextBlock Classes="caption" Text="Drawing is added to the page image when you apply it. Ctrl+Z undoes it afterwards." />
               </StackPanel>
 
               <!-- Adjust -->
@@ -151,6 +191,8 @@
                     Command="{Binding ApplyCropCommand}" IsVisible="{Binding IsCropping}" />
             <Button Grid.Column="2" HorizontalAlignment="Stretch" Classes="accent" Content="Apply"
                     Command="{Binding ApplyAdjustCommand}" IsVisible="{Binding IsAdjusting}" />
+            <Button Grid.Column="2" HorizontalAlignment="Stretch" Classes="accent" Content="Apply"
+                    Command="{Binding ApplyDrawCommand}" IsVisible="{Binding IsDrawing}" />
           </Grid>
         </Grid>
       </Border>

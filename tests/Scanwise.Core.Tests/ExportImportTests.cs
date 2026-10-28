@@ -154,3 +154,28 @@ internal static class AsyncEnumerableExtensions
         return list;
     }
 }
+
+public class AnnotatorTests
+{
+    [Fact]
+    public async Task StrokesAreBurnedIntoTheRenderedPage()
+    {
+        using var env = new TestEnv();
+        var page = env.CreateImage(200, 300, new SixLabors.ImageSharp.PixelFormats.Rgb24(255, 255, 255))
+            .WithTransform(new NAPS2.Images.Transforms.RotationTransform(90), disposeSelf: true);
+        var strokes = new[]
+        {
+            new Scanwise.Core.Processing.InkStroke([(0.5, 0.9), (0.9, 0.9)], 0xFFFF0000, 0.05, false),
+        };
+
+        using var burned = await Scanwise.Core.Processing.Annotator.BurnAsync(env.Context.Scanning, page, strokes, env.Paths.TempDir);
+
+        Assert.True(burned.TransformState.IsEmpty);
+        using var rendered = env.Context.ImageContext.Render(burned);
+        Assert.Equal((300, 200), (rendered.Width, rendered.Height));
+        var pixels = ((NAPS2.Images.ImageSharp.ImageSharpImage)rendered).Image.CloneAs<SixLabors.ImageSharp.PixelFormats.Rgb24>();
+        var red = pixels[210, 180];
+        Assert.True(red.R > 200 && red.G < 60, $"expected red ink, got {red}");
+        page.Dispose();
+    }
+}

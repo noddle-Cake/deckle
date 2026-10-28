@@ -171,6 +171,21 @@ public sealed class ShellTests : IDisposable
             Screenshot(window, "07-adjust");
             vm.Editor.ApplyAdjustCommand.Execute(null);
 
+            // Draw (Scanner's ink tools): strokes are burned in and can be undone as one step.
+            vm.Editor.StartDrawCommand.Execute(null);
+            vm.Editor.Strokes.Add(new Scanwise.Core.Processing.InkStroke([(0.2, 0.3), (0.5, 0.35), (0.8, 0.3)], 0xFFE01B24, 0.01, false));
+            vm.Editor.IsHighlighter = true;
+            vm.Editor.Strokes.Add(new Scanwise.Core.Processing.InkStroke([(0.15, 0.6), (0.85, 0.6)], 0x6EF6D32D, 0.04, true));
+            Pump();
+            Screenshot(window, "07b-draw");
+            var before = vm.Editor.Current!.Page.Image;
+            await vm.Editor.ApplyDrawCommand.ExecuteAsync(null);
+            await WaitUntil(() => !ReferenceEquals(vm.Editor.Current!.Page.Image, before));
+            Assert.True(vm.Editor.Current!.Page.Image.TransformState.IsEmpty);
+            vm.UndoCommand.Execute(null);
+            Assert.Same(before, vm.Editor.Current!.Page.Image);
+            vm.RedoCommand.Execute(null);
+
             await vm.SaveCommand.ExecuteAsync(null);
             await WaitUntil(() => !vm.IsBusy);
             Assert.False(vm.HasUnsavedChanges);
