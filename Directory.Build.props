@@ -1,0 +1,19 @@
+<Project>
+  <PropertyGroup>
+    <!-- Switch to net10.0 once the .NET 10 SDK is installed (net8 support ends Nov 2026). -->
+    <ScanwiseTargetFramework>net8.0</ScanwiseTargetFramework>
+    <TargetFramework>$(ScanwiseTargetFramework)</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Version>0.1.0</Version>
+    <Authors>Chris Servin</Authors>
+    <Product>Scanwise</Product>
+    <Copyright>Copyright © 2026 Chris Servin</Copyright>
+    <PackageLicenseExpression>MPL-2.0</PackageLicenseExpression>
+  </PropertyGroup>
+  <PropertyGroup>
+    <Naps2Version>1.6.0</Naps2Version>
+    <AvaloniaVersion>11.2.8</AvaloniaVersion>
+  </PropertyGroup>
+</Project>
