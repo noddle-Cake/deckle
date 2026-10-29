@@ -272,14 +272,27 @@ Status 2026-10-29: implemented and unit-tested on Linux with `AppShortcuts.IsMac
   `.icns` (16–1024 at @1x/@2x) for macOS 14–15.
 
 #### 9.2 Should fix: layout and structure
-- [ ] **Unified title bar and window title.** The app uses a standard title bar over a Fluent nav rail, and
+
+Status 2026-10-29: done except where noted, tested on Linux with `AppShortcuts.IsMac` on and checked in
+headless screenshots (wide, sidebar hidden, narrow, Settings); **not yet run on a Mac**. Code:
+`Views/MacShell.axaml`, `Views/MacSettingsView.axaml`, `Views/HelpWindow.axaml`, `MacIntegration.cs`.
+On a Mac, check: blur behind the sidebar, the window dragging from the toolbar, traffic-light spacing, the
+share menu's position, and that pasted images arrive in Preview/Pages.
+
+- [x] **Unified title bar and window title.** Done: 52 px title bar holding the toolbar; title = file name,
+  "Untitled" or "Scanwise" with no pages; `NSWindow.documentEdited` and `representedFilename` (proxy icon).
+  The page count moved to the toolbar subtitle. The app uses a standard title bar over a Fluent nav rail, and
   the title is "Scanwise · 3 pages •". Toolbars page: "Don't title windows with your app name" and keep titles
   short. On macOS unsaved changes appear as the dot in the close button, not in the title.
   *Fix (Mac):* `ExtendClientAreaToDecorationsHint=true` with a ~78 px leading inset for the traffic lights.
   Title = document name ("Untitled" until saved, then the file name). Show the page count in the Pages
   header. Set `NSWindow.documentEdited` through the ObjC runtime (as `MacIntegration.cs` already does for the
   Dock menu) instead of appending "•".
-- [ ] **Sidebar instead of a Fluent compact nav rail.** `NavigationView PaneDisplayMode="LeftCompact"` is a
+- [x] **Sidebar instead of a Fluent compact nav rail.** Done: `MacShell` replaces the `NavigationView` on Mac.
+  The scan options are a full-height sidebar, transparent over `AcrylicBlur`, falling back to a solid colour
+  when blur is unavailable. View ▸ Show/Hide Sidebar ⌃⌘S. In a narrow window the sidebar button swaps sidebar
+  and pages, and a Pages | Editor switch replaces the top navigation. Help opens in its own window, like
+  Settings. `NavigationView PaneDisplayMode="LeftCompact"` is a
   Windows pattern. On Mac the scan options are the natural sidebar and pages/editor are the content and
   detail columns. Sidebars page: "consider using a split view interface that includes a content list between
   the sidebar items and detail view". Settings, Help and "Open save folder" sit at the bottom of the rail;
@@ -290,7 +303,9 @@ Status 2026-10-29: implemented and unit-tested on Linux with `AppShortcuts.IsMac
   the window and a transparent `PaneBackground` on Mac. Add View ▸ Show/Hide Sidebar. When the window narrows,
   collapse the sidebar instead of switching to top navigation, as the Sidebars page suggests. Don't hide it by
   default.
-- [ ] **Toolbar grouping.** The borderless icon buttons already match the HIG's "no bezel" style. But there
+- [x] **Toolbar grouping.** Done as proposed. Scan, with its split menu, appears only in the toolbar. The pane
+  buttons it replaces (rotate, copy, share, save as, undo/redo) are hidden on Mac. In a narrow window the
+  centre group collapses, and its commands stay in the menu bar. The borderless icon buttons already match the HIG's "no bezel" style. But there
   are two toolbars with many groups and no single primary action. Toolbars page: "aim for a maximum of three"
   groups. Leading: sidebar toggle and title. Centre: common actions. Trailing: inspector, search, More.
   "Only specify one primary action, and put it on the trailing side".
@@ -298,22 +313,30 @@ Status 2026-10-29: implemented and unit-tested on Linux with `AppShortcuts.IsMac
   Rotate Left/Right, Crop, Adjust, Draw. Trailing: Share and **Scan**, which is the only prominent button.
   Duplicate, Move, Page order and Open in another app stay in More and in the menu bar. Drop the painted
   toolbar background ("Reduce the use of toolbar backgrounds and tinted controls").
-- [ ] **The editor's tool panel acts as an inspector.** Crop/Adjust/Draw open a 280 px right-hand panel.
+- [x] **The editor's tool panel acts as an inspector.** Decided against a separate ⌥⌘I toggle. The panel is
+  a tool mode (Crop/Adjust/Draw with Apply/Cancel), not a property inspector, and the toolbar's Crop/Adjust/Draw
+  toggles already open and close it; a generic toggle could throw away an unfinished crop. It stays solid
+  because it sits over the editor canvas, not the window background. Crop/Adjust/Draw open a 280 px right-hand panel.
   On Mac, toggle it from a trailing toolbar button and View ▸ Show Inspector ⌥⌘I, using the sidebar's
   material.
-- [ ] **Share opens Mail only.** `PlatformShell.ShareAsync` runs `open -a Mail`. Mac users expect the system
+- [x] **Share opens Mail only.** Done: `NSSharingServicePicker` anchored to the clicked button, or the top
+  centre when Share comes from the menu bar. `PlatformShell.ShareAsync` runs `open -a Mail`. Mac users expect the system
   share menu (AirDrop, Messages, Notes, Mail…).
   *Fix:* show `NSSharingServicePicker` via the ObjC runtime, anchored to the Share button, with the files as
   `NSURL`s. Drop the ⌘E binding on Mac: the Keyboards page reserves ⌘E for "Use the selection for a find
   operation".
-- [ ] **Copying runs AppleScript.** `CopyImageAsync` calls `osascript` with a script built from a string.
+- [x] **Copying runs AppleScript.** Done: PNG and TIFF on the general pasteboard. `CopyImageAsync` calls `osascript` with a script built from a string.
   That's slow and may raise an Automation permission prompt. Write PNG and TIFF to
   `NSPasteboard.generalPasteboard` directly.
-- [ ] **Settings controls.** `SettingsExpander` cards with `ToggleSwitch` look like Windows Settings. On Mac,
+- [x] **Settings controls.** Done: `MacSettingsView` in a fixed-size window, with the four tabs, right-aligned
+  labels and checkboxes. About is in the app menu. `SettingsExpander` cards with `ToggleSwitch` look like Windows Settings. On Mac,
   use a grouped form in the Settings window, with labels on the leading side and controls on the trailing
   side, and checkboxes for most options. The HIG Toggles page reserves macOS switches for major on/off
   settings. Split the window into tabs: General, Saving, Text Recognition, PDF & Images.
-- [ ] **Global hotkey uses Control.** `MacIntegration.RegisterHotkey` registers ⌃⌥ + key. Global shortcuts
+- [x] **Global hotkey uses Control.** Won't do: ⌃⌥ stays. A global hotkey takes its key combination away
+  from every app, and ⌥⌘ combinations are taken widely (⌥⌘D Dock, ⌥⌘H Hide Others, ⌥⌘S Save All). ⌃⌥ is
+  the usual choice for system-wide shortcuts; the HIG's "avoid Control" is about shortcuts inside an app.
+  Original note: `MacIntegration.RegisterHotkey` registers ⌃⌥ + key. Global shortcuts
   are a special case, but Command is still preferred: default to ⌥⌘ + key, keep ⌃⌥ selectable, and render
   the label as `⌥⌘S`.
 

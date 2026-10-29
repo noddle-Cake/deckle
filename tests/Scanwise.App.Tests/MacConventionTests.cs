@@ -124,6 +124,9 @@ public sealed class MacConventionTests : IDisposable
         Assert.True(settings.IsVisible);
         Assert.Same(vm.SettingsPage, settings.DataContext);
         Assert.Equal(Section.Scan, vm.Section); // The workspace stays put.
+        Assert.IsType<MacSettingsView>(settings.Content);
+        Assert.False(settings.CanResize);
+        Screenshot(settings, "mac-04-settings");
         window.Close();
         Dispatcher.UIThread.RunJobs();
         Assert.False(settings.IsVisible);

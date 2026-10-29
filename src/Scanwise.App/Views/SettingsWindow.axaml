@@ -5,9 +5,10 @@
         x:Class="Scanwise.App.Views.SettingsWindow"
         x:DataType="vm:SettingsViewModel"
         Title="Settings"
-        Width="760" Height="720" MinWidth="560" MinHeight="400"
+        Width="660" Height="560"
+        CanResize="False"
         WindowStartupLocation="CenterScreen"
         ShowInTaskbar="False">
-  <!-- macOS only: Settings get their own window (Scanwise ▸ Settings…, ⌘,) instead of a page in the main window. -->
-  <v:SettingsView />
+  <!-- macOS only: Settings get their own fixed-size window (Scanwise ▸ Settings…, ⌘,) with tabs. -->
+  <v:MacSettingsView />
 </Window>
