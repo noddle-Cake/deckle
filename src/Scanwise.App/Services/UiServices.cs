@@ -1,4 +1,5 @@
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Input.Platform;
 using Avalonia.Platform.Storage;
 using FluentAvalonia.UI.Controls;
@@ -147,7 +148,19 @@ public sealed class UiServices : IUiServices
         return result == ContentDialogResult.Primary ? box.Text ?? "" : null;
     }
 
-    public Task<ContentDialogResult> ShowDialogAsync(ContentDialog dialog) => dialog.ShowAsync(_window);
+    public Task<ContentDialogResult> ShowDialogAsync(ContentDialog dialog)
+    {
+        if (AppShortcuts.IsMac)
+        {
+            // Esc already cancels; macOS also uses ⌘. (HIG, Alerts).
+            dialog.KeyBindings.Add(new KeyBinding
+            {
+                Gesture = new KeyGesture(Key.OemPeriod, KeyModifiers.Meta),
+                Command = new CommunityToolkit.Mvvm.Input.RelayCommand(dialog.Hide),
+            });
+        }
+        return dialog.ShowAsync(_window);
+    }
 
     public async Task OpenFileAsync(string path)
     {

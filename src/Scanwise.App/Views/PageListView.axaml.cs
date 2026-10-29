@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Platform.Storage;
 using Avalonia.VisualTree;
+using Scanwise.App.Services;
 using Scanwise.App.ViewModels;
 
 namespace Scanwise.App.Views;
@@ -32,6 +33,22 @@ public partial class PageListView : UserControl
     }
 
     private MainViewModel? ViewModel => DataContext as MainViewModel;
+
+    protected override void OnDataContextChanged(EventArgs e)
+    {
+        base.OnDataContextChanged(e);
+        List.KeyBindings.Clear();
+        if (ViewModel is not { } vm)
+        {
+            return;
+        }
+        AppShortcuts.Bind(List, AppShortcuts.Delete, vm.DeleteSelectedCommand);
+        AppShortcuts.Bind(List, AppShortcuts.SelectAll, vm.Pages.SelectAllCommand);
+        AppShortcuts.Bind(List, AppShortcuts.RotateRight, vm.Pages.RotateRightCommand);
+        AppShortcuts.Bind(List, AppShortcuts.RotateLeft, vm.Pages.RotateLeftCommand);
+        AppShortcuts.Bind(List, AppShortcuts.MoveUp, vm.Pages.MoveUpCommand);
+        AppShortcuts.Bind(List, AppShortcuts.MoveDown, vm.Pages.MoveDownCommand);
+    }
 
     private PageItemViewModel? ItemAt(Point point) =>
         (List.InputHitTest(point) as Visual)?.FindAncestorOfType<ListBoxItem>(includeSelf: true)?.DataContext as PageItemViewModel;

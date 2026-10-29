@@ -2,6 +2,7 @@
 # Builds self-contained Scanwise folders (no .NET install needed) for each platform.
 # Usage: scripts/publish.sh [rid ...]   default: linux-x64 linux-arm64 win-x64 osx-x64 osx-arm64
 # Output: publish/<rid>/  plus publish/scanwise-<version>-<rid>.{tar.gz,zip}
+#         macOS: publish/osx-*/Scanwise.app, zipped (unsigned; see README)
 set -euo pipefail
 root="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$root"
@@ -45,6 +46,19 @@ for rid in "${rids[@]}"; do
   cp .cache/tessdata/*.traineddata "$out/tessdata/"
   case "$rid" in
     win-*) (cd publish && rm -f "scanwise-$version-$rid.zip" && zip -qr "scanwise-$version-$rid.zip" "$rid") ;;
+    osx-*)
+      # A real app bundle (Dock name and icon, bundle ID for permissions such as local network access).
+      # Everything the publish produced lives in Contents/MacOS, so the app finds tessdata and natives as before.
+      chmod +x "$out/Scanwise"; find "$out" -path '*/_*/tesseract' -exec chmod +x {} +
+      app="$out/Scanwise.app"
+      rm -rf "$out.contents"
+      mv "$out" "$out.contents"
+      mkdir -p "$app/Contents/Resources"
+      mv "$out.contents" "$app/Contents/MacOS"
+      sed "s/@VERSION@/$version/g" packaging/macos/Info.plist > "$app/Contents/Info.plist"
+      printf 'APPL????' > "$app/Contents/PkgInfo"
+      cp packaging/macos/Scanwise.icns "$app/Contents/Resources/Scanwise.icns"
+      (cd "$out" && rm -f "../scanwise-$version-$rid.zip" && zip -qry "../scanwise-$version-$rid.zip" Scanwise.app) ;;
     *) chmod +x "$out/Scanwise"; find "$out" -path '*/_*/tesseract' -exec chmod +x {} +
        tar -C publish -czf "publish/scanwise-$version-$rid.tar.gz" "$rid" ;;
   esac

@@ -1,6 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:ui="using:FluentAvalonia.UI.Controls"
+             xmlns:svc="using:Scanwise.App.Services"
              x:Class="Scanwise.App.Views.HelpView">
   <UserControl.Styles>
     <Style Selector="Expander">
@@ -56,27 +57,33 @@
       </Expander>
 
       <Expander Header="Keyboard shortcuts">
-        <Grid ColumnDefinitions="Auto,24,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto">
-          <TextBlock Grid.Row="0" Text="Ctrl+N" FontWeight="SemiBold" />
+        <!-- Shortcut texts come from AppShortcuts: ⌘ on macOS, Ctrl elsewhere. -->
+        <Grid ColumnDefinitions="Auto,24,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto">
+          <TextBlock Grid.Row="0" Text="{svc:ShortcutLabel Scan}" FontWeight="SemiBold" />
           <TextBlock Grid.Row="0" Grid.Column="2" Text="Scan" />
-          <TextBlock Grid.Row="1" Text="Ctrl+Shift+N" FontWeight="SemiBold" />
+          <TextBlock Grid.Row="1" Text="{svc:ShortcutLabel ScanNew}" FontWeight="SemiBold" />
           <TextBlock Grid.Row="1" Grid.Column="2" Text="Scan into a new document" />
-          <TextBlock Grid.Row="2" Text="Ctrl+S / Ctrl+Shift+S" FontWeight="SemiBold" />
+          <TextBlock Grid.Row="2" Text="{svc:ShortcutLabel 'Save SaveAs'}" FontWeight="SemiBold" />
           <TextBlock Grid.Row="2" Grid.Column="2" Text="Save / Save as" />
-          <TextBlock Grid.Row="3" Text="Ctrl+O" FontWeight="SemiBold" />
+          <TextBlock Grid.Row="3" Text="{svc:ShortcutLabel Import}" FontWeight="SemiBold" />
           <TextBlock Grid.Row="3" Grid.Column="2" Text="Import images or PDFs" />
-          <TextBlock Grid.Row="9" Text="Ctrl+C / Ctrl+E" FontWeight="SemiBold" />
-          <TextBlock Grid.Row="9" Grid.Column="2" Text="Copy page to clipboard / share pages" />
-          <TextBlock Grid.Row="4" Text="Ctrl+Z / Ctrl+Y" FontWeight="SemiBold" />
+          <TextBlock Grid.Row="4" Text="{svc:ShortcutLabel 'Undo Redo'}" FontWeight="SemiBold" />
           <TextBlock Grid.Row="4" Grid.Column="2" Text="Undo / redo" />
-          <TextBlock Grid.Row="5" Text="Delete, Ctrl+A" FontWeight="SemiBold" />
-          <TextBlock Grid.Row="5" Grid.Column="2" Text="Delete selected pages, select all (page list)" />
-          <TextBlock Grid.Row="6" Text="R / Shift+R" FontWeight="SemiBold" />
+          <TextBlock Grid.Row="5" Text="{svc:ShortcutLabel 'Delete SelectAll'}" FontWeight="SemiBold" />
+          <TextBlock Grid.Row="5" Grid.Column="2" Text="Delete selected pages / select all (page list)" />
+          <TextBlock Grid.Row="6" Text="{svc:ShortcutLabel 'RotateRight RotateLeft'}" FontWeight="SemiBold" />
           <TextBlock Grid.Row="6" Grid.Column="2" Text="Rotate selected pages right / left (page list)" />
-          <TextBlock Grid.Row="7" Text="Page Up / Page Down" FontWeight="SemiBold" />
-          <TextBlock Grid.Row="7" Grid.Column="2" Text="Previous / next page (editor)" />
-          <TextBlock Grid.Row="8" Text="Ctrl+wheel, Ctrl+0" FontWeight="SemiBold" />
-          <TextBlock Grid.Row="8" Grid.Column="2" Text="Zoom, fit to window (editor)" />
+          <TextBlock Grid.Row="7" Text="{svc:ShortcutLabel 'MoveUp MoveDown'}" FontWeight="SemiBold" />
+          <TextBlock Grid.Row="7" Grid.Column="2" Text="Move selected pages up / down (page list)" />
+          <TextBlock Grid.Row="8" Text="{svc:ShortcutLabel 'PreviousPage NextPage'}" FontWeight="SemiBold" />
+          <TextBlock Grid.Row="8" Grid.Column="2" Text="Previous / next page (editor)" />
+          <TextBlock Grid.Row="9" Text="{svc:ShortcutLabel 'ZoomIn ZoomOut ZoomFit'}" FontWeight="SemiBold" />
+          <TextBlock Grid.Row="9" Grid.Column="2"
+                     Text="{OnPlatform 'Zoom in / out / fit to window (editor). Ctrl+wheel zooms too.', macOS='Zoom in / out / fit to window (editor). ⌘+scroll or pinching zooms too.'}" />
+          <TextBlock Grid.Row="10" Text="{svc:ShortcutLabel Copy}" FontWeight="SemiBold" />
+          <TextBlock Grid.Row="10" Grid.Column="2" Text="Copy page to clipboard" />
+          <TextBlock Grid.Row="11" Text="{svc:ShortcutLabel Share}" FontWeight="SemiBold" IsVisible="{OnPlatform True, macOS=False}" />
+          <TextBlock Grid.Row="11" Grid.Column="2" Text="Share pages" IsVisible="{OnPlatform True, macOS=False}" />
         </Grid>
       </Expander>
     </StackPanel>

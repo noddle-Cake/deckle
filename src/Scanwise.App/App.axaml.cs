@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
+using Avalonia.Markup.Xaml.Styling;
 using Avalonia.Controls;
 using Avalonia.Styling;
 using Avalonia.Threading;
@@ -21,6 +22,10 @@ public partial class App : Application
     public override void Initialize()
     {
         AvaloniaXamlLoader.Load(this);
+        if (AppShortcuts.IsMac)
+        {
+            Styles.Add(new StyleInclude(new Uri("avares://Scanwise/")) { Source = new Uri("avares://Scanwise/MacStyles.axaml") });
+        }
     }
 
     public override void OnFrameworkInitializationCompleted()
@@ -33,6 +38,11 @@ public partial class App : Application
             var ui = new UiServices(window);
             var vm = new MainViewModel(services, ui);
             window.DataContext = vm;
+            if (AppShortcuts.IsMac)
+            {
+                NativeMenu.SetMenu(this, MacMenuBar.AppMenu(vm, window.OpenSettingsCommand));
+                NativeMenu.SetMenu(window, MacMenuBar.WindowMenu(vm, window));
+            }
             desktop.MainWindow = window;
             desktop.ShutdownRequested += (_, _) => vm.OnShutdown();
             window.Opened += async (_, _) => await vm.InitializeAsync();

@@ -163,6 +163,11 @@ public sealed partial class MainViewModel : ObservableObject
     [RelayCommand]
     private void Navigate(Section section) => Section = section;
 
+    /// <summary>Scanwise ▸ About Scanwise in the macOS menu bar.</summary>
+    [RelayCommand]
+    private Task ShowAbout() => _ui.ShowMessageAsync("Scanwise",
+        $"Version {SettingsPage.Version}\n\nA simple document scanner built on NAPS2 and the ideas of Scanner by Simon Knuth.\nMozilla Public License 2.0.");
+
     /// <summary>Opens a page in the editor (double-click in the page list).</summary>
     public void OpenInEditor(PageItemViewModel item)
     {
@@ -547,7 +552,7 @@ public sealed partial class MainViewModel : ObservableObject
             return;
         }
         Document.Remove(ids);
-        ShowStatus("Deleted", $"Removed {ids.Count} page(s). Press Ctrl+Z to undo.", InfoBarSeverity.Informational);
+        ShowStatus("Deleted", $"Removed {ids.Count} page(s). Press {AppShortcuts.Label(AppShortcuts.Undo)} to undo.", InfoBarSeverity.Informational);
         await Task.CompletedTask;
     }
 

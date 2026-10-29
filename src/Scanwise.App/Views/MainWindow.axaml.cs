@@ -1,18 +1,27 @@
 using System.ComponentModel;
+using System.Windows.Input;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Platform.Storage;
+using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
+using Scanwise.App.Services;
 using Scanwise.App.ViewModels;
 
 namespace Scanwise.App.Views;
 
 public partial class MainWindow : Window
 {
+    private SettingsWindow? _settingsWindow;
+
     public MainWindow()
     {
         InitializeComponent();
+        OpenSettingsCommand = new RelayCommand(OpenSettings);
+        // macOS opens Settings in its own window from the menu bar (⌘,), so the nav rail doesn't list it.
+        NavSettings.IsVisible = !AppShortcuts.IsMac;
+        Closed += (_, _) => _settingsWindow?.Close();
         Nav.ItemInvoked += OnNavItemInvoked;
         AddHandler(DragDrop.DragOverEvent, OnDragOver);
         AddHandler(DragDrop.DropEvent, OnDrop);
@@ -20,6 +29,7 @@ public partial class MainWindow : Window
         {
             if (DataContext is MainViewModel vm)
             {
+                BindKeys(vm);
                 vm.PropertyChanged += OnViewModelChanged;
                 vm.UpdateLayout(Bounds.Width);
                 ApplyLayout(vm);
@@ -29,6 +39,47 @@ public partial class MainWindow : Window
     }
 
     private MainViewModel? ViewModel => DataContext as MainViewModel;
+
+    /// <summary>A Settings window on macOS (one at a time), the Settings page elsewhere.</summary>
+    public ICommand OpenSettingsCommand { get; }
+
+    internal SettingsWindow? OpenSettingsWindow => _settingsWindow;
+
+    private void OpenSettings()
+    {
+        if (ViewModel is not { } vm)
+        {
+            return;
+        }
+        if (!AppShortcuts.IsMac)
+        {
+            vm.Section = Section.Settings;
+            return;
+        }
+        if (_settingsWindow is null)
+        {
+            _settingsWindow = new SettingsWindow { DataContext = vm.SettingsPage };
+            _settingsWindow.Closed += (_, _) => _settingsWindow = null;
+            _settingsWindow.Show();
+        }
+        _settingsWindow.Activate();
+    }
+
+    private void BindKeys(MainViewModel vm)
+    {
+        KeyBindings.Clear();
+        AppShortcuts.Bind(this, AppShortcuts.Settings, OpenSettingsCommand);
+        AppShortcuts.Bind(this, AppShortcuts.Scan, vm.ScanCommand);
+        AppShortcuts.Bind(this, AppShortcuts.ScanNew, vm.ScanStartFreshCommand);
+        AppShortcuts.Bind(this, AppShortcuts.Save, vm.SaveCommand);
+        AppShortcuts.Bind(this, AppShortcuts.SaveAs, vm.SaveAsCommand);
+        AppShortcuts.Bind(this, AppShortcuts.Import, vm.ImportCommand);
+        AppShortcuts.Bind(this, AppShortcuts.Copy, vm.CopyPageCommand);
+        AppShortcuts.Bind(this, AppShortcuts.Share, vm.ShareCommand);
+        AppShortcuts.Bind(this, AppShortcuts.Undo, vm.UndoCommand);
+        AppShortcuts.Bind(this, AppShortcuts.Redo, vm.RedoCommand);
+        AppShortcuts.Bind(this, AppShortcuts.Cancel, vm.CancelOperationCommand);
+    }
 
     protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
     {

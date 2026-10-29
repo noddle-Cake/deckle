@@ -37,7 +37,7 @@ Scanwise combines two projects:
   source, brightness, contrast, file type, plus your own text
 - Searchable PDFs (OCR in 100+ languages, downloadable in-app), PDF/A, metadata and password protection
 - JPG quality and TIFF compression (CCITT G4 for black & white)
-- **Copy a page to the clipboard** (Ctrl+C) or **share** pages (Ctrl+E) without saving first: the Windows share
+- **Copy a page to the clipboard** (Ctrl+C, ⌘C on macOS) or **share** pages (Ctrl+E) without saving first: the Windows share
   sheet, or a new email via `xdg-email` (Linux) / Mail (macOS). One page is shared as JPG, several as one PDF.
   On Linux, copying images needs `wl-clipboard` (Wayland) or `xclip` (X11)
 
@@ -58,7 +58,7 @@ no .NET install is needed.
 |---|---|
 | Windows 10/11 | WIA works out of the box; install the scanner maker's driver for TWAIN. |
 | Linux | Install SANE (`sudo dnf install sane-backends` / `sudo apt install sane-utils`) plus your scanner's backend (`hplip`, `sane-airscan`, `brscan`, …). Check that `scanimage -L` lists it. |
-| macOS | Network scanners work without drivers; USB scanners use the bundled SANE. The download is not signed: right-click → Open the first time. |
+| macOS | Unzip and move `Scanwise.app` to Applications. Network scanners work without drivers (allow local network access when asked); USB scanners use the bundled SANE. The download is not signed: right-click → Open the first time. Shortcuts use ⌘ and every command is in the menu bar. |
 
 Text recognition (auto-rotate, searchable PDFs) uses a system Tesseract if one is installed, otherwise the copy
 bundled with Scanwise. English and the orientation data are included; other languages download from Settings.

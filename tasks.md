@@ -195,7 +195,12 @@ in the content layer ("can result in unnecessary complexity and a confusing visu
 overusing it in custom controls.
 
 #### 9.1 Must fix
-- [ ] **⌘ instead of Ctrl on macOS.** Every gesture is hard-coded `Ctrl+…` (`MainWindow.axaml` KeyBindings,
+Status 2026-10-29: implemented and unit-tested on Linux with `AppShortcuts.IsMac` switched on
+(`MacConventionTests`); **not yet run on a Mac** (see 9.5). Code: `Services/AppShortcuts.cs`,
+`Services/MacMenuBar.cs`, `Views/SettingsWindow.axaml`, `MacStyles.axaml`, `packaging/macos/`.
+
+- [x] **⌘ instead of Ctrl on macOS.** Done: every shortcut is defined once in `AppShortcuts` and bound in
+  code; the editor zooms with ⌘+scroll and trackpad pinch on Mac. Every gesture is hard-coded `Ctrl+…` (`MainWindow.axaml` KeyBindings,
   `PageListView.axaml`, `ScanOptionsView.axaml`, Ctrl+wheel in `EditorView.axaml.cs`). Keyboards page:
   "Prefer the Command key as the main modifier" and "Avoid using the Control key as a modifier". On a Mac
   the shortcuts are effectively missing.
@@ -203,12 +208,16 @@ overusing it in custom controls.
   macOS, Control elsewhere) rather than literal strings. On Mac: redo ⇧⌘Z (no Ctrl+Y), delete page ⌘⌫
   (keep Delete too), move page ⌥⌘↑/⌥⌘↓ instead of Alt+↑/↓, zoom with ⌘+wheel and trackpad pinch. Add a
   test that the macOS gestures use `KeyModifiers.Meta`.
-- [ ] **Shortcut text says "Ctrl".** Tooltips, `InputGesture=` on menu items, "Press Ctrl+Z to undo"
+- [x] **Shortcut text says "Ctrl".** Done: `{svc:ShortcutTip}`, `{svc:Shortcut}` and `{svc:ShortcutLabel}`
+  markup extensions; Share shows no shortcut on Mac (⌘E is Find). Tooltips, `InputGesture=` on menu items, "Press Ctrl+Z to undo"
   (`MainViewModel.cs:550`), the shortcut table in `HelpView.axaml`, "Save (Ctrl+S)" in `SettingsView.axaml`,
   and the drawing caption in `EditorView.axaml`.
   *Fix:* one helper that renders `⌘S`, `⇧⌘S`, `⌥⌘↑` on Mac (modifier order ⌃⌥⇧⌘, as the HIG requires) and
   `Ctrl+S` elsewhere. Use it everywhere a shortcut appears in text.
-- [ ] **No menu bar.** On macOS the app has only Avalonia's default app menu. Menu bar page: support App ·
+- [x] **No menu bar.** Done as proposed below, except Show/Hide Sidebar (comes with the sidebar in 9.2) and
+  Share as a plain item, not a submenu. Edit items act on a focused text field first, so ⌘C/⌘Z/⌘A still edit
+  text. **Check on a Mac:** that a menu shortcut and the window's key binding don't both fire, and that AppKit
+  doesn't add a second "Enter Full Screen". On macOS the app has only Avalonia's default app menu. Menu bar page: support App ·
   File · Edit · View · (app menus) · Window · Help in that order, and "Even when commands are available
   elsewhere in your app, it's important to list them in the menu bar". Toolbars page: "Make every toolbar
   item available as a command in the menu bar". Full Keyboard Access and VoiceOver users depend on it.
@@ -227,26 +236,36 @@ overusing it in custom controls.
     Previous/Next Page · Enter Full Screen ⌃⌘F
   - **Window:** Minimize ⌘M · Zoom · Bring All to Front
   - **Help:** Scanwise Help (opens the Help view)
-- [ ] **Settings is a page inside the main window.** On macOS it belongs in its own window, opened with
+- [x] **Settings is a page inside the main window.** Done: `SettingsWindow`, one at a time, closes with the
+  main window. It stays resizable until 9.2 splits the long page into tabs. On macOS it belongs in its own window, opened with
   Scanwise ▸ Settings… or ⌘, (Menu bar and Keyboards pages). Today it also replaces the scan workspace while
   it's open.
   *Fix (Mac):* host `SettingsView` in a single non-resizable `Window` titled "Settings" (a second ⌘, brings it
   to the front). Remove Settings from the nav rail on Mac.
-- [ ] **Alert buttons are in Windows order.** FluentAvalonia's `ContentDialog` puts the primary button on the
+- [x] **Alert buttons are in Windows order.** Done differently from the fix below: `MacStyles.axaml` (loaded on
+  Mac only) mirrors `ContentDialog`'s button grid, so every existing dialog gets Cancel · Secondary · Default
+  without a second dialog type. ⌘. cancels. No destructive style: "Clear all pages" is a deliberate,
+  undoable choice, and the HIG keeps that style for actions people didn't choose. The confirm buttons already
+  use specific verbs (Replace, Delete, Clear pages, Restore). FluentAvalonia's `ContentDialog` puts the primary button on the
   left and Close/Cancel on the right. Alerts page: "Always place the default button on the trailing side of
   a row … Cancel buttons are typically on the leading side". This affects every dialog in `UiServices`
   (confirm, text prompt, merge, scan area, batch). Esc and ⌘. must cancel, and Return must choose the default.
   *Fix (Mac):* a small dialog window shown with `ShowDialog(owner)` and laid out Cancel · secondary ·
   default, from leading to trailing. Use the destructive style for "Clear all pages". Keep `ContentDialog`
   on Windows.
-- [ ] **Ship a real `.app` bundle.** `scripts/publish.sh` makes a bare folder and a tar.gz for `osx-*`. With
+- [x] **Ship a real `.app` bundle.** Done: `publish.sh` builds `Scanwise.app` (bundle ID
+  `com.cjservin.scanwise`, plus `NSLocalNetworkUsageDescription` and the eSCL Bonjour types so macOS 15+
+  allows network scanner discovery) and zips it with `zip -y`, since `ditto` isn't available on Linux.
+  Signing and notarization still wait for a Developer ID. `scripts/publish.sh` makes a bare folder and a tar.gz for `osx-*`. With
   no `Scanwise.app` and no `Info.plist`, the Dock shows no proper name or icon, Finder treats the binary as a
   Unix executable, and macOS has no bundle ID for permissions or the share sheet.
   *Fix:* build `Scanwise.app/Contents/{MacOS,Resources,Info.plist}` with `CFBundleIdentifier`,
   `CFBundleName`, `CFBundleIconFile`, `LSApplicationCategoryType=public.app-category.productivity`,
   `NSHighResolutionCapable` and `LSMinimumSystemVersion`. Archive it with `ditto -c -k --keepParent` (not
   tar) and sign/notarize once a Developer ID is available.
-- [ ] **No macOS app icon.** There's only `scanwise.ico`/`.png`. App icons page: use Apple's
+- [~] **No macOS app icon.** Partly done: `packaging/macos/icon.svg` redraws the icon on the 1024 px grid
+  (824 px body, shadow) and `scripts/make-icns.py` builds `Scanwise.icns` (16–1024 at @1x/@2x). Still to do:
+  the layered Icon Composer `.icon` for macOS 26, which needs a Mac. There's only `scanwise.ico`/`.png`. App icons page: use Apple's
   rounded-rectangle grid and let the system apply the shape. On macOS 26 the icon is layered (Icon Composer
   `.icon`), so the system can render it in Liquid Glass and in the dark, clear and tinted appearances.
   *Fix:* separate foreground/background layers on the 1024 px template, exported with Icon Composer, plus an
@@ -344,6 +363,12 @@ overusing it in custom controls.
 - [ ] Unit-test the shortcut/label helpers and the menu construction on Linux with a faked macOS platform.
 
 ## Verification log
+
+- 2026-10-29: Phase 9.1 (macOS HIG). App tests 19/19 (8 new in `MacConventionTests`: ⌘ gestures and labels,
+  window bindings, Settings window, menu bar contents and order, Edit menu on a text field, dialog button
+  order with and without `MacStyles.axaml`); core 47 passed, 4 skipped (OSD/GNOME env not set). `publish.sh
+  osx-arm64` produced `Scanwise.app` (Info.plist, PkgInfo, 10-size `.icns`, executable bit kept in the zip).
+  Not run on a Mac.
 
 - 2026-10-28: Full suite 57/57 with no skips (51 core + 6 UI). `scripts/publish.sh` produces Release
   self-contained builds for linux-x64, linux-arm64, win-x64 (includes the NAPS2 TWAIN worker), osx-x64 and

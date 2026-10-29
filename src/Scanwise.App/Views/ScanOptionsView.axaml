@@ -2,6 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:ui="using:FluentAvalonia.UI.Controls"
              xmlns:vm="using:Scanwise.App.ViewModels"
+             xmlns:svc="using:Scanwise.App.Services"
              xmlns:scan="using:Scanwise.Core.Scanning"
              x:Class="Scanwise.App.Views.ScanOptionsView"
              x:DataType="vm:MainViewModel">
@@ -172,7 +173,7 @@
           </Button>
           <SplitButton Grid.Column="1" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
                        Classes="accent" Command="{Binding ScanCommand}" IsEnabled="{Binding CanScan}"
-                       ToolTip.Tip="Scan (Ctrl+N)">
+                       ToolTip.Tip="{svc:ShortcutTip Scan, Scan}">
             <StackPanel Orientation="Horizontal" Spacing="8">
               <ui:SymbolIcon Symbol="Scan" FontSize="16" />
               <TextBlock Text="Scan" FontWeight="SemiBold" />
@@ -180,7 +181,7 @@
             <SplitButton.Flyout>
               <MenuFlyout Placement="TopEdgeAlignedRight">
                 <MenuItem Header="Scan and add to current document" Command="{Binding ScanAddToDocumentCommand}" />
-                <MenuItem Header="Scan into a new document" Command="{Binding ScanStartFreshCommand}" InputGesture="Ctrl+Shift+N" />
+                <MenuItem Header="Scan into a new document" Command="{Binding ScanStartFreshCommand}" InputGesture="{svc:Shortcut ScanNew}" />
                 <MenuItem Header="Scan and insert between pages…" Command="{Binding ScanMergeCommand}" />
                 <Separator />
                 <MenuItem Header="Batch scan…" Command="{Binding BatchScanCommand}" />

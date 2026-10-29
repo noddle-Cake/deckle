@@ -1,0 +1,61 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ui="using:FluentAvalonia.UI.Controls">
+
+  <!--
+    macOS only (added in App.axaml.cs). Apple's HIG: "Always place the default button on the trailing side of a row
+    … Cancel buttons are typically on the leading side". FluentAvalonia's ContentDialog uses the Windows order
+    (Primary · Secondary · Close), so this mirrors its CommandSpace grid (columns *, 0.5*, 0.5*, *) to
+    Close · Secondary · Primary. Three-button rules come last so they win over the two-button ones.
+  -->
+
+  <Style Selector="ui|ContentDialog:primary:close /template/ Button#CloseButton">
+    <Setter Property="Grid.Column" Value="0" />
+    <Setter Property="Grid.ColumnSpan" Value="2" />
+    <Setter Property="Margin" Value="0,0,4,0" />
+  </Style>
+  <Style Selector="ui|ContentDialog:primary:close /template/ Button#PrimaryButton">
+    <Setter Property="Grid.Column" Value="2" />
+    <Setter Property="Grid.ColumnSpan" Value="2" />
+    <Setter Property="Margin" Value="4,0,0,0" />
+  </Style>
+
+  <Style Selector="ui|ContentDialog:primary:secondary /template/ Button#SecondaryButton">
+    <Setter Property="Grid.Column" Value="0" />
+    <Setter Property="Grid.ColumnSpan" Value="2" />
+    <Setter Property="Margin" Value="0,0,4,0" />
+  </Style>
+  <Style Selector="ui|ContentDialog:primary:secondary /template/ Button#PrimaryButton">
+    <Setter Property="Grid.Column" Value="2" />
+    <Setter Property="Grid.ColumnSpan" Value="2" />
+    <Setter Property="Margin" Value="4,0,0,0" />
+  </Style>
+
+  <Style Selector="ui|ContentDialog:secondary:close /template/ Button#CloseButton">
+    <Setter Property="Grid.Column" Value="0" />
+    <Setter Property="Grid.ColumnSpan" Value="2" />
+    <Setter Property="Margin" Value="0,0,4,0" />
+  </Style>
+  <Style Selector="ui|ContentDialog:secondary:close /template/ Button#SecondaryButton">
+    <Setter Property="IsVisible" Value="True" />
+    <Setter Property="Grid.Column" Value="2" />
+    <Setter Property="Grid.ColumnSpan" Value="2" />
+    <Setter Property="Margin" Value="4,0,0,0" />
+  </Style>
+
+  <Style Selector="ui|ContentDialog:primary:secondary:close /template/ Button#CloseButton">
+    <Setter Property="Grid.Column" Value="0" />
+    <Setter Property="Grid.ColumnSpan" Value="1" />
+    <Setter Property="Margin" Value="0,0,4,0" />
+  </Style>
+  <Style Selector="ui|ContentDialog:primary:secondary:close /template/ Button#SecondaryButton">
+    <Setter Property="Grid.Column" Value="1" />
+    <Setter Property="Grid.ColumnSpan" Value="2" />
+    <Setter Property="Margin" Value="4,0,4,0" />
+  </Style>
+  <Style Selector="ui|ContentDialog:primary:secondary:close /template/ Button#PrimaryButton">
+    <Setter Property="Grid.Column" Value="3" />
+    <Setter Property="Grid.ColumnSpan" Value="1" />
+    <Setter Property="Margin" Value="4,0,0,0" />
+  </Style>
+</Styles>

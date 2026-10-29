@@ -3,6 +3,7 @@
              xmlns:ui="using:FluentAvalonia.UI.Controls"
              xmlns:vm="using:Scanwise.App.ViewModels"
              xmlns:m="using:Scanwise.App.Models"
+             xmlns:svc="using:Scanwise.App.Services"
              x:Class="Scanwise.App.Views.SettingsView"
              x:DataType="vm:SettingsViewModel">
   <ScrollViewer HorizontalScrollBarVisibility="Disabled">
@@ -25,7 +26,7 @@
       </ui:SettingsExpander>
 
       <ui:SettingsExpander Header="After scanning" Description="What happens to new pages" IconSource="Scan" IsExpanded="True">
-        <ui:SettingsExpanderItem Content="Save automatically" Description="Write every scan to a file straight away. When off, use Save (Ctrl+S).">
+        <ui:SettingsExpanderItem Content="Save automatically" Description="{svc:ShortcutTip 'Write every scan to a file straight away. When off, use Save', Save}">
           <ui:SettingsExpanderItem.Footer>
             <ToggleSwitch IsChecked="{Binding AutoSave}" OnContent="" OffContent="" />
           </ui:SettingsExpanderItem.Footer>

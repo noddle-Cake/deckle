@@ -2,6 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:ui="using:FluentAvalonia.UI.Controls"
              xmlns:vm="using:Scanwise.App.ViewModels"
+             xmlns:svc="using:Scanwise.App.Services"
              xmlns:c="using:Scanwise.App.Controls"
              xmlns:m="using:Scanwise.App.Models"
              x:Class="Scanwise.App.Views.EditorView"
@@ -12,11 +13,11 @@
     <Border Grid.Row="0" Padding="8,6" Background="{DynamicResource PaneBackground}" BorderBrush="{DynamicResource CardBorder}" BorderThickness="0,0,0,1">
       <Grid ColumnDefinitions="Auto,*,Auto">
         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-          <Button Classes="icon" Command="{Binding PreviousCommand}" IsEnabled="{Binding CanGoPrevious}" ToolTip.Tip="Previous page (Page Up)">
+          <Button Classes="icon" Command="{Binding PreviousCommand}" IsEnabled="{Binding CanGoPrevious}" ToolTip.Tip="{svc:ShortcutTip 'Previous page', PreviousPage}">
             <ui:SymbolIcon Symbol="Previous" />
           </Button>
           <TextBlock Text="{Binding PageTitle}" VerticalAlignment="Center" Margin="6,0" MinWidth="110" TextAlignment="Center" />
-          <Button Classes="icon" Command="{Binding NextCommand}" IsEnabled="{Binding CanGoNext}" ToolTip.Tip="Next page (Page Down)">
+          <Button Classes="icon" Command="{Binding NextCommand}" IsEnabled="{Binding CanGoNext}" ToolTip.Tip="{svc:ShortcutTip 'Next page', NextPage}">
             <ui:SymbolIcon Symbol="Next" />
           </Button>
         </StackPanel>
@@ -40,10 +41,10 @@
           <ToggleButton Classes="icon" Padding="8" Background="Transparent" BorderThickness="0" Command="{Binding StartDrawCommand}" IsChecked="{Binding IsDrawing, Mode=OneWay}" ToolTip.Tip="Draw and highlight">
             <ui:SymbolIcon Symbol="Highlight" FontSize="18" />
           </ToggleButton>
-          <Button Classes="icon" Command="{Binding $parent[UserControl].((vm:MainViewModel)DataContext).CopyPageCommand}" ToolTip.Tip="Copy page to clipboard (Ctrl+C)">
+          <Button Classes="icon" Command="{Binding $parent[UserControl].((vm:MainViewModel)DataContext).CopyPageCommand}" ToolTip.Tip="{svc:ShortcutTip 'Copy page to clipboard', Copy}">
             <ui:SymbolIcon Symbol="Copy" />
           </Button>
-          <Button Classes="icon" Command="{Binding $parent[UserControl].((vm:MainViewModel)DataContext).ShareCommand}" ToolTip.Tip="Share (Ctrl+E)">
+          <Button Classes="icon" Command="{Binding $parent[UserControl].((vm:MainViewModel)DataContext).ShareCommand}" ToolTip.Tip="{svc:ShortcutTip Share, Share}">
             <ui:SymbolIcon Symbol="Share" />
           </Button>
           <Button Classes="icon" Command="{Binding DeleteCommand}" ToolTip.Tip="Delete page">
@@ -52,13 +53,13 @@
         </WrapPanel>
 
         <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" IsEnabled="{Binding HasPage}">
-          <Button Classes="icon" Command="{Binding ZoomOutCommand}" ToolTip.Tip="Zoom out (Ctrl+-)">
+          <Button Classes="icon" Command="{Binding ZoomOutCommand}" ToolTip.Tip="{svc:ShortcutTip 'Zoom out', ZoomOut}">
             <ui:SymbolIcon Symbol="ZoomOut" />
           </Button>
-          <Button Classes="icon" Command="{Binding ZoomFitCommand}" ToolTip.Tip="Fit to window (Ctrl+0)" MinWidth="52">
+          <Button Classes="icon" Command="{Binding ZoomFitCommand}" ToolTip.Tip="{svc:ShortcutTip 'Fit to window', ZoomFit}" MinWidth="52">
             <TextBlock Text="{Binding ZoomLabel}" FontSize="12" />
           </Button>
-          <Button Classes="icon" Command="{Binding ZoomInCommand}" ToolTip.Tip="Zoom in (Ctrl+=)">
+          <Button Classes="icon" Command="{Binding ZoomInCommand}" ToolTip.Tip="{svc:ShortcutTip 'Zoom in', ZoomIn}">
             <ui:SymbolIcon Symbol="ZoomIn" />
           </Button>
         </StackPanel>
@@ -150,7 +151,7 @@
                   <Button Content="Undo stroke" Command="{Binding UndoStrokeCommand}" IsEnabled="{Binding HasStrokes}" />
                   <Button Content="Clear" Command="{Binding ClearStrokesCommand}" IsEnabled="{Binding HasStrokes}" />
                 </StackPanel>
-                <TextBlock Classes="caption" Text="Drawing is added to the page image when you apply it. Ctrl+Z undoes it afterwards." />
+                <TextBlock Classes="caption" Text="Drawing is added to the page image when you apply it. Undo removes it again afterwards." />
               </StackPanel>
 
               <!-- Adjust -->

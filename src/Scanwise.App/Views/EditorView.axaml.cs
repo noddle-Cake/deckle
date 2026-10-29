@@ -1,12 +1,16 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
+using Scanwise.App.Services;
 using Scanwise.App.ViewModels;
 
 namespace Scanwise.App.Views;
 
 public partial class EditorView : UserControl
 {
+    private const double MagnifyStep = 0.25;
+    private double _magnify;
+
     public EditorView()
     {
         InitializeComponent();
@@ -18,6 +22,7 @@ public partial class EditorView : UserControl
             }
         };
         AddHandler(PointerWheelChangedEvent, OnWheel, Avalonia.Interactivity.RoutingStrategies.Tunnel);
+        AddHandler(Gestures.PointerTouchPadGestureMagnifyEvent, OnMagnify);
         KeyDown += OnKeyDown;
         Focusable = true;
     }
@@ -33,10 +38,31 @@ public partial class EditorView : UserControl
         }
     }
 
-    /// <summary>Ctrl+wheel zooms; plain wheel scrolls.</summary>
+    /// <summary>Trackpad pinch zooms one step each time the fingers spread or close by about a quarter.</summary>
+    private void OnMagnify(object? sender, PointerDeltaEventArgs e)
+    {
+        if (Editor is not { } editor)
+        {
+            return;
+        }
+        _magnify += e.Delta.X;
+        if (_magnify >= MagnifyStep)
+        {
+            editor.ZoomInCommand.Execute(null);
+            _magnify = 0;
+        }
+        else if (_magnify <= -MagnifyStep)
+        {
+            editor.ZoomOutCommand.Execute(null);
+            _magnify = 0;
+        }
+        e.Handled = true;
+    }
+
+    /// <summary>Ctrl+wheel (⌘+wheel on macOS) zooms; plain wheel scrolls.</summary>
     private void OnWheel(object? sender, PointerWheelEventArgs e)
     {
-        if (Editor is not { } editor || !e.KeyModifiers.HasFlag(KeyModifiers.Control))
+        if (Editor is not { } editor || !e.KeyModifiers.HasFlag(AppShortcuts.CommandModifier))
         {
             return;
         }
@@ -57,22 +83,21 @@ public partial class EditorView : UserControl
         {
             return;
         }
-        var ctrl = e.KeyModifiers.HasFlag(KeyModifiers.Control);
         switch (e.Key)
         {
-            case Key.PageUp:
+            case var _ when AppShortcuts.Matches(AppShortcuts.PreviousPage, e):
                 editor.PreviousCommand.Execute(null);
                 break;
-            case Key.PageDown:
+            case var _ when AppShortcuts.Matches(AppShortcuts.NextPage, e):
                 editor.NextCommand.Execute(null);
                 break;
-            case Key.OemPlus or Key.Add when ctrl:
+            case var _ when AppShortcuts.Matches(AppShortcuts.ZoomIn, e):
                 editor.ZoomInCommand.Execute(null);
                 break;
-            case Key.OemMinus or Key.Subtract when ctrl:
+            case var _ when AppShortcuts.Matches(AppShortcuts.ZoomOut, e):
                 editor.ZoomOutCommand.Execute(null);
                 break;
-            case Key.D0 or Key.NumPad0 when ctrl:
+            case var _ when AppShortcuts.Matches(AppShortcuts.ZoomFit, e):
                 editor.ZoomFitCommand.Execute(null);
                 break;
             case Key.Enter when editor.IsCropping:

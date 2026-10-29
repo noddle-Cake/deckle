@@ -2,6 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:ui="using:FluentAvalonia.UI.Controls"
              xmlns:vm="using:Scanwise.App.ViewModels"
+             xmlns:svc="using:Scanwise.App.Services"
              x:Class="Scanwise.App.Views.PageListView"
              x:DataType="vm:MainViewModel">
   <Border BorderBrush="{DynamicResource CardBorder}" BorderThickness="0,0,1,0">
@@ -12,10 +13,10 @@
           <TextBlock Classes="caption" Text="{Binding Pages.SelectionSummary}" />
         </StackPanel>
         <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Bottom">
-          <Button Classes="icon" Command="{Binding UndoCommand}" IsEnabled="{Binding CanUndo}" ToolTip.Tip="Undo (Ctrl+Z)">
+          <Button Classes="icon" Command="{Binding UndoCommand}" IsEnabled="{Binding CanUndo}" ToolTip.Tip="{svc:ShortcutTip Undo, Undo}">
             <ui:SymbolIcon Symbol="Undo" />
           </Button>
-          <Button Classes="icon" Command="{Binding RedoCommand}" IsEnabled="{Binding CanRedo}" ToolTip.Tip="Redo (Ctrl+Y)">
+          <Button Classes="icon" Command="{Binding RedoCommand}" IsEnabled="{Binding CanRedo}" ToolTip.Tip="{svc:ShortcutTip Redo, Redo}">
             <ui:SymbolIcon Symbol="Redo" />
           </Button>
         </StackPanel>
@@ -23,7 +24,7 @@
 
       <!-- Toolbar: acts on the selection, or on all pages when nothing is selected. -->
       <WrapPanel Grid.Row="1" Margin="8,0,8,4">
-        <Button Classes="icon" Command="{Binding ImportCommand}" ToolTip.Tip="Import images or PDFs (Ctrl+O)">
+        <Button Classes="icon" Command="{Binding ImportCommand}" ToolTip.Tip="{svc:ShortcutTip 'Import images or PDFs', Import}">
           <ui:SymbolIcon Symbol="Import" />
         </Button>
         <Button Classes="icon" Command="{Binding Pages.RotateLeftCommand}" IsEnabled="{Binding HasPages}" ToolTip.Tip="Rotate left">
@@ -32,29 +33,29 @@
         <Button Classes="icon" Command="{Binding Pages.RotateRightCommand}" IsEnabled="{Binding HasPages}" ToolTip.Tip="Rotate right">
           <ui:SymbolIcon Symbol="RotateClockwise" />
         </Button>
-        <Button Classes="icon" Command="{Binding DeleteSelectedCommand}" IsEnabled="{Binding Pages.HasSelection}" ToolTip.Tip="Delete selected pages (Del)">
+        <Button Classes="icon" Command="{Binding DeleteSelectedCommand}" IsEnabled="{Binding Pages.HasSelection}" ToolTip.Tip="{svc:ShortcutTip 'Delete selected pages', Delete}">
           <ui:SymbolIcon Symbol="Delete" />
         </Button>
-        <Button Classes="icon" Command="{Binding SaveAsCommand}" IsEnabled="{Binding HasPages}" ToolTip.Tip="Save as… (Ctrl+Shift+S)">
+        <Button Classes="icon" Command="{Binding SaveAsCommand}" IsEnabled="{Binding HasPages}" ToolTip.Tip="{svc:ShortcutTip 'Save as…', SaveAs}">
           <ui:SymbolIcon Symbol="SaveAs" />
         </Button>
-        <Button Classes="icon" Command="{Binding CopyPageCommand}" IsEnabled="{Binding Pages.HasSelection}" ToolTip.Tip="Copy page to clipboard (Ctrl+C)">
+        <Button Classes="icon" Command="{Binding CopyPageCommand}" IsEnabled="{Binding Pages.HasSelection}" ToolTip.Tip="{svc:ShortcutTip 'Copy page to clipboard', Copy}">
           <ui:SymbolIcon Symbol="Copy" />
         </Button>
-        <Button Classes="icon" Command="{Binding ShareCommand}" IsEnabled="{Binding HasPages}" ToolTip.Tip="Share selected pages, or all pages (Ctrl+E)">
+        <Button Classes="icon" Command="{Binding ShareCommand}" IsEnabled="{Binding HasPages}" ToolTip.Tip="{svc:ShortcutTip 'Share selected pages, or all pages', Share}">
           <ui:SymbolIcon Symbol="Share" />
         </Button>
         <Button Classes="icon" ToolTip.Tip="More page actions" IsEnabled="{Binding HasPages}">
           <ui:SymbolIcon Symbol="More" />
           <Button.Flyout>
             <MenuFlyout>
-              <MenuItem Header="Save" Command="{Binding SaveCommand}" InputGesture="Ctrl+S" />
+              <MenuItem Header="Save" Command="{Binding SaveCommand}" InputGesture="{svc:Shortcut Save}" />
               <MenuItem Header="Save selected pages as…" Command="{Binding SaveSelectionAsCommand}" IsEnabled="{Binding Pages.HasSelection}" />
               <MenuItem Header="Open selected page in another app" Command="{Binding OpenSelectedExternallyCommand}" IsEnabled="{Binding Pages.HasSelection}" />
-              <MenuItem Header="Copy page to clipboard" Command="{Binding CopyPageCommand}" IsEnabled="{Binding Pages.HasSelection}" InputGesture="Ctrl+C" />
-              <MenuItem Header="Share…" Command="{Binding ShareCommand}" InputGesture="Ctrl+E" />
+              <MenuItem Header="Copy page to clipboard" Command="{Binding CopyPageCommand}" IsEnabled="{Binding Pages.HasSelection}" InputGesture="{svc:Shortcut Copy}" />
+              <MenuItem Header="Share…" Command="{Binding ShareCommand}" InputGesture="{svc:Shortcut Share}" />
               <Separator />
-              <MenuItem Header="Select all" Command="{Binding Pages.SelectAllCommand}" InputGesture="Ctrl+A" />
+              <MenuItem Header="Select all" Command="{Binding Pages.SelectAllCommand}" InputGesture="{svc:Shortcut SelectAll}" />
               <MenuItem Header="Rotate 180°" Command="{Binding Pages.Rotate180Command}" />
               <MenuItem Header="Duplicate" Command="{Binding Pages.DuplicateCommand}" IsEnabled="{Binding Pages.HasSelection}" />
               <MenuItem Header="Move up" Command="{Binding Pages.MoveUpCommand}" IsEnabled="{Binding Pages.HasSelection}" />
@@ -82,14 +83,6 @@
                Background="Transparent"
                DragDrop.AllowDrop="True"
                ScrollViewer.HorizontalScrollBarVisibility="Disabled">
-        <ListBox.KeyBindings>
-          <KeyBinding Gesture="Delete" Command="{Binding DeleteSelectedCommand}" />
-          <KeyBinding Gesture="Ctrl+A" Command="{Binding Pages.SelectAllCommand}" />
-          <KeyBinding Gesture="R" Command="{Binding Pages.RotateRightCommand}" />
-          <KeyBinding Gesture="Shift+R" Command="{Binding Pages.RotateLeftCommand}" />
-          <KeyBinding Gesture="Alt+Up" Command="{Binding Pages.MoveUpCommand}" />
-          <KeyBinding Gesture="Alt+Down" Command="{Binding Pages.MoveDownCommand}" />
-        </ListBox.KeyBindings>
         <ListBox.ItemsPanel>
           <ItemsPanelTemplate>
             <WrapPanel Orientation="Horizontal" HorizontalAlignment="Center" />
@@ -123,10 +116,10 @@
             <Separator />
             <MenuItem Header="Save selected pages as…" Command="{Binding SaveSelectionAsCommand}" />
             <MenuItem Header="Open in another app" Command="{Binding OpenSelectedExternallyCommand}" />
-            <MenuItem Header="Copy to clipboard" Command="{Binding CopyPageCommand}" InputGesture="Ctrl+C" />
-            <MenuItem Header="Share…" Command="{Binding ShareCommand}" InputGesture="Ctrl+E" />
+            <MenuItem Header="Copy to clipboard" Command="{Binding CopyPageCommand}" InputGesture="{svc:Shortcut Copy}" />
+            <MenuItem Header="Share…" Command="{Binding ShareCommand}" InputGesture="{svc:Shortcut Share}" />
             <Separator />
-            <MenuItem Header="Delete" Command="{Binding DeleteSelectedCommand}" InputGesture="Delete" />
+            <MenuItem Header="Delete" Command="{Binding DeleteSelectedCommand}" InputGesture="{svc:Shortcut Delete}" />
           </ContextMenu>
         </ListBox.ContextMenu>
       </ListBox>
@@ -141,7 +134,7 @@
       </StackPanel>
 
       <Border Grid.Row="3" Padding="12,8" BorderBrush="{DynamicResource CardBorder}" BorderThickness="0,1,0,0" IsVisible="{Binding HasPages}">
-        <Button HorizontalAlignment="Stretch" Command="{Binding SaveCommand}" ToolTip.Tip="Save all pages (Ctrl+S)">
+        <Button HorizontalAlignment="Stretch" Command="{Binding SaveCommand}" ToolTip.Tip="{svc:ShortcutTip 'Save all pages', Save}">
           <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
             <ui:SymbolIcon Symbol="Save" FontSize="16" />
             <TextBlock Text="Save" />
