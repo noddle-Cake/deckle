@@ -1,6 +1,7 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:ui="using:FluentAvalonia.UI.Controls"
+             xmlns:c="using:Scanwise.App.Controls"
         xmlns:vm="using:Scanwise.App.ViewModels"
         xmlns:v="using:Scanwise.App.Views"
         x:Class="Scanwise.App.Views.MainWindow"
@@ -21,20 +22,20 @@
                      OpenPaneLength="220"
                      CompactPaneLength="56">
     <ui:NavigationView.MenuItems>
-      <ui:NavigationViewItem x:Name="NavScan" Content="Scan" Tag="Scan" IconSource="Scan" ToolTip.Tip="Scan options" />
-      <ui:NavigationViewItem x:Name="NavPages" Content="Pages" Tag="Pages" IconSource="Library" ToolTip.Tip="Pages">
+      <ui:NavigationViewItem x:Name="NavScan" Content="Scan" Tag="Scan" IconSource="{c:LucideSource ScanLine}" ToolTip.Tip="Scan options" />
+      <ui:NavigationViewItem x:Name="NavPages" Content="Pages" Tag="Pages" IconSource="{c:LucideSource Files}" ToolTip.Tip="Pages">
         <ui:NavigationViewItem.InfoBadge>
           <ui:InfoBadge Value="{Binding Pages.Count}" IsVisible="{Binding HasPages}" />
         </ui:NavigationViewItem.InfoBadge>
       </ui:NavigationViewItem>
-      <ui:NavigationViewItem x:Name="NavEditor" Content="Edit" Tag="Editor" IconSource="ImageEdit" ToolTip.Tip="Edit page"
+      <ui:NavigationViewItem x:Name="NavEditor" Content="Edit" Tag="Editor" IconSource="{c:LucideSource Image}" ToolTip.Tip="Edit page"
                              IsVisible="{Binding ShowEditorNavItem}" />
     </ui:NavigationView.MenuItems>
     <ui:NavigationView.FooterMenuItems>
-      <ui:NavigationViewItem x:Name="NavFolder" Content="Open save folder" Tag="Folder" IconSource="OpenFolder" SelectsOnInvoked="False"
+      <ui:NavigationViewItem x:Name="NavFolder" Content="Open save folder" Tag="Folder" IconSource="{c:LucideSource FolderOpen}" SelectsOnInvoked="False"
                              ToolTip.Tip="Open the folder where scans are saved" />
-      <ui:NavigationViewItem x:Name="NavHelp" Content="Help" Tag="Help" IconSource="Help" ToolTip.Tip="Help" />
-      <ui:NavigationViewItem x:Name="NavSettings" Content="Settings" Tag="Settings" IconSource="Settings" ToolTip.Tip="Settings" />
+      <ui:NavigationViewItem x:Name="NavHelp" Content="Help" Tag="Help" IconSource="{c:LucideSource CircleHelp}" ToolTip.Tip="Help" />
+      <ui:NavigationViewItem x:Name="NavSettings" Content="Settings" Tag="Settings" IconSource="{c:LucideSource Settings}" ToolTip.Tip="Settings" />
     </ui:NavigationView.FooterMenuItems>
 
     <Grid RowDefinitions="Auto,Auto,*">

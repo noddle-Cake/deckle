@@ -75,6 +75,7 @@ SCANWISE_SCREENSHOTS=/tmp/shots scripts/test.sh                    # keep UI scr
 SCANWISE_TEST_GSETTINGS=1 scripts/test.sh   # also the GNOME shortcut (uses a temporary keyfile backend, not dconf)
 dotnet run --project src/Scanwise.App
 scripts/publish.sh                    # self-contained builds for linux-x64/arm64, win-x64, osx-x64/arm64
+scripts/make-icon-font.py             # rebuild the Lucide icon font after editing Assets/Fonts/lucide-icons.txt
 ```
 
 Layout: `src/Scanwise.Core` (scanning, export, import, page model, no UI), `src/Scanwise.App` (Avalonia +
@@ -91,7 +92,8 @@ ImageSharp pin.
 
 Mozilla Public License 2.0. Scanwise's code is new; it re-implements the ideas of Scanner (MPL-2.0) and uses
 NAPS2.Sdk (LGPL-2.1) as a library. Other components: Tesseract (Apache-2.0), Avalonia and FluentAvalonia (MIT),
-ImageSharp (Six Labors Split License), LibTiff.NET (BSD), PDFium (BSD).
+Lucide icons (ISC; `src/Scanwise.App/Assets/Fonts/LICENSE-lucide.txt`), ImageSharp (Six Labors Split License),
+LibTiff.NET (BSD), PDFium (BSD).
 
 **Note:** `github.com/naps2-software/naps2-scanner` is an impostor repository, not NAPS2. Get NAPS2 only from
 https://www.naps2.com or https://github.com/cyanfish/naps2.

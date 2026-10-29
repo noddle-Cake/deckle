@@ -236,7 +236,7 @@ public sealed partial class MainViewModel : ObservableObject
     /// <summary>Scanwise ▸ About Scanwise in the macOS menu bar.</summary>
     [RelayCommand]
     private Task ShowAbout() => _ui.ShowMessageAsync("Scanwise",
-        $"Version {SettingsPage.Version}\n\nA simple document scanner built on NAPS2 and the ideas of Scanner by Simon Knuth.\nMozilla Public License 2.0.");
+        $"Version {SettingsPage.Version}\n\nA simple document scanner built on NAPS2 and the ideas of Scanner by Simon Knuth.\nMozilla Public License 2.0. Icons: Lucide (ISC).");
 
     /// <summary>Opens a page in the editor (double-click in the page list).</summary>
     public void OpenInEditor(PageItemViewModel item)

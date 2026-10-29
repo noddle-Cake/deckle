@@ -1,6 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:ui="using:FluentAvalonia.UI.Controls"
+             xmlns:c="using:Scanwise.App.Controls"
              xmlns:vm="using:Scanwise.App.ViewModels"
              xmlns:m="using:Scanwise.App.Models"
              xmlns:svc="using:Scanwise.App.Services"
@@ -11,7 +12,7 @@
       <TextBlock Classes="title" FontSize="28" Text="Settings" Margin="0,0,0,12" />
 
       <TextBlock Classes="heading" Text="Saving" Margin="0,8,0,4" />
-      <ui:SettingsExpander Header="Save location" Description="{Binding SaveFolder}" IconSource="Folder" IsExpanded="True">
+      <ui:SettingsExpander Header="Save location" Description="{Binding SaveFolder}" IconSource="{c:LucideSource Folder}" IsExpanded="True">
         <ui:SettingsExpander.Footer>
           <StackPanel Orientation="Horizontal" Spacing="6">
             <Button Content="Change folder…" Command="{Binding ChooseFolderCommand}" />
@@ -25,7 +26,7 @@
         </ui:SettingsExpanderItem>
       </ui:SettingsExpander>
 
-      <ui:SettingsExpander Header="After scanning" Description="What happens to new pages" IconSource="Scan" IsExpanded="True">
+      <ui:SettingsExpander Header="After scanning" Description="What happens to new pages" IconSource="{c:LucideSource ScanLine}" IsExpanded="True">
         <ui:SettingsExpanderItem Content="Save automatically" Description="{svc:ShortcutTip 'Write every scan to a file straight away. When off, use Save', Save}">
           <ui:SettingsExpanderItem.Footer>
             <ToggleSwitch IsChecked="{Binding AutoSave}" OnContent="" OffContent="" />
@@ -48,7 +49,7 @@
         </ui:SettingsExpanderItem>
       </ui:SettingsExpander>
 
-      <ui:SettingsExpander Header="Scan shortcut" Description="{Binding LauncherHint}" IconSource="Keyboard" IsExpanded="True">
+      <ui:SettingsExpander Header="Scan shortcut" Description="{Binding LauncherHint}" IconSource="{c:LucideSource Keyboard}" IsExpanded="True">
         <ui:SettingsExpanderItem Content="Shortcut key" Description="{Binding HotkeyDescription}" IsVisible="{Binding HotkeyIsAutomatic}">
           <ui:SettingsExpanderItem.Footer>
             <StackPanel Orientation="Horizontal" Spacing="12">
@@ -70,7 +71,7 @@
         </ui:SettingsExpanderItem>
       </ui:SettingsExpander>
 
-      <ui:SettingsExpander Header="File names" Description="{Binding NamingPreview}" IconSource="Rename" IsExpanded="True">
+      <ui:SettingsExpander Header="File names" Description="{Binding NamingPreview}" IconSource="{c:LucideSource TextCursorInput}" IsExpanded="True">
         <ui:SettingsExpander.Footer>
           <ComboBox ItemsSource="{Binding NamingPresets}" SelectedItem="{Binding NamingPreset}" MinWidth="160" />
         </ui:SettingsExpander.Footer>
@@ -97,7 +98,7 @@
       </ui:SettingsExpander>
 
       <TextBlock Classes="heading" Text="Text recognition" Margin="0,16,0,4" />
-      <ui:SettingsExpander Header="Rotate pages automatically" Description="Turns upside-down and sideways pages upright after scanning, using text recognition." IconSource="Rotate" IsExpanded="True">
+      <ui:SettingsExpander Header="Rotate pages automatically" Description="Turns upside-down and sideways pages upright after scanning, using text recognition." IconSource="{c:LucideSource RotateCw}" IsExpanded="True">
         <ui:SettingsExpander.Footer>
           <ToggleSwitch IsChecked="{Binding AutoRotate}" OnContent="" OffContent="" IsEnabled="{Binding OcrAvailable}" />
         </ui:SettingsExpander.Footer>
@@ -108,7 +109,7 @@
         </ui:SettingsExpanderItem>
       </ui:SettingsExpander>
 
-      <ui:SettingsExpander Header="OCR language" Description="{Binding OcrStatus}" IconSource="Character" IsExpanded="True">
+      <ui:SettingsExpander Header="OCR language" Description="{Binding OcrStatus}" IconSource="{c:LucideSource Languages}" IsExpanded="True">
         <ui:SettingsExpander.Footer>
           <ComboBox ItemsSource="{Binding OcrLanguages}" SelectedItem="{Binding OcrLanguage}" MinWidth="120" IsEnabled="{Binding OcrAvailable}" />
         </ui:SettingsExpander.Footer>
@@ -126,7 +127,7 @@
       </ui:SettingsExpander>
 
       <TextBlock Classes="heading" Text="Output" Margin="0,16,0,4" />
-      <ui:SettingsExpander Header="PDF" Description="Searchable text, archiving and passwords" IconSource="Document">
+      <ui:SettingsExpander Header="PDF" Description="Searchable text, archiving and passwords" IconSource="{c:LucideSource FileText}">
         <ui:SettingsExpanderItem Content="Make PDFs searchable" Description="Adds an invisible text layer so you can search and copy text. Slower to save.">
           <ui:SettingsExpanderItem.Footer>
             <ToggleSwitch IsChecked="{Binding PdfOcr}" OnContent="" OffContent="" IsEnabled="{Binding OcrAvailable}" />
@@ -157,7 +158,7 @@
         </ui:SettingsExpanderItem>
       </ui:SettingsExpander>
 
-      <ui:SettingsExpander Header="Images" Description="JPG quality and TIFF compression" IconSource="Image">
+      <ui:SettingsExpander Header="Images" Description="JPG quality and TIFF compression" IconSource="{c:LucideSource Image}">
         <ui:SettingsExpanderItem Content="JPG quality" Description="{Binding JpegQuality, StringFormat='{}{0} (higher = better quality, larger files)'}">
           <ui:SettingsExpanderItem.Footer>
             <Slider Minimum="30" Maximum="100" Value="{Binding JpegQuality}" Width="200" />
@@ -171,18 +172,18 @@
       </ui:SettingsExpander>
 
       <TextBlock Classes="heading" Text="Appearance" Margin="0,16,0,4" />
-      <ui:SettingsExpander Header="Theme" IconSource="ColorBackground">
+      <ui:SettingsExpander Header="Theme" IconSource="{c:LucideSource Palette}">
         <ui:SettingsExpander.Footer>
           <ComboBox ItemsSource="{Binding Themes}" SelectedItem="{Binding Theme}" MinWidth="180" />
         </ui:SettingsExpander.Footer>
       </ui:SettingsExpander>
 
       <TextBlock Classes="heading" Text="About" Margin="0,16,0,4" />
-      <ui:SettingsExpander Header="Scanwise" Description="{Binding Version, StringFormat='Version {0} · Mozilla Public License 2.0'}" IconSource="Scan">
+      <ui:SettingsExpander Header="Scanwise" Description="{Binding Version, StringFormat='Version {0} · Mozilla Public License 2.0'}" IconSource="{c:LucideSource ScanLine}">
         <ui:SettingsExpanderItem>
           <StackPanel Spacing="6">
             <TextBlock TextWrapping="Wrap">Scanwise combines the interface ideas of Scanner by Simon Knuth with the scanning engine of NAPS2.</TextBlock>
-            <TextBlock Classes="caption" TextWrapping="Wrap">Built with NAPS2.Sdk (LGPL-2.1, Ben Olden-Cooligan and contributors), Tesseract OCR (Apache-2.0), Avalonia and FluentAvalonia (MIT), ImageSharp (Six Labors Split License), LibTiff.NET (BSD) and PDFium (BSD).</TextBlock>
+            <TextBlock Classes="caption" TextWrapping="Wrap">Built with NAPS2.Sdk (LGPL-2.1, Ben Olden-Cooligan and contributors), Tesseract OCR (Apache-2.0), Avalonia and FluentAvalonia (MIT), Lucide icons (ISC), ImageSharp (Six Labors Split License), LibTiff.NET (BSD) and PDFium (BSD).</TextBlock>
             <StackPanel Orientation="Horizontal" Spacing="12">
               <HyperlinkButton Content="Scanner" Command="{Binding OpenUrlCommand}" CommandParameter="https://github.com/simon-knuth/scanner" />
               <HyperlinkButton Content="NAPS2" Command="{Binding OpenUrlCommand}" CommandParameter="https://github.com/cyanfish/naps2" />

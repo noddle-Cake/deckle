@@ -1,6 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:ui="using:FluentAvalonia.UI.Controls"
+             xmlns:c="using:Scanwise.App.Controls"
              xmlns:vm="using:Scanwise.App.ViewModels"
              xmlns:svc="using:Scanwise.App.Services"
              x:Class="Scanwise.App.Views.MacShell"
@@ -24,7 +25,7 @@
       <Button Classes="icon" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,8,0"
               Command="{Binding ToggleSidebarCommand}" ToolTip.Tip="{svc:ShortcutTip 'Hide sidebar', ToggleSidebar}"
               AutomationProperties.Name="Hide sidebar">
-        <ui:SymbolIcon Symbol="DockLeft" />
+        <c:LucideIcon Kind="PanelLeft" />
       </Button>
     </Panel>
 
@@ -34,7 +35,7 @@
       <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
         <Button Classes="icon" Command="{Binding ToggleSidebarCommand}" IsVisible="{Binding ShowToolbarSidebarButton}"
                 ToolTip.Tip="{svc:ShortcutTip 'Show or hide sidebar', ToggleSidebar}" AutomationProperties.Name="Show or hide sidebar">
-          <ui:SymbolIcon Symbol="DockLeft" />
+          <c:LucideIcon Kind="PanelLeft" />
         </Button>
         <StackPanel VerticalAlignment="Center" Margin="4,0,0,0">
           <TextBlock Text="{Binding WindowTitle}" FontSize="14" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" MaxWidth="260" />
@@ -53,7 +54,7 @@
                          IsIndeterminate="{Binding IsProgressIndeterminate}" Value="{Binding Progress}" Maximum="100" />
             <Button Classes="icon" Padding="2" Command="{Binding CancelOperationCommand}" IsVisible="{Binding CanCancel}"
                     ToolTip.Tip="{svc:ShortcutTip Stop, Cancel}" AutomationProperties.Name="Stop">
-              <ui:SymbolIcon Symbol="Cancel" FontSize="12" />
+              <c:LucideIcon Kind="X" FontSize="12" />
             </Button>
           </StackPanel>
         </StackPanel>
@@ -72,32 +73,32 @@
       <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="2"
                   IsEnabled="{Binding HasPages}" IsVisible="{Binding ShowToolbarActions}" ClipToBounds="True">
         <Button Classes="icon" Command="{Binding Pages.RotateLeftCommand}" ToolTip.Tip="{svc:ShortcutTip 'Rotate left', RotateLeft}" AutomationProperties.Name="Rotate left">
-          <ui:SymbolIcon Symbol="RotateCounterClockwise" />
+          <c:LucideIcon Kind="RotateCcw" />
         </Button>
         <Button Classes="icon" Command="{Binding Pages.RotateRightCommand}" ToolTip.Tip="{svc:ShortcutTip 'Rotate right', RotateRight}" AutomationProperties.Name="Rotate right">
-          <ui:SymbolIcon Symbol="RotateClockwise" />
+          <c:LucideIcon Kind="RotateCw" />
         </Button>
         <Border Width="12" />
         <ToggleButton Classes="icon" Command="{Binding CropPageCommand}" IsChecked="{Binding Editor.IsCropping, Mode=OneWay}" ToolTip.Tip="Crop" AutomationProperties.Name="Crop">
-          <ui:SymbolIcon Symbol="Crop" />
+          <c:LucideIcon Kind="Crop" />
         </ToggleButton>
         <ToggleButton Classes="icon" Command="{Binding AdjustPageCommand}" IsChecked="{Binding Editor.IsAdjusting, Mode=OneWay}" ToolTip.Tip="Adjust colors, brightness and straighten" AutomationProperties.Name="Adjust">
-          <ui:SymbolIcon Symbol="ColorBackground" />
+          <c:LucideIcon Kind="SlidersHorizontal" />
         </ToggleButton>
         <ToggleButton Classes="icon" Command="{Binding DrawOnPageCommand}" IsChecked="{Binding Editor.IsDrawing, Mode=OneWay}" ToolTip.Tip="Draw and highlight" AutomationProperties.Name="Draw">
-          <ui:SymbolIcon Symbol="Highlight" />
+          <c:LucideIcon Kind="Highlighter" />
         </ToggleButton>
       </StackPanel>
 
       <!-- Trailing: Share, then Scan as the one primary action. -->
       <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
         <Button Classes="icon" Command="{Binding ShareCommand}" IsEnabled="{Binding HasPages}" ToolTip.Tip="Share selected pages, or all pages" AutomationProperties.Name="Share">
-          <ui:SymbolIcon Symbol="Share" />
+          <c:LucideIcon Kind="Share" />
         </Button>
         <SplitButton Classes="accent" Command="{Binding ScanCommand}" IsEnabled="{Binding CanScan}"
                      ToolTip.Tip="{svc:ShortcutTip Scan, Scan}" AutomationProperties.Name="Scan">
           <StackPanel Orientation="Horizontal" Spacing="6">
-            <ui:SymbolIcon Symbol="Scan" FontSize="16" />
+            <c:LucideIcon Kind="ScanLine" FontSize="16" />
             <TextBlock Text="Scan" FontWeight="SemiBold" />
           </StackPanel>
           <SplitButton.Flyout>

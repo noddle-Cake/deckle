@@ -355,10 +355,12 @@ Tested on Linux with `AppShortcuts.IsMac` on (`MacConventionTests`, 24 tests).
   can only be judged on a Mac.
 - [x] **Sidebar icons use the accent colour.** Not applicable: the Mac sidebar is the scan options form, with
   no icon list. Checkboxes and radio buttons already follow the accent colour.
-- [ ] **Icons look like Windows.** **Needs a decision:** which icon set to use (licence and look); see the
-  report. Original note: The Fluent symbols read as Windows. SF Symbols may be used only in apps for
-  Apple platforms, which a cross-platform build isn't. Use a neutral outline icon set that doesn't read as
-  Windows-specific.
+- [x] **Icons look like Windows.** Done 2026-10-29: Lucide (ISC) on all platforms, as decided. It's a 12 KB
+  subset font (`Assets/Fonts/lucide.ttf`, 34 icons) built by `scripts/make-icon-font.py` from lucide-static
+  1.57.0, with the sha512 checked. Used through `<c:LucideIcon Kind="…">` and `{c:LucideSource …}`.
+  To add an icon, add its name to `Assets/Fonts/lucide-icons.txt` and rerun the script. A test checks that
+  every `LucideKind` is in the font. FluentAvalonia's built-in glyphs (combo box chevrons, InfoBar
+  severity) are unchanged.
 - [x] **VoiceOver labels.** Done on every platform (helps Narrator and Orca too): a style names every icon
   button after its tooltip, without the shortcut; page thumbnails ("Page 3") and colour swatches are named
   too. A test checks that every visible icon button has a name.

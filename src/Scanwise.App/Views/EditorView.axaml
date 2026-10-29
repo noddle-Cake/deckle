@@ -14,54 +14,54 @@
       <Grid ColumnDefinitions="Auto,*,Auto">
         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
           <Button Classes="icon" Command="{Binding PreviousCommand}" IsEnabled="{Binding CanGoPrevious}" ToolTip.Tip="{svc:ShortcutTip 'Previous page', PreviousPage}">
-            <ui:SymbolIcon Symbol="Previous" />
+            <c:LucideIcon Kind="ChevronLeft" />
           </Button>
           <TextBlock Text="{Binding PageTitle}" VerticalAlignment="Center" Margin="6,0" MinWidth="110" TextAlignment="Center" />
           <Button Classes="icon" Command="{Binding NextCommand}" IsEnabled="{Binding CanGoNext}" ToolTip.Tip="{svc:ShortcutTip 'Next page', NextPage}">
-            <ui:SymbolIcon Symbol="Next" />
+            <c:LucideIcon Kind="ChevronRight" />
           </Button>
         </StackPanel>
 
         <!-- On macOS these are in the window toolbar and the Page menu. -->
         <WrapPanel Grid.Column="1" HorizontalAlignment="Center" IsEnabled="{Binding HasPage}" IsVisible="{x:Static svc:PlatformLook.NotMac}">
           <Button Classes="icon" Command="{Binding RotateLeftCommand}" ToolTip.Tip="Rotate left">
-            <ui:SymbolIcon Symbol="RotateCounterClockwise" />
+            <c:LucideIcon Kind="RotateCcw" />
           </Button>
           <Button Classes="icon" Command="{Binding RotateRightCommand}" ToolTip.Tip="Rotate right">
-            <ui:SymbolIcon Symbol="RotateClockwise" />
+            <c:LucideIcon Kind="RotateCw" />
           </Button>
           <Button Classes="icon" Command="{Binding Rotate180Command}" ToolTip.Tip="Rotate 180°">
             <TextBlock Text="180°" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center" />
           </Button>
           <ToggleButton Classes="icon" Padding="8" Background="Transparent" BorderThickness="0" Command="{Binding StartCropCommand}" IsChecked="{Binding IsCropping, Mode=OneWay}" ToolTip.Tip="Crop">
-            <ui:SymbolIcon Symbol="Crop" FontSize="18" />
+            <c:LucideIcon Kind="Crop" FontSize="18" />
           </ToggleButton>
           <ToggleButton Classes="icon" Padding="8" Background="Transparent" BorderThickness="0" Command="{Binding StartAdjustCommand}" IsChecked="{Binding IsAdjusting, Mode=OneWay}" ToolTip.Tip="Adjust colors, brightness and straighten">
-            <ui:SymbolIcon Symbol="ColorBackground" FontSize="18" />
+            <c:LucideIcon Kind="SlidersHorizontal" FontSize="18" />
           </ToggleButton>
           <ToggleButton Classes="icon" Padding="8" Background="Transparent" BorderThickness="0" Command="{Binding StartDrawCommand}" IsChecked="{Binding IsDrawing, Mode=OneWay}" ToolTip.Tip="Draw and highlight">
-            <ui:SymbolIcon Symbol="Highlight" FontSize="18" />
+            <c:LucideIcon Kind="Highlighter" FontSize="18" />
           </ToggleButton>
           <Button Classes="icon" Command="{Binding $parent[UserControl].((vm:MainViewModel)DataContext).CopyPageCommand}" ToolTip.Tip="{svc:ShortcutTip 'Copy page to clipboard', Copy}">
-            <ui:SymbolIcon Symbol="Copy" />
+            <c:LucideIcon Kind="Copy" />
           </Button>
           <Button Classes="icon" Command="{Binding $parent[UserControl].((vm:MainViewModel)DataContext).ShareCommand}" ToolTip.Tip="{svc:ShortcutTip Share, Share}">
-            <ui:SymbolIcon Symbol="Share" />
+            <c:LucideIcon Kind="Share" />
           </Button>
           <Button Classes="icon" Command="{Binding DeleteCommand}" ToolTip.Tip="Delete page">
-            <ui:SymbolIcon Symbol="Delete" />
+            <c:LucideIcon Kind="Trash2" />
           </Button>
         </WrapPanel>
 
         <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" IsEnabled="{Binding HasPage}">
           <Button Classes="icon" Command="{Binding ZoomOutCommand}" ToolTip.Tip="{svc:ShortcutTip 'Zoom out', ZoomOut}">
-            <ui:SymbolIcon Symbol="ZoomOut" />
+            <c:LucideIcon Kind="ZoomOut" />
           </Button>
           <Button Classes="icon" Command="{Binding ZoomFitCommand}" ToolTip.Tip="{svc:ShortcutTip 'Fit to window', ZoomFit}" MinWidth="52">
             <TextBlock Text="{Binding ZoomLabel}" FontSize="12" />
           </Button>
           <Button Classes="icon" Command="{Binding ZoomInCommand}" ToolTip.Tip="{svc:ShortcutTip 'Zoom in', ZoomIn}">
-            <ui:SymbolIcon Symbol="ZoomIn" />
+            <c:LucideIcon Kind="ZoomIn" />
           </Button>
         </StackPanel>
       </Grid>
@@ -88,7 +88,7 @@
       </ScrollViewer>
 
       <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="10" IsVisible="{Binding !HasPage}">
-        <ui:SymbolIcon Symbol="ImageEdit" FontSize="44" Opacity="0.4" />
+        <c:LucideIcon Kind="Image" FontSize="44" Opacity="0.4" />
         <TextBlock Text="Select a page to view and edit it" Opacity="0.7" />
       </StackPanel>
 
@@ -109,7 +109,7 @@
                   <Grid ColumnDefinitions="*,Auto">
                     <ComboBox ItemsSource="{Binding AspectRatios}" SelectedItem="{Binding AspectRatio}" HorizontalAlignment="Stretch" />
                     <Button Grid.Column="1" Classes="icon" Margin="4,0,0,0" Command="{Binding FlipAspectCommand}" ToolTip.Tip="Switch portrait / landscape">
-                      <ui:SymbolIcon Symbol="Rotate" />
+                      <c:LucideIcon Kind="RotateCcwSquare" />
                     </Button>
                   </Grid>
                 </StackPanel>

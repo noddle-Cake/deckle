@@ -1,6 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:ui="using:FluentAvalonia.UI.Controls"
+             xmlns:c="using:Scanwise.App.Controls"
              xmlns:vm="using:Scanwise.App.ViewModels"
              xmlns:svc="using:Scanwise.App.Services"
              x:Class="Scanwise.App.Views.PageListView"
@@ -15,10 +16,10 @@
         <!-- On macOS undo/redo live in the Edit menu, and the common page actions in the window toolbar. -->
         <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Bottom" IsVisible="{x:Static svc:PlatformLook.NotMac}">
           <Button Classes="icon" Command="{Binding UndoCommand}" IsEnabled="{Binding CanUndo}" ToolTip.Tip="{svc:ShortcutTip Undo, Undo}">
-            <ui:SymbolIcon Symbol="Undo" />
+            <c:LucideIcon Kind="Undo2" />
           </Button>
           <Button Classes="icon" Command="{Binding RedoCommand}" IsEnabled="{Binding CanRedo}" ToolTip.Tip="{svc:ShortcutTip Redo, Redo}">
-            <ui:SymbolIcon Symbol="Redo" />
+            <c:LucideIcon Kind="Redo2" />
           </Button>
         </StackPanel>
       </Grid>
@@ -26,33 +27,33 @@
       <!-- Toolbar: acts on the selection, or on all pages when nothing is selected. -->
       <WrapPanel Grid.Row="1" Margin="8,0,8,4">
         <Button Classes="icon" Command="{Binding ImportCommand}" ToolTip.Tip="{svc:ShortcutTip 'Import images or PDFs', Import}">
-          <ui:SymbolIcon Symbol="Import" />
+          <c:LucideIcon Kind="Import" />
         </Button>
         <Button Classes="icon" Command="{Binding Pages.RotateLeftCommand}" IsEnabled="{Binding HasPages}" ToolTip.Tip="Rotate left"
                 IsVisible="{x:Static svc:PlatformLook.NotMac}">
-          <ui:SymbolIcon Symbol="RotateCounterClockwise" />
+          <c:LucideIcon Kind="RotateCcw" />
         </Button>
         <Button Classes="icon" Command="{Binding Pages.RotateRightCommand}" IsEnabled="{Binding HasPages}" ToolTip.Tip="Rotate right"
                 IsVisible="{x:Static svc:PlatformLook.NotMac}">
-          <ui:SymbolIcon Symbol="RotateClockwise" />
+          <c:LucideIcon Kind="RotateCw" />
         </Button>
         <Button Classes="icon" Command="{Binding DeleteSelectedCommand}" IsEnabled="{Binding Pages.HasSelection}" ToolTip.Tip="{svc:ShortcutTip 'Delete selected pages', Delete}">
-          <ui:SymbolIcon Symbol="Delete" />
+          <c:LucideIcon Kind="Trash2" />
         </Button>
         <Button Classes="icon" Command="{Binding SaveAsCommand}" IsEnabled="{Binding HasPages}" ToolTip.Tip="{svc:ShortcutTip 'Save as…', SaveAs}"
                 IsVisible="{x:Static svc:PlatformLook.NotMac}">
-          <ui:SymbolIcon Symbol="SaveAs" />
+          <c:LucideIcon Kind="FileOutput" />
         </Button>
         <Button Classes="icon" Command="{Binding CopyPageCommand}" IsEnabled="{Binding Pages.HasSelection}" ToolTip.Tip="{svc:ShortcutTip 'Copy page to clipboard', Copy}"
                 IsVisible="{x:Static svc:PlatformLook.NotMac}">
-          <ui:SymbolIcon Symbol="Copy" />
+          <c:LucideIcon Kind="Copy" />
         </Button>
         <Button Classes="icon" Command="{Binding ShareCommand}" IsEnabled="{Binding HasPages}" ToolTip.Tip="{svc:ShortcutTip 'Share selected pages, or all pages', Share}"
                 IsVisible="{x:Static svc:PlatformLook.NotMac}">
-          <ui:SymbolIcon Symbol="Share" />
+          <c:LucideIcon Kind="Share" />
         </Button>
         <Button Classes="icon" ToolTip.Tip="More page actions" IsEnabled="{Binding HasPages}">
-          <ui:SymbolIcon Symbol="More" />
+          <c:LucideIcon Kind="Ellipsis" />
           <Button.Flyout>
             <MenuFlyout>
               <MenuItem Header="Save" Command="{Binding SaveCommand}" InputGesture="{svc:Shortcut Save}" />
@@ -133,7 +134,7 @@
       <!-- Empty state (Scanner's "Your scans will appear here"). -->
       <StackPanel Grid.Row="2" VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="10" Margin="24"
                   IsVisible="{Binding !HasPages}">
-        <ui:SymbolIcon Symbol="Library" FontSize="40" Opacity="0.5" />
+        <c:LucideIcon Kind="Files" FontSize="40" Opacity="0.5" />
         <TextBlock Text="Your scans will appear here" HorizontalAlignment="Center" FontWeight="SemiBold" TextWrapping="Wrap" TextAlignment="Center" />
         <TextBlock Classes="caption" TextAlignment="Center" MaxWidth="220"
                    Text="Scan a page, or drop images and PDFs here to import them." />
@@ -142,7 +143,7 @@
       <Border Grid.Row="3" Padding="12,8" BorderBrush="{DynamicResource CardBorder}" BorderThickness="0,1,0,0" IsVisible="{Binding HasPages}">
         <Button HorizontalAlignment="Stretch" Command="{Binding SaveCommand}" ToolTip.Tip="{svc:ShortcutTip 'Save all pages', Save}">
           <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
-            <ui:SymbolIcon Symbol="Save" FontSize="16" />
+            <c:LucideIcon Kind="Save" FontSize="16" />
             <TextBlock Text="Save" />
           </StackPanel>
         </Button>

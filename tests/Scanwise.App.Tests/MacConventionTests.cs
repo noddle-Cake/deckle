@@ -292,6 +292,19 @@ public sealed class MacConventionTests : IDisposable
     });
 
     [AvaloniaFact]
+    public void EveryLucideIconIsInTheBundledFont()
+    {
+        Assert.True(Avalonia.Media.FontManager.Current.TryGetGlyphTypeface(new Avalonia.Media.Typeface(Scanwise.App.Controls.Lucide.Font), out var font));
+        Assert.Equal("lucide", font.FamilyName);
+        foreach (var kind in Enum.GetValues<Scanwise.App.Controls.LucideKind>())
+        {
+            var glyph = Scanwise.App.Controls.Lucide.Glyph(kind);
+            Assert.Single(glyph);
+            Assert.True(font.TryGetGlyph(glyph[0], out var id) && id != 0, $"{kind} is missing from lucide.ttf");
+        }
+    }
+
+    [AvaloniaFact]
     public void MacDialogsPutCancelLeadingAndTheDefaultTrailing()
     {
         var (windows, primary, close) = ShowDialog(mac: false);
