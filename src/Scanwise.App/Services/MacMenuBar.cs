@@ -22,11 +22,19 @@ public static class MacMenuBar
         Item("Settings…", openSettings, AppShortcuts.Settings),
     ];
 
-    public static NativeMenu WindowMenu(MainViewModel vm, Window window)
+    public static NativeMenu WindowMenu(MainViewModel vm, Window window, ICommand openHelp)
     {
         var text = new TextCommands(window);
         var pages = vm.Pages;
         var editor = vm.Editor;
+        var sidebar = Item(vm.SidebarMenuHeader, vm.ToggleSidebarCommand, AppShortcuts.ToggleSidebar);
+        vm.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(MainViewModel.SidebarMenuHeader))
+            {
+                sidebar.Header = vm.SidebarMenuHeader;
+            }
+        };
         return
         [
             Menu("File",
@@ -61,6 +69,8 @@ public static class MacMenuBar
                 Item("Duplicate", pages.DuplicateCommand, AppShortcuts.Duplicate),
                 Item("Clear All Pages…", vm.ClearAllCommand)),
             Menu("View",
+                sidebar,
+                new NativeMenuItemSeparator(),
                 Item("Scan Options", vm.NavigateCommand, AppShortcuts.ShowScan, Section.Scan),
                 Item("Pages", vm.NavigateCommand, AppShortcuts.ShowPages, Section.Pages),
                 Item("Editor", vm.NavigateCommand, AppShortcuts.ShowEditor, Section.Editor),
@@ -83,9 +93,9 @@ public static class MacMenuBar
                 Item("Move Up", pages.MoveUpCommand, AppShortcuts.MoveUp),
                 Item("Move Down", pages.MoveDownCommand, AppShortcuts.MoveDown),
                 new NativeMenuItemSeparator(),
-                Item("Crop", InEditor(vm, editor.StartCropCommand)),
-                Item("Adjust Colors", InEditor(vm, editor.StartAdjustCommand)),
-                Item("Draw and Highlight", InEditor(vm, editor.StartDrawCommand)),
+                Item("Crop", vm.CropPageCommand),
+                Item("Adjust Colors", vm.AdjustPageCommand),
+                Item("Draw and Highlight", vm.DrawOnPageCommand),
                 Item("Undo Edits on Page", pages.ResetEditsCommand),
                 new NativeMenuItemSeparator(),
                 Menu("Page Order",
@@ -101,7 +111,7 @@ public static class MacMenuBar
                 new NativeMenuItemSeparator(),
                 Item("Bring All to Front", new RelayCommand(window.Activate))),
             Menu("Help",
-                Item("Scanwise Help", vm.NavigateCommand, null, Section.Help)),
+                Item("Scanwise Help", openHelp)),
         ];
     }
 
@@ -117,16 +127,6 @@ public static class MacMenuBar
 
     private static NativeMenuItem Item(string header, ICommand command, string? shortcut = null, object? parameter = null) =>
         new(header) { Command = command, CommandParameter = parameter, Gesture = shortcut is null ? null : AppShortcuts.Gesture(shortcut) };
-
-    /// <summary>Editor tools need the editor on screen (one pane at a time in a narrow window).</summary>
-    private static ICommand InEditor(MainViewModel vm, IRelayCommand command) => new ForwardCommand(
-        () => command.CanExecute(null),
-        () =>
-        {
-            vm.Section = Section.Editor;
-            command.Execute(null);
-        },
-        command);
 
     /// <summary>⌘⌫ in a text field deletes the selection, or everything before the caret on its line.</summary>
     private static void DeleteToLineStart(TextBox box)

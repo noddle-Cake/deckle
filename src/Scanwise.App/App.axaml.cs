@@ -41,7 +41,7 @@ public partial class App : Application
             if (AppShortcuts.IsMac)
             {
                 NativeMenu.SetMenu(this, MacMenuBar.AppMenu(vm, window.OpenSettingsCommand));
-                NativeMenu.SetMenu(window, MacMenuBar.WindowMenu(vm, window));
+                NativeMenu.SetMenu(window, MacMenuBar.WindowMenu(vm, window, window.OpenHelpCommand));
             }
             desktop.MainWindow = window;
             desktop.ShutdownRequested += (_, _) => vm.OnShutdown();

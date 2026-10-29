@@ -38,7 +38,7 @@ Scanwise combines two projects:
 - Searchable PDFs (OCR in 100+ languages, downloadable in-app), PDF/A, metadata and password protection
 - JPG quality and TIFF compression (CCITT G4 for black & white)
 - **Copy a page to the clipboard** (Ctrl+C, ⌘C on macOS) or **share** pages (Ctrl+E) without saving first: the Windows share
-  sheet, or a new email via `xdg-email` (Linux) / Mail (macOS). One page is shared as JPG, several as one PDF.
+  sheet, the macOS share menu (AirDrop, Mail, Messages…), or a new email via `xdg-email` (Linux). One page is shared as JPG, several as one PDF.
   On Linux, copying images needs `wl-clipboard` (Wayland) or `xclip` (X11)
 
 **Editing**

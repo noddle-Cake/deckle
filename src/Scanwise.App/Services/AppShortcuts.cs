@@ -45,6 +45,7 @@ public static class AppShortcuts
     public const string CloseWindow = nameof(CloseWindow);
     public const string Minimize = nameof(Minimize);
     public const string FullScreen = nameof(FullScreen);
+    public const string ToggleSidebar = nameof(ToggleSidebar);
 
     /// <summary>Use macOS conventions. Tests switch this to check both platforms.</summary>
     public static bool IsMac { get; set; } = OperatingSystem.IsMacOS();
@@ -91,6 +92,7 @@ public static class AppShortcuts
             CloseWindow => IsMac ? [new(Key.W, cmd)] : [],
             Minimize => IsMac ? [new(Key.M, cmd)] : [],
             FullScreen => IsMac ? [new(Key.F, KeyModifiers.Control | cmd)] : [],
+            ToggleSidebar => IsMac ? [new(Key.S, KeyModifiers.Control | cmd)] : [],
             _ => throw new ArgumentOutOfRangeException(nameof(action), action, "Unknown shortcut."),
         };
     }

@@ -3,10 +3,12 @@ using System.Windows.Input;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Media;
 using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
 using Scanwise.App.Services;
+using Scanwise.App.Services.Platform;
 using Scanwise.App.ViewModels;
 
 namespace Scanwise.App.Views;
@@ -14,14 +16,24 @@ namespace Scanwise.App.Views;
 public partial class MainWindow : Window
 {
     private SettingsWindow? _settingsWindow;
+    private HelpWindow? _helpWindow;
+    private readonly MacShell? _macShell;
 
     public MainWindow()
     {
         InitializeComponent();
         OpenSettingsCommand = new RelayCommand(OpenSettings);
-        // macOS opens Settings in its own window from the menu bar (⌘,), so the nav rail doesn't list it.
-        NavSettings.IsVisible = !AppShortcuts.IsMac;
-        Closed += (_, _) => _settingsWindow?.Close();
+        OpenHelpCommand = new RelayCommand(OpenHelp);
+        if (AppShortcuts.IsMac)
+        {
+            _macShell = UseMacShell();
+        }
+        Closed += (_, _) =>
+        {
+            _settingsWindow?.Close();
+            _helpWindow?.Close();
+        };
+        Opened += (_, _) => UpdateMacDocumentState();
         Nav.ItemInvoked += OnNavItemInvoked;
         AddHandler(DragDrop.DragOverEvent, OnDragOver);
         AddHandler(DragDrop.DropEvent, OnDrop);
@@ -43,7 +55,30 @@ public partial class MainWindow : Window
     /// <summary>A Settings window on macOS (one at a time), the Settings page elsewhere.</summary>
     public ICommand OpenSettingsCommand { get; }
 
+    /// <summary>A Help window on macOS (Help ▸ Scanwise Help), the Help page elsewhere.</summary>
+    public ICommand OpenHelpCommand { get; }
+
     internal SettingsWindow? OpenSettingsWindow => _settingsWindow;
+    internal HelpWindow? OpenHelpWindow => _helpWindow;
+    internal MacShell? MacShell => _macShell;
+
+    /// <summary>
+    /// The macOS window (Toolbars, Sidebars and Materials HIG): no Fluent nav rail; the title bar and toolbar are
+    /// one row; the scan options are a sidebar over the window's blurred, vibrant background.
+    /// </summary>
+    private MacShell UseMacShell()
+    {
+        var body = (Control)Nav.Content!;
+        Nav.Content = null;
+        var shell = new MacShell { Body = body };
+        Content = shell;
+        ExtendClientAreaToDecorationsHint = true;
+        ExtendClientAreaChromeHints = Avalonia.Platform.ExtendClientAreaChromeHints.PreferSystemChrome;
+        ExtendClientAreaTitleBarHeightHint = 52;
+        TransparencyLevelHint = [WindowTransparencyLevel.AcrylicBlur, WindowTransparencyLevel.None];
+        Background = Brushes.Transparent;
+        return shell;
+    }
 
     private void OpenSettings()
     {
@@ -56,13 +91,52 @@ public partial class MainWindow : Window
             vm.Section = Section.Settings;
             return;
         }
-        if (_settingsWindow is null)
+        _settingsWindow = ShowSingle(_settingsWindow, () => new SettingsWindow { DataContext = vm.SettingsPage }, () => _settingsWindow = null);
+    }
+
+    private void OpenHelp()
+    {
+        if (ViewModel is not { } vm)
         {
-            _settingsWindow = new SettingsWindow { DataContext = vm.SettingsPage };
-            _settingsWindow.Closed += (_, _) => _settingsWindow = null;
-            _settingsWindow.Show();
+            return;
         }
-        _settingsWindow.Activate();
+        if (!AppShortcuts.IsMac)
+        {
+            vm.Section = Section.Help;
+            return;
+        }
+        _helpWindow = ShowSingle(_helpWindow, () => new HelpWindow(), () => _helpWindow = null);
+    }
+
+    /// <summary>Opens a window once; asking again brings the open one to the front.</summary>
+    private static T ShowSingle<T>(T? open, Func<T> create, Action onClosed) where T : Window
+    {
+        if (open is null)
+        {
+            open = create();
+            open.Closed += (_, _) => onClosed();
+            open.Show();
+        }
+        open.Activate();
+        return open;
+    }
+
+    /// <summary>macOS shows unsaved changes as the dot in the close button and the saved file as a proxy icon.</summary>
+    private void UpdateMacDocumentState()
+    {
+        if (!OperatingSystem.IsMacOS() || !AppShortcuts.IsMac || ViewModel is not { } vm
+            || TryGetPlatformHandle() is not { HandleDescriptor: "NSView", Handle: var view } || view == IntPtr.Zero)
+        {
+            return;
+        }
+        try
+        {
+            MacIntegration.SetDocumentState(view, vm.HasUnsavedChanges, vm.DocumentPath);
+        }
+        catch (Exception ex) when (ex is EntryPointNotFoundException or DllNotFoundException)
+        {
+            System.Diagnostics.Trace.WriteLine($"Scanwise: {ex.Message}");
+        }
     }
 
     private void BindKeys(MainViewModel vm)
@@ -88,6 +162,18 @@ public partial class MainWindow : Window
         {
             vm.UpdateLayout(Bounds.Width);
         }
+        else if (change.Property == ActualTransparencyLevelProperty && _macShell is not null)
+        {
+            // Without blur (Reduce Transparency, or not supported) the sidebar gets a solid background instead.
+            if (ActualTransparencyLevel == WindowTransparencyLevel.None)
+            {
+                this[!BackgroundProperty] = this.GetResourceObservable("PaneBackground").ToBinding();
+            }
+            else
+            {
+                Background = Brushes.Transparent;
+            }
+        }
     }
 
     private void OnViewModelChanged(object? sender, PropertyChangedEventArgs e)
@@ -96,10 +182,14 @@ public partial class MainWindow : Window
         {
             return;
         }
-        if (e.PropertyName is nameof(MainViewModel.Layout) or nameof(MainViewModel.Section))
+        if (e.PropertyName is nameof(MainViewModel.Layout) or nameof(MainViewModel.Section) or nameof(MainViewModel.SidebarHidden))
         {
             ApplyLayout(vm);
             SyncNavSelection(vm);
+        }
+        else if (e.PropertyName is nameof(MainViewModel.HasUnsavedChanges) or nameof(MainViewModel.DocumentPath))
+        {
+            UpdateMacDocumentState();
         }
     }
 
@@ -121,6 +211,8 @@ public partial class MainWindow : Window
         columns[0].Width = options;
         columns[1].Width = pages;
         columns[2].Width = editor;
+        // A narrow window shows the scan options as the only pane, on the content background.
+        _macShell?.SetSidebarWidth(vm.ShowScanPane && vm.Layout != LayoutMode.Narrow ? 340 : 0);
     }
 
     private void SyncNavSelection(MainViewModel vm)

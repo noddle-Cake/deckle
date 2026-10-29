@@ -4,8 +4,9 @@ using System.Runtime.Versioning;
 namespace Scanwise.App.Services.Platform;
 
 /// <summary>
-/// macOS integration: a "Scan" item in the Dock icon's menu, and a global Control+Option+key hotkey (Carbon's
-/// RegisterEventHotKey, which needs no accessibility permission) that works while Scanwise is running.
+/// macOS integration: a "Scan" item in the Dock icon's menu, a global Control+Option+key hotkey (Carbon's
+/// RegisterEventHotKey, which needs no accessibility permission) that works while Scanwise is running, the image
+/// pasteboard, the system share menu, and the window's edited dot and proxy icon.
 /// Avalonia 11 has no dock-menu API, so the menu is added to its app delegate through the Objective-C runtime.
 /// </summary>
 [SupportedOSPlatform("macos")]
@@ -109,6 +110,81 @@ internal static unsafe class MacIntegration
         }
     }
 
+    /// <summary>Puts a PNG on the general pasteboard as PNG and TIFF (TIFF for older apps), without AppleScript.</summary>
+    public static void CopyImage(string pngPath)
+    {
+        var data = Send(Class("NSData"), Sel("dataWithContentsOfFile:"), NSString(pngPath));
+        if (data == IntPtr.Zero)
+        {
+            throw new InvalidOperationException("Could not read the page image.");
+        }
+        var board = Send(Class("NSPasteboard"), Sel("generalPasteboard"));
+        Send(board, Sel("clearContents"));
+        Send(board, Sel("setData:forType:"), data, NSString("public.png"));
+        var image = Send(Send(Class("NSImage"), Sel("alloc")), Sel("initWithData:"), data);
+        if (image != IntPtr.Zero)
+        {
+            var tiff = Send(image, Sel("TIFFRepresentation"));
+            if (tiff != IntPtr.Zero)
+            {
+                Send(board, Sel("setData:forType:"), tiff, NSString("public.tiff"));
+            }
+            Send(image, Sel("release"));
+        }
+    }
+
+    private static IntPtr _sharePicker;
+
+    /// <summary>
+    /// Shows the system share menu (AirDrop, Mail, Messages, Notes…) for <paramref name="paths"/>, pointing at a
+    /// rectangle in the window's content view, given in points from the top left.
+    /// </summary>
+    public static void Share(IntPtr nsView, IReadOnlyList<string> paths, double x, double y, double width, double height)
+    {
+        var items = Send(Class("NSMutableArray"), Sel("array"));
+        foreach (var path in paths)
+        {
+            Send(items, Sel("addObject:"), Send(Class("NSURL"), Sel("fileURLWithPath:"), NSString(path)));
+        }
+        if (_sharePicker != IntPtr.Zero)
+        {
+            Send(_sharePicker, Sel("release")); // The previous picker has closed by now.
+        }
+        _sharePicker = Send(Send(Class("NSSharingServicePicker"), Sel("alloc")), Sel("initWithItems:"), items);
+        // AppKit views count y from the bottom unless they're flipped.
+        if ((Send(nsView, Sel("isFlipped")) & 0xFF) == 0)
+        {
+            var viewHeight = ViewHeight(nsView);
+            y = viewHeight - y - height;
+        }
+        const nuint MinYEdge = 1;
+        ShowPicker(_sharePicker, Sel("showRelativeToRect:ofView:preferredEdge:"), new NSRect(x, y, width, height), nsView, MinYEdge);
+    }
+
+    /// <summary>The dot in the window's close button for unsaved changes, and the proxy icon for the saved file.</summary>
+    public static void SetDocumentState(IntPtr nsView, bool edited, string? path)
+    {
+        var window = Send(nsView, Sel("window"));
+        if (window == IntPtr.Zero)
+        {
+            return;
+        }
+        Send(window, Sel("setDocumentEdited:"), edited ? 1 : IntPtr.Zero);
+        Send(window, Sel("setRepresentedFilename:"), NSString(path ?? ""));
+    }
+
+    private static double ViewHeight(IntPtr nsView)
+    {
+        // -frame returns an NSRect; read it with the struct-returning entry point on x64.
+        var frame = RuntimeInformation.ProcessArchitecture == Architecture.Arm64
+            ? FrameArm64(nsView, Sel("frame"))
+            : FrameX64(nsView, Sel("frame"));
+        return frame.Height;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private readonly record struct NSRect(double X, double Y, double Width, double Height);
+
     // Carbon virtual key codes (kVK_ANSI_*) follow the physical US layout, not the alphabet.
     private static readonly Dictionary<char, uint> KeyCodes = new()
     {
@@ -154,7 +230,17 @@ internal static unsafe class MacIntegration
     [DllImport(ObjC)] private static extern bool class_addMethod(IntPtr cls, IntPtr sel, IntPtr imp, string types);
     [DllImport(ObjC, EntryPoint = "objc_msgSend")] private static extern IntPtr Send(IntPtr receiver, IntPtr selector);
     [DllImport(ObjC, EntryPoint = "objc_msgSend")] private static extern IntPtr Send(IntPtr receiver, IntPtr selector, IntPtr arg);
+    [DllImport(ObjC, EntryPoint = "objc_msgSend")] private static extern IntPtr Send(IntPtr receiver, IntPtr selector, IntPtr arg1, IntPtr arg2);
     [DllImport(ObjC, EntryPoint = "objc_msgSend")] private static extern IntPtr Send(IntPtr receiver, IntPtr selector, IntPtr arg1, IntPtr arg2, IntPtr arg3);
+    [DllImport(ObjC, EntryPoint = "objc_msgSend")] private static extern void ShowPicker(IntPtr receiver, IntPtr selector, NSRect rect, IntPtr view, nuint edge);
+    [DllImport(ObjC, EntryPoint = "objc_msgSend")] private static extern NSRect FrameArm64(IntPtr receiver, IntPtr selector);
+    [DllImport(ObjC, EntryPoint = "objc_msgSend_stret")] private static extern void FrameX64Stret(out NSRect result, IntPtr receiver, IntPtr selector);
+
+    private static NSRect FrameX64(IntPtr receiver, IntPtr selector)
+    {
+        FrameX64Stret(out var rect, receiver, selector);
+        return rect;
+    }
 
     [DllImport(Carbon)] private static extern IntPtr GetApplicationEventTarget();
     [DllImport(Carbon)] private static extern int InstallEventHandler(IntPtr target, IntPtr handler, uint numTypes, ref EventTypeSpec list, IntPtr userData, out IntPtr handlerRef);

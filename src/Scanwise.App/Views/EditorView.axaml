@@ -10,7 +10,7 @@
   <Grid RowDefinitions="Auto,*" DataContext="{Binding Editor}" x:DataType="vm:EditorViewModel" Background="{DynamicResource CanvasBackground}">
 
     <!-- Toolbar -->
-    <Border Grid.Row="0" Padding="8,6" Background="{DynamicResource PaneBackground}" BorderBrush="{DynamicResource CardBorder}" BorderThickness="0,0,0,1">
+    <Border Grid.Row="0" Padding="8,6" Background="{DynamicResource BarBackground}" BorderBrush="{DynamicResource CardBorder}" BorderThickness="0,0,0,1">
       <Grid ColumnDefinitions="Auto,*,Auto">
         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
           <Button Classes="icon" Command="{Binding PreviousCommand}" IsEnabled="{Binding CanGoPrevious}" ToolTip.Tip="{svc:ShortcutTip 'Previous page', PreviousPage}">
@@ -22,7 +22,8 @@
           </Button>
         </StackPanel>
 
-        <WrapPanel Grid.Column="1" HorizontalAlignment="Center" IsEnabled="{Binding HasPage}">
+        <!-- On macOS these are in the window toolbar and the Page menu. -->
+        <WrapPanel Grid.Column="1" HorizontalAlignment="Center" IsEnabled="{Binding HasPage}" IsVisible="{x:Static svc:PlatformLook.NotMac}">
           <Button Classes="icon" Command="{Binding RotateLeftCommand}" ToolTip.Tip="Rotate left">
             <ui:SymbolIcon Symbol="RotateCounterClockwise" />
           </Button>

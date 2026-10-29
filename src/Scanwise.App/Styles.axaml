@@ -7,6 +7,11 @@
       <ResourceDictionary.ThemeDictionaries>
         <ResourceDictionary x:Key="Light">
           <SolidColorBrush x:Key="PaneBackground" Color="#F3F3F3" />
+          <!-- Scan options pane and editor bar; MacStyles makes them transparent over the window's vibrancy. -->
+          <SolidColorBrush x:Key="SidebarBackground" Color="#F3F3F3" />
+          <SolidColorBrush x:Key="BarBackground" Color="#F3F3F3" />
+          <!-- Behind pages and editor in the macOS shell. -->
+          <SolidColorBrush x:Key="ContentBackground" Color="#FFFFFF" />
           <SolidColorBrush x:Key="CardBackground" Color="#FBFBFB" />
           <SolidColorBrush x:Key="CardBorder" Color="#1A000000" />
           <SolidColorBrush x:Key="CanvasBackground" Color="#EBEBEB" />
@@ -14,6 +19,9 @@
         </ResourceDictionary>
         <ResourceDictionary x:Key="Dark">
           <SolidColorBrush x:Key="PaneBackground" Color="#202020" />
+          <SolidColorBrush x:Key="SidebarBackground" Color="#202020" />
+          <SolidColorBrush x:Key="BarBackground" Color="#202020" />
+          <SolidColorBrush x:Key="ContentBackground" Color="#1E1E1E" />
           <SolidColorBrush x:Key="CardBackground" Color="#2B2B2B" />
           <SolidColorBrush x:Key="CardBorder" Color="#19FFFFFF" />
           <SolidColorBrush x:Key="CanvasBackground" Color="#1A1A1A" />

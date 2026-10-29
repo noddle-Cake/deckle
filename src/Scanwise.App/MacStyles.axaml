@@ -2,6 +2,42 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:ui="using:FluentAvalonia.UI.Controls">
 
+  <Styles.Resources>
+    <ResourceDictionary>
+      <ResourceDictionary.ThemeDictionaries>
+        <!-- The sidebar shows the window's vibrancy (Materials HIG); toolbars carry no painted background. -->
+        <ResourceDictionary x:Key="Light">
+          <SolidColorBrush x:Key="SidebarBackground" Color="Transparent" />
+          <SolidColorBrush x:Key="BarBackground" Color="Transparent" />
+        </ResourceDictionary>
+        <ResourceDictionary x:Key="Dark">
+          <SolidColorBrush x:Key="SidebarBackground" Color="Transparent" />
+          <SolidColorBrush x:Key="BarBackground" Color="Transparent" />
+        </ResourceDictionary>
+      </ResourceDictionary.ThemeDictionaries>
+    </ResourceDictionary>
+  </Styles.Resources>
+
+  <!-- Toolbar items have no bezel (Toolbars HIG), also when disabled or toggled on. -->
+  <Style Selector="ToggleButton.icon">
+    <Setter Property="Padding" Value="8" />
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+  </Style>
+  <Style Selector="ToggleButton.icon ui|SymbolIcon">
+    <Setter Property="FontSize" Value="18" />
+  </Style>
+  <Style Selector=":is(Button).icon:disabled /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="Transparent" />
+  </Style>
+
+  <!-- Pages | Editor segmented control in the toolbar. -->
+  <Style Selector="ToggleButton.segment">
+    <Setter Property="Padding" Value="12,4" />
+    <Setter Property="MinWidth" Value="64" />
+    <Setter Property="HorizontalContentAlignment" Value="Center" />
+  </Style>
+
   <!--
     macOS only (added in App.axaml.cs). Apple's HIG: "Always place the default button on the trailing side of a row
     … Cancel buttons are typically on the leading side". FluentAvalonia's ContentDialog uses the Windows order

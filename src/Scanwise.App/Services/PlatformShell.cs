@@ -27,8 +27,7 @@ internal static class PlatformShell
 #else
         if (OperatingSystem.IsMacOS())
         {
-            var escaped = pngPath.Replace("\\", "\\\\").Replace("\"", "\\\"");
-            await RunAsync("osascript", null, "-e", $"set the clipboard to (read (POSIX file \"{escaped}\") as «class PNGf»)");
+            Platform.MacIntegration.CopyImage(pngPath);
             return;
         }
         var bytes = await File.ReadAllBytesAsync(pngPath);
@@ -47,8 +46,11 @@ internal static class PlatformShell
 #endif
     }
 
-    /// <summary>Offers files to other apps: the share sheet on Windows, a new email elsewhere.</summary>
-    public static async Task ShareAsync(IReadOnlyList<string> paths, string title, IntPtr window)
+    /// <summary>
+    /// Offers files to other apps: the share sheet on Windows, the share menu on macOS (pointing at
+    /// <paramref name="anchor"/>, in window points), a new email on Linux.
+    /// </summary>
+    public static async Task ShareAsync(IReadOnlyList<string> paths, string title, IntPtr window, Avalonia.Rect anchor)
     {
 #if WINDOWS
         var files = new List<IStorageItem>();
@@ -72,11 +74,9 @@ internal static class PlatformShell
         manager.DataRequested += OnDataRequested;
         interop.ShowShareUIForWindow(window);
 #else
-        _ = window;
-        if (OperatingSystem.IsMacOS())
+        if (OperatingSystem.IsMacOS() && window != IntPtr.Zero)
         {
-            // Mail opens a new message with the files attached.
-            await RunAsync("open", null, ["-a", "Mail", .. paths]);
+            Platform.MacIntegration.Share(window, paths, anchor.X, anchor.Y, anchor.Width, anchor.Height);
             return;
         }
         if (FindTool("xdg-email") is not { } xdgEmail)

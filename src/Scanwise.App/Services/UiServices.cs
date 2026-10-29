@@ -1,3 +1,4 @@
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Input.Platform;
@@ -29,7 +30,7 @@ public interface IUiServices
     /// <summary>Puts an image (a PNG file) on the clipboard.</summary>
     Task CopyImageAsync(string pngPath);
 
-    /// <summary>Opens the system share sheet (Windows) or a new email (elsewhere) with these files.</summary>
+    /// <summary>Opens the system share sheet (Windows), the share menu (macOS) or a new email (Linux) with these files.</summary>
     Task ShareFilesAsync(IReadOnlyList<string> paths, string title);
 
     /// <summary>Scanner's scan-merge options; null when cancelled.</summary>
@@ -195,7 +196,21 @@ public sealed class UiServices : IUiServices
     public Task CopyImageAsync(string pngPath) => PlatformShell.CopyImageAsync(pngPath);
 
     public Task ShareFilesAsync(IReadOnlyList<string> paths, string title) =>
-        PlatformShell.ShareAsync(paths, title, _window.TryGetPlatformHandle()?.Handle ?? IntPtr.Zero);
+        PlatformShell.ShareAsync(paths, title, _window.TryGetPlatformHandle()?.Handle ?? IntPtr.Zero, ShareAnchor());
+
+    /// <summary>
+    /// Where the macOS share menu points: the button that was just clicked (it has focus), or the top centre of
+    /// the window when Share came from the menu bar or a shortcut.
+    /// </summary>
+    private Rect ShareAnchor()
+    {
+        if (_window.FocusManager?.GetFocusedElement() is Button button
+            && button.TranslatePoint(default, _window) is { } topLeft)
+        {
+            return new Rect(topLeft, button.Bounds.Size);
+        }
+        return new Rect(_window.ClientSize.Width / 2, 0, 1, 1);
+    }
 
     public async Task<(int AfterIndex, bool Reverse)?> AskMergeOptionsAsync(int pageCount)
     {

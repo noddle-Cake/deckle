@@ -6,7 +6,7 @@
              xmlns:scan="using:Scanwise.Core.Scanning"
              x:Class="Scanwise.App.Views.ScanOptionsView"
              x:DataType="vm:MainViewModel">
-  <Border Background="{DynamicResource PaneBackground}" BorderBrush="{DynamicResource CardBorder}" BorderThickness="0,0,1,0">
+  <Border Background="{DynamicResource SidebarBackground}" BorderBrush="{DynamicResource CardBorder}" BorderThickness="0,0,1,0">
     <Grid RowDefinitions="Auto,*,Auto" DataContext="{Binding ScanOptions}" x:DataType="vm:ScanOptionsViewModel">
 
       <!-- Header: profile picker -->
@@ -164,14 +164,16 @@
       <Border Grid.Row="2" Padding="16,12" BorderBrush="{DynamicResource CardBorder}" BorderThickness="0,1,0,0"
               DataContext="{Binding $parent[UserControl].((vm:MainViewModel)DataContext)}" x:DataType="vm:MainViewModel">
         <Grid ColumnDefinitions="Auto,*">
-          <Button Grid.Column="0" Margin="0,0,8,0" Command="{Binding PreviewCommand}" IsEnabled="{Binding ScanOptions.CanPreview}"
+          <Button x:Name="PreviewButton" Grid.Column="0" Margin="0,0,8,0" Command="{Binding PreviewCommand}" IsEnabled="{Binding ScanOptions.CanPreview}"
                   ToolTip.Tip="Quick preview of the glass; select the area to scan">
             <StackPanel Orientation="Horizontal" Spacing="6">
               <ui:SymbolIcon Symbol="Crop" FontSize="16" />
               <TextBlock Text="Preview" />
             </StackPanel>
           </Button>
+          <!-- macOS: Scan is the toolbar's primary button (one primary action per window). -->
           <SplitButton Grid.Column="1" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                       IsVisible="{x:Static svc:PlatformLook.NotMac}"
                        Classes="accent" Command="{Binding ScanCommand}" IsEnabled="{Binding CanScan}"
                        ToolTip.Tip="{svc:ShortcutTip Scan, Scan}">
             <StackPanel Orientation="Horizontal" Spacing="8">

@@ -31,7 +31,11 @@ public sealed class MacConventionTests : IDisposable
         AppShortcuts.PreviousPage, AppShortcuts.NextPage, AppShortcuts.Settings, AppShortcuts.Cancel,
         AppShortcuts.Cut, AppShortcuts.Paste, AppShortcuts.Duplicate, AppShortcuts.ShowScan, AppShortcuts.ShowPages,
         AppShortcuts.ShowEditor, AppShortcuts.CloseWindow, AppShortcuts.Minimize, AppShortcuts.FullScreen,
+        AppShortcuts.ToggleSidebar,
     ];
+
+    /// <summary>The standard macOS shortcuts that do include Control: ⌃⌘F full screen and ⌃⌘S show/hide sidebar.</summary>
+    private static readonly string[] ControlCommandShortcuts = [AppShortcuts.FullScreen, AppShortcuts.ToggleSidebar];
 
     private static void As(bool mac, Action body)
     {
@@ -54,8 +58,7 @@ public sealed class MacConventionTests : IDisposable
         {
             foreach (var gesture in AppShortcuts.Gestures(action))
             {
-                // ⌃⌘F (full screen) is the one standard macOS shortcut that includes Control.
-                if (action != AppShortcuts.FullScreen)
+                if (!ControlCommandShortcuts.Contains(action))
                 {
                     Assert.False(gesture.KeyModifiers.HasFlag(KeyModifiers.Control), $"{action}: {gesture}");
                 }
@@ -98,13 +101,15 @@ public sealed class MacConventionTests : IDisposable
     });
 
     [AvaloniaFact]
-    public void MacWindowBindsCommandShortcutsAndHidesSettingsFromTheRail() => As(true, () =>
+    public void MacWindowBindsCommandShortcutsAndDropsTheNavRail() => As(true, () =>
     {
         var (window, _) = Open();
         Assert.Contains(window.KeyBindings, b => b.Gesture.Equals(new KeyGesture(Key.N, KeyModifiers.Meta)));
         Assert.Contains(window.KeyBindings, b => b.Gesture.Equals(new KeyGesture(Key.OemComma, KeyModifiers.Meta)));
         Assert.DoesNotContain(window.KeyBindings, b => b.Gesture.KeyModifiers.HasFlag(KeyModifiers.Control));
-        Assert.False(window.FindControl<NavigationViewItem>("NavSettings")!.IsVisible);
+        // Settings and Help are menu bar windows on macOS; the Fluent nav rail isn't in the window at all.
+        Assert.IsType<MacShell>(window.Content);
+        Assert.Null(window.FindControl<NavigationView>("Nav")!.Parent);
         window.Close();
     });
 
@@ -129,7 +134,7 @@ public sealed class MacConventionTests : IDisposable
     public void MenuBarHasTheStandardMenusAndEveryToolbarCommand() => As(true, () =>
     {
         var (window, vm) = Open();
-        var menu = MacMenuBar.WindowMenu(vm, window);
+        var menu = MacMenuBar.WindowMenu(vm, window, window.OpenHelpCommand);
         var top = menu.Items.OfType<NativeMenuItem>().Select(i => i.Header).ToList();
         // HIG order: (app menu) File, Edit, View, app-specific menus, Window, Help.
         Assert.Equal(["File", "Edit", "View", "Page", "Window", "Help"], top);
@@ -152,8 +157,9 @@ public sealed class MacConventionTests : IDisposable
             Assert.Contains(items, i => i.Header == header);
         }
 
-        Assert.All(items.Where(i => i.Gesture is not null && i.Header != "Enter Full Screen"),
+        Assert.All(items.Where(i => i.Gesture is not null && i.Header is not ("Enter Full Screen" or "Hide Sidebar")),
             i => Assert.False(i.Gesture!.KeyModifiers.HasFlag(KeyModifiers.Control), i.Header));
+        Assert.Contains(items, i => i.Header == "Hide Sidebar" && i.Command == vm.ToggleSidebarCommand);
         Assert.Equal(new KeyGesture(Key.Back, KeyModifiers.Meta), items.Single(i => i.Header == "Delete").Gesture);
 
         var app = Flatten(MacMenuBar.AppMenu(vm, window.OpenSettingsCommand)).ToList();
@@ -166,7 +172,7 @@ public sealed class MacConventionTests : IDisposable
     public void EditMenuActsOnTheFocusedTextField() => As(true, () =>
     {
         var (window, vm) = Open();
-        var menu = MacMenuBar.WindowMenu(vm, window);
+        var menu = MacMenuBar.WindowMenu(vm, window, window.OpenHelpCommand);
         var selectAll = Flatten(menu).Single(i => i.Header == "Select All").Command!;
         var box = new TextBox { Text = "Invoice" };
         window.Content = box;
@@ -177,6 +183,45 @@ public sealed class MacConventionTests : IDisposable
         selectAll.Execute(null);
         Assert.Equal("Invoice", box.SelectedText);
         window.Close();
+    });
+
+    [AvaloniaFact]
+    public void MacWindowUsesASidebarAndATitleBarToolbar() => As(true, () =>
+    {
+        var (window, vm) = Open(mac: true);
+        var shell = Assert.IsType<MacShell>(window.Content);
+        Assert.NotNull(window.MacShell);
+        Assert.True(window.ExtendClientAreaToDecorationsHint);
+        Assert.True(vm.SidebarVisible);
+        Assert.Equal("Scanwise", window.Title); // No document yet; with pages it's the file name or "Untitled".
+        Screenshot(window, "mac-01-wide");
+
+        vm.ToggleSidebarCommand.Execute(null);
+        Pump();
+        Assert.False(vm.ShowScanPane);
+        Assert.Equal("Show Sidebar", vm.SidebarMenuHeader);
+        Screenshot(window, "mac-02-sidebar-hidden");
+        vm.ToggleSidebarCommand.Execute(null);
+        Assert.True(vm.ShowScanPane);
+
+        // Narrow: the sidebar button swaps between the scan options and the pages; there is no top navigation.
+        window.Width = 600;
+        Pump();
+        Assert.Equal(LayoutMode.Narrow, vm.Layout);
+        Assert.True(vm.ShowScanPane);
+        vm.ToggleSidebarCommand.Execute(null);
+        Assert.Equal(Section.Pages, vm.Section);
+        Assert.True(vm.ShowPagesPane);
+        Assert.False(vm.ShowScanPane);
+        Screenshot(window, "mac-03-narrow");
+
+        window.OpenHelpCommand.Execute(null);
+        Assert.NotNull(window.OpenHelpWindow);
+        Assert.Equal(Section.Pages, vm.Section); // Help doesn't replace the workspace on macOS.
+        window.Close();
+        Pump();
+        Assert.Null(window.OpenHelpWindow);
+        _ = shell;
     });
 
     [AvaloniaFact]
@@ -215,11 +260,36 @@ public sealed class MacConventionTests : IDisposable
         return (window, primary, close);
     }
 
-    private (MainWindow Window, MainViewModel Vm) Open()
+    private static readonly string ScreenshotDir = Environment.GetEnvironmentVariable("SCANWISE_SCREENSHOTS") is { Length: > 0 } dir
+        ? dir
+        : Path.Combine(Path.GetTempPath(), "scanwise-screenshots");
+
+    private static void Pump()
+    {
+        for (var i = 0; i < 5; i++)
+        {
+            Dispatcher.UIThread.RunJobs();
+            AvaloniaHeadlessPlatform.ForceRenderTimerTick();
+        }
+    }
+
+    private static void Screenshot(Window window, string name)
+    {
+        Directory.CreateDirectory(ScreenshotDir);
+        Pump();
+        window.CaptureRenderedFrame()?.Save(Path.Combine(ScreenshotDir, name + ".png"));
+    }
+
+    private (MainWindow Window, MainViewModel Vm) Open(bool mac = false)
     {
         var services = new AppServices(new AppPaths(Path.Combine(_root, "config"), Path.Combine(_root, "data")));
         services.Settings.SaveFolder = Path.Combine(_root, "out");
         var window = new MainWindow { Width = 1200, Height = 800 };
+        if (mac)
+        {
+            // App.Initialize ran without macOS styles in the test app; add them to this window.
+            window.Styles.Add(new StyleInclude(new Uri("avares://Scanwise/")) { Source = new Uri("avares://Scanwise/MacStyles.axaml") });
+        }
         var vm = new MainViewModel(services, new FakeUi());
         window.DataContext = vm;
         window.Show();

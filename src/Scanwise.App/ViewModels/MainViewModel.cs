@@ -67,7 +67,16 @@ public sealed partial class MainViewModel : ObservableObject
     /// <summary>True while the status bar is reporting a save, so Open / Show in folder make sense.</summary>
     [ObservableProperty] private bool _statusHasFileActions;
 
-    public string WindowTitle => Document.Count == 0 ? "Scanwise" : $"Scanwise · {Document.Count} page{(Document.Count == 1 ? "" : "s")}{(HasUnsavedChanges ? " •" : "")}";
+    /// <summary>
+    /// macOS titles the window with the document's name ("Untitled" until saved) and shows unsaved changes as the
+    /// dot in the close button (see <see cref="DocumentPath"/>); elsewhere the title carries the page count and "•".
+    /// </summary>
+    public string WindowTitle => AppShortcuts.IsMac
+        ? Document.Count == 0 ? "Scanwise" : Path.GetFileName(DocumentPath) ?? "Untitled"
+        : Document.Count == 0 ? "Scanwise" : $"Scanwise · {Document.Count} page{(Document.Count == 1 ? "" : "s")}{(HasUnsavedChanges ? " •" : "")}";
+
+    /// <summary>The PDF/TIFF the pages are being saved into, if there is one.</summary>
+    public string? DocumentPath => Document.Count == 0 ? null : _services.Saver.CurrentDocumentPath;
     public bool HasUnsavedChanges => _services.Saver.HasUnsavedChanges(Document);
     public bool HasPages => Document.Count > 0;
     public bool CanUndo => Document.CanUndo;
@@ -78,7 +87,51 @@ public sealed partial class MainViewModel : ObservableObject
     public bool IsWorkspace => Section is Section.Scan or Section.Pages or Section.Editor;
     public bool ShowSettings => Section == Section.Settings;
     public bool ShowHelp => Section == Section.Help;
-    public bool ShowScanPane => IsWorkspace && (Layout != LayoutMode.Narrow || Section == Section.Scan);
+    public bool ShowScanPane => IsWorkspace && (Layout == LayoutMode.Narrow ? Section == Section.Scan : !SidebarHidden);
+
+    /// <summary>macOS View ▸ Hide Sidebar: the scan options column is hidden in wide and medium windows.</summary>
+    [ObservableProperty] private bool _sidebarHidden;
+
+    public bool SidebarVisible => ShowScanPane;
+    public string SidebarMenuHeader => SidebarVisible ? "Hide Sidebar" : "Show Sidebar";
+
+    /// <summary>
+    /// Shows or hides the sidebar. A narrow window has room for one pane, so there it swaps between the scan
+    /// options and the pages (Sidebars HIG: collapse the sidebar rather than switch to other navigation).
+    /// </summary>
+    [RelayCommand]
+    private void ToggleSidebar()
+    {
+        if (Layout == LayoutMode.Narrow)
+        {
+            Section = Section == Section.Scan ? Section.Pages : Section.Scan;
+        }
+        else
+        {
+            SidebarHidden = !SidebarHidden;
+        }
+    }
+
+    partial void OnSidebarHiddenChanged(bool value) => RaiseLayout();
+
+    // Editor tools from the macOS toolbar and menu bar; they bring the editor on screen first.
+    [RelayCommand]
+    private void CropPage() => InEditor(Editor.StartCropCommand);
+
+    [RelayCommand]
+    private void AdjustPage() => InEditor(Editor.StartAdjustCommand);
+
+    [RelayCommand]
+    private void DrawOnPage() => InEditor(Editor.StartDrawCommand);
+
+    private void InEditor(System.Windows.Input.ICommand tool)
+    {
+        if (!ShowEditorPane)
+        {
+            Section = Section.Editor;
+        }
+        tool.Execute(null);
+    }
     public bool ShowPagesPane => IsWorkspace && Layout switch
     {
         LayoutMode.Wide => true,
@@ -93,6 +146,13 @@ public sealed partial class MainViewModel : ObservableObject
     /// <summary>The page list fills the remaining width unless the editor is beside it.</summary>
     public bool PagesPaneIsColumn => Layout == LayoutMode.Wide;
     public bool ShowEditorNavItem => Layout != LayoutMode.Wide;
+
+    // The macOS toolbar's Pages | Editor switch, used when the window is too narrow for both.
+    public bool IsPagesShown => ShowPagesPane && !ShowEditorPane;
+    public bool IsEditorShown => ShowEditorPane && !ShowPagesPane;
+
+    /// <summary>The toolbar's centre group collapses in a narrow window (its commands stay in the menu bar).</summary>
+    public bool ShowToolbarActions => Layout != LayoutMode.Narrow;
 
     private readonly TaskCompletionSource _discoveryStarted = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
@@ -153,7 +213,8 @@ public sealed partial class MainViewModel : ObservableObject
         foreach (var name in new[]
         {
             nameof(IsWorkspace), nameof(ShowSettings), nameof(ShowHelp), nameof(ShowScanPane), nameof(ShowPagesPane),
-            nameof(ShowEditorPane), nameof(PagesPaneIsColumn), nameof(ShowEditorNavItem),
+            nameof(ShowEditorPane), nameof(PagesPaneIsColumn), nameof(ShowEditorNavItem), nameof(SidebarVisible),
+            nameof(SidebarMenuHeader), nameof(IsPagesShown), nameof(IsEditorShown), nameof(ShowToolbarActions),
         })
         {
             OnPropertyChanged(name);
@@ -787,6 +848,7 @@ public sealed partial class MainViewModel : ObservableObject
 
     private void RaiseDocumentState()
     {
+        OnPropertyChanged(nameof(DocumentPath));
         OnPropertyChanged(nameof(WindowTitle));
         OnPropertyChanged(nameof(HasUnsavedChanges));
         OnPropertyChanged(nameof(HasPages));
