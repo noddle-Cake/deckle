@@ -46,6 +46,9 @@ public static class AppShortcuts
     public const string Minimize = nameof(Minimize);
     public const string FullScreen = nameof(FullScreen);
     public const string ToggleSidebar = nameof(ToggleSidebar);
+    public const string Help = nameof(Help);
+    public const string KeyboardShortcuts = nameof(KeyboardShortcuts);
+    public const string RefreshScanners = nameof(RefreshScanners);
 
     /// <summary>Use macOS conventions. Tests switch this to check both platforms.</summary>
     public static bool IsMac { get; set; } = OperatingSystem.IsMacOS();
@@ -81,7 +84,12 @@ public static class AppShortcuts
             ZoomFit => [new(Key.D0, cmd), new(Key.NumPad0, cmd)],
             PreviousPage => [new(Key.PageUp, none)],
             NextPage => [new(Key.PageDown, none)],
-            Settings => IsMac ? [new(Key.OemComma, cmd)] : [],
+            // ⌘, on a Mac; Ctrl+, for GNOME's Preferences; Windows apps have no standard shortcut for settings.
+            Settings => IsMac || PlatformLook.IsGnome ? [new(Key.OemComma, cmd)] : [],
+            // GNOME's Keyboard Shortcuts window (Ctrl+?); F1 Help and F5 Refresh are Windows and Linux standards.
+            KeyboardShortcuts => !IsMac && PlatformLook.IsGnome ? [new(Key.OemQuestion, cmd | shift)] : [],
+            Help => IsMac ? [] : [new(Key.F1, none)],
+            RefreshScanners => IsMac ? [] : [new(Key.F5, none)],
             Cancel => [new(Key.Escape, none)],
             Cut => [new(Key.X, cmd)],
             Paste => [new(Key.V, cmd)],
@@ -89,7 +97,7 @@ public static class AppShortcuts
             ShowScan => IsMac ? [new(Key.D1, cmd)] : [],
             ShowPages => IsMac ? [new(Key.D2, cmd)] : [],
             ShowEditor => IsMac ? [new(Key.D3, cmd)] : [],
-            CloseWindow => IsMac ? [new(Key.W, cmd)] : [],
+            CloseWindow => [new(Key.W, cmd)], // ⌘W, and Ctrl+W on Windows and GNOME.
             Minimize => IsMac ? [new(Key.M, cmd)] : [],
             FullScreen => IsMac ? [new(Key.F, KeyModifiers.Control | cmd)] : [],
             ToggleSidebar => IsMac ? [new(Key.S, KeyModifiers.Control | cmd)] : [],
@@ -142,6 +150,7 @@ public static class AppShortcuts
         Key.Up => "↑",
         Key.Down => "↓",
         Key.OemComma => ",",
+        Key.OemQuestion => "?",
         Key.OemPlus => IsMac ? "+" : "=",
         Key.OemMinus => "-",
         >= Key.D0 and <= Key.D9 => ((int)(key - Key.D0)).ToString(),

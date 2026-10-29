@@ -14,7 +14,7 @@
           <TextBlock Classes="caption" Text="{Binding Pages.SelectionSummary}" />
         </StackPanel>
         <!-- On macOS undo/redo live in the Edit menu, and the common page actions in the window toolbar. -->
-        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Bottom" IsVisible="{x:Static svc:PlatformLook.NotMac}">
+        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Bottom" IsVisible="{x:Static svc:PlatformLook.HasPaneActions}">
           <Button Classes="icon" Command="{Binding UndoCommand}" IsEnabled="{Binding CanUndo}" ToolTip.Tip="{svc:ShortcutTip Undo, Undo}">
             <c:LucideIcon Kind="Undo2" />
           </Button>
@@ -30,26 +30,26 @@
           <c:LucideIcon Kind="Import" />
         </Button>
         <Button Classes="icon" Command="{Binding Pages.RotateLeftCommand}" IsEnabled="{Binding HasPages}" ToolTip.Tip="Rotate left"
-                IsVisible="{x:Static svc:PlatformLook.NotMac}">
+                IsVisible="{x:Static svc:PlatformLook.HasPaneActions}">
           <c:LucideIcon Kind="RotateCcw" />
         </Button>
         <Button Classes="icon" Command="{Binding Pages.RotateRightCommand}" IsEnabled="{Binding HasPages}" ToolTip.Tip="Rotate right"
-                IsVisible="{x:Static svc:PlatformLook.NotMac}">
+                IsVisible="{x:Static svc:PlatformLook.HasPaneActions}">
           <c:LucideIcon Kind="RotateCw" />
         </Button>
         <Button Classes="icon" Command="{Binding DeleteSelectedCommand}" IsEnabled="{Binding Pages.HasSelection}" ToolTip.Tip="{svc:ShortcutTip 'Delete selected pages', Delete}">
           <c:LucideIcon Kind="Trash2" />
         </Button>
         <Button Classes="icon" Command="{Binding SaveAsCommand}" IsEnabled="{Binding HasPages}" ToolTip.Tip="{svc:ShortcutTip 'Save as…', SaveAs}"
-                IsVisible="{x:Static svc:PlatformLook.NotMac}">
+                IsVisible="{x:Static svc:PlatformLook.HasPaneActions}">
           <c:LucideIcon Kind="FileOutput" />
         </Button>
         <Button Classes="icon" Command="{Binding CopyPageCommand}" IsEnabled="{Binding Pages.HasSelection}" ToolTip.Tip="{svc:ShortcutTip 'Copy page to clipboard', Copy}"
-                IsVisible="{x:Static svc:PlatformLook.NotMac}">
+                IsVisible="{x:Static svc:PlatformLook.HasPaneActions}">
           <c:LucideIcon Kind="Copy" />
         </Button>
         <Button Classes="icon" Command="{Binding ShareCommand}" IsEnabled="{Binding HasPages}" ToolTip.Tip="{svc:ShortcutTip 'Share selected pages, or all pages', Share}"
-                IsVisible="{x:Static svc:PlatformLook.NotMac}">
+                IsVisible="{x:Static svc:PlatformLook.HasPaneActions}">
           <c:LucideIcon Kind="Share" />
         </Button>
         <Button Classes="icon" ToolTip.Tip="More page actions" IsEnabled="{Binding HasPages}">

@@ -4,6 +4,9 @@ namespace Scanwise.Core.Settings;
 
 public enum AppTheme { System, Light, Dark }
 
+/// <summary>Which platform's design the window follows; Automatic matches the operating system.</summary>
+public enum AppLook { Automatic, Windows, MacOS, Gnome }
+
 public enum SaveLocationMode
 {
     /// <summary>Scans are written to <see cref="AppSettings.SaveFolder"/> without asking.</summary>
@@ -30,6 +33,9 @@ public sealed class AppSettings
 
     // Appearance
     public AppTheme Theme { get; set; } = AppTheme.System;
+
+    /// <summary>Window layout and conventions (Windows, macOS or GNOME); applied when the app starts.</summary>
+    public AppLook Look { get; set; } = AppLook.Automatic;
     public MeasurementUnits Units { get; set; } = MeasurementUnits.Metric;
 
     /// <summary>Where the main window was last time; null until it has been closed once.</summary>

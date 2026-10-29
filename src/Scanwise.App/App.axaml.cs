@@ -31,21 +31,52 @@ public partial class App : Application
 
     private readonly SingleInstance _instance = new();
 
+    /// <summary>Settings ▸ Look ▸ Restart Now.</summary>
+    public static Action? RequestRestart { get; set; }
+
+    /// <summary>--look=windows|macos|gnome: overrides the Look setting for this run (screenshots, testing).</summary>
+    public static AppLook? LookOverride { get; set; }
+
     public override void Initialize()
     {
         AvaloniaXamlLoader.Load(this);
-        if (AppShortcuts.IsMac)
+    }
+
+    /// <summary>
+    /// Fixes the look for this run (Settings ▸ Look, or --look) and loads its styles. The look decides the window
+    /// structure, so a change applies on the next start.
+    /// </summary>
+    public void ApplyLook(AppLook setting)
+    {
+        PlatformLook.Current = PlatformLook.Resolve(LookOverride ?? setting);
+        foreach (var file in LookStyles(PlatformLook.Current))
         {
-            TitleCase.ApplyToMenus();
-            Styles.Add(new StyleInclude(new Uri("avares://Scanwise/")) { Source = new Uri("avares://Scanwise/MacStyles.axaml") });
+            Styles.Add(new StyleInclude(new Uri("avares://Scanwise/")) { Source = new Uri($"avares://Scanwise/{file}") });
+        }
+        if (PlatformLook.IsToolbarLook)
+        {
+            TitleCase.ApplyToMenus(); // Apple and GNOME both use title case in menus.
+        }
+        if (PlatformLook.IsGnome && Styles.OfType<FluentAvalonia.Styling.FluentAvaloniaTheme>().FirstOrDefault() is { } fluent)
+        {
+            fluent.PreferUserAccentColor = false;
+            fluent.CustomAccentColor = GnomeDesktop.AccentColor();
         }
     }
+
+    public static string[] LookStyles(AppLook look) => look switch
+    {
+        AppLook.MacOS => ["ToolbarLookStyles.axaml", "MacStyles.axaml"],
+        AppLook.Gnome => ["ToolbarLookStyles.axaml", "GnomeStyles.axaml"],
+        _ => [],
+    };
 
     public override void OnFrameworkInitializationCompleted()
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             var services = new AppServices(AppPaths.Default());
+            ApplyLook(services.Settings.Look);
             ApplyTheme(services.Settings.Theme);
             FollowContrastSetting();
             var window = new MainWindow();
@@ -58,13 +89,22 @@ public partial class App : Application
             var ui = new UiServices(window);
             var vm = new MainViewModel(services, ui);
             window.DataContext = vm;
-            if (AppShortcuts.IsMac)
+            // The menu bar: macOS's own on a Mac (whatever the look), inside the window for the macOS look elsewhere.
+            if (AppShortcuts.IsMac || PlatformLook.IsMac)
             {
                 NativeMenu.SetMenu(this, MacMenuBar.AppMenu(vm, window.OpenSettingsCommand));
                 NativeMenu.SetMenu(window, MacMenuBar.WindowMenu(vm, window, window.OpenHelpCommand));
             }
             desktop.MainWindow = window;
             desktop.ShutdownRequested += (_, _) => vm.OnShutdown();
+            RequestRestart = () => Dispatcher.UIThread.Post(() =>
+            {
+                vm.OnShutdown(); // Pages and settings are saved before the new copy reads them.
+                var start = new System.Diagnostics.ProcessStartInfo(ScanShortcuts.ExePath) { UseShellExecute = false };
+                start.ArgumentList.Add(Program.WaitForArgument + Environment.ProcessId);
+                System.Diagnostics.Process.Start(start);
+                desktop.Shutdown();
+            });
             window.Opened += async (_, _) => await vm.InitializeAsync();
             if (SelfCheckReport is { } report && OperatingSystem.IsMacOS())
             {

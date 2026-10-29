@@ -420,6 +420,78 @@ Prepared 2026-10-29; **the Mac run itself is still to do.** On a Mac: `scripts/m
 - [x] Unit-test the shortcut/label helpers and the menu construction on Linux with a faked macOS platform
   (`MacConventionTests`, done in 9.1–9.4).
 
+### Phase 10: Windows design (Fluent)
+
+Audit of 2026-10-29 against https://learn.microsoft.com/en-us/windows/apps/design/ (title bar, Mica, keyboard
+accelerators, layering). The app started as a Fluent app (FluentAvalonia: NavigationView, InfoBar,
+ContentDialog with the primary button first, Settings as a page with SettingsExpander cards), so most of it
+already fits. What doesn't:
+
+- [x] **Font.** `WithInterFont()` makes text Inter; Windows apps use Segoe UI Variable ("The window title
+  should use the Segoe UI Variable (if available) or Segoe UI font"). *Fix:* use the system font on every OS
+  (Segoe UI Variable on Windows, the fontconfig default — Cantarell/Adwaita Sans — on GNOME, San Francisco on
+  macOS). Tests keep Inter so screenshots are the same everywhere.
+- [~] **Mica and the title bar.** "We recommend that you apply Mica or Mica Alt as the base layer of your app,
+  and prioritize visibility in the title bar area"; the title bar is 32 px with the 16 px icon 16 px from the
+  edge, the title 16 px after it, and the title bar blends with the window. The app uses a plain system title
+  bar on a solid background. *Fix (Windows look on Windows 11):* `TransparencyLevelHint = Mica`, extend into
+  the title bar with a 32 px row (icon, title in caption style), keep the system caption buttons; the nav pane
+  stays transparent so Mica shows, and the content area keeps its layer fill. Falls back to the solid colour on
+  Windows 10 / transparency off.
+- [x] **Standard accelerators.** Microsoft's common list: F5 refresh, Ctrl+W close, Ctrl+Plus/Minus/0 zoom
+  (have), Ctrl+Y redo (have), Del (have), Ctrl+D delete-with-undo, F1 help. *Fix:* F5 searches for scanners
+  again, Ctrl+W closes the window, F1 opens Help (Windows and GNOME looks).
+- [x] Already fine: accelerators shown in tooltips and menu items; ContentDialog order (primary first, Close
+  last); Settings as a page in the nav footer; InfoBar for status; Lucide icons were the user's choice.
+
+### Phase 11: GNOME (Linux)
+
+Audit of 2026-10-29 against https://developer.gnome.org/hig/ (header bars, sidebars, menus, dialogs,
+preferences, keyboard). On GNOME the app looks like a Windows app inside a system title bar.
+
+- [x] **Header bar.** GNOME windows have one header bar that is the title bar: "Main user action buttons, such
+  as new, add, open, and back" at the start, "a window heading" (or a view switcher) in the centre, "menus …
+  typically placed at the end"; flat buttons, all with tooltips; "always ensure that there is some blank space
+  in the header bar to allow it to be dragged". *Fix:* a `GnomeShell` with client-side decorations: the header
+  bar holds Scan (with its menu) and Import at the start, the document title (and a Pages | Editor switcher when
+  narrow) in the centre, Share and the primary menu at the end, and the window buttons from the user's GNOME
+  `button-layout` setting (close only by default). Drag, double-click to maximize, resize grips on the edges.
+- [x] **Primary menu.** "Preferences", "Keyboard Shortcuts", "Help", "About Scanwise" grouped at the end; no
+  Quit or Close. Ctrl+, Preferences, Ctrl+? Keyboard Shortcuts, F1 Help.
+- [x] **No nav rail.** The scan options are a sidebar beside the pages (`AdwNavigationSplitView`-like) that
+  collapses in narrow windows; Help, Settings and the save folder move to the primary menu.
+- [x] **Preferences** open in their own window (the existing settings cards already look like Adwaita boxed
+  lists with switches, which GNOME uses).
+- [x] **Dialogs.** Libadwaita alert dialogs put the affirmative button last (trailing), like macOS: reuse the
+  macOS button order.
+- [x] **Capitalization.** Menu items and header bar buttons use header capitalization ("Save Selected Pages
+  As…"): reuse `TitleCase`.
+- [~] **Adwaita styling.** Window background #fafafa / #242424, header bar #ebebeb / #303030, 12 px window
+  corners, accent blue #3584e4 (follows the system accent where Avalonia exposes it).
+
+Status of phases 10–12 (2026-10-29): implemented and tested on Linux (`LookTests`, headless screenshots of each
+look). Still open:
+- **Mica:** needs checking on Windows 11. The title row, Mica hint and transparent panes are in place, but
+  nothing was run on Windows.
+- **Rounded corners:** the GNOME window's 12 px corners aren't done. Client-side decorations draw a square frame
+  with a 1 px border, because rounded corners need a transparent window, which Avalonia on X11 doesn't do
+  reliably.
+- **Window shadow:** GNOME's own shadow is missing for the same reason.
+
+### Phase 12: Look setting (user decision 2026-10-29: option b)
+
+Settings ▸ Appearance ▸ **Look**: Automatic (default: Windows on Windows, macOS on macOS, GNOME on Linux),
+Windows, macOS, GNOME. Applied on restart (the window structure differs per look).
+- [x] Split "look" from "OS". Layout, title case, dialog order and Settings placement follow the look
+  (`UiLook.Current`); keyboard modifiers (⌘ vs Ctrl) and native integrations (menu bar, Dock, Liquid Glass,
+  share sheet) follow the real OS, whatever the look.
+- [x] macOS look elsewhere: drawn close/minimize/zoom buttons at the leading edge and the menu bar shown inside
+  the window (Avalonia's `NativeMenuBar`), since there's no global menu bar.
+- [x] GNOME look elsewhere: the same header bar with drawn window buttons.
+- [x] Windows look elsewhere: the Fluent shell with the system title bar (what Linux and macOS had before 9.x).
+- [x] Tests: each look renders on Linux headless (screenshots), the setting round-trips, Automatic resolves per
+  OS.
+
 ## Verification log
 
 - 2026-10-29: Auto-rotate (user report: about 80% of pages right, landscape pages scanned in portrait).

@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.VisualTree;
+using Scanwise.App.Controls;
 
 namespace Scanwise.App.Views;
 
@@ -16,6 +17,22 @@ public partial class MacShell : UserControl
         InitializeComponent();
         Toolbar.PointerPressed += OnTitleBarPressed;
         SidebarTitleArea.PointerPressed += OnTitleBarPressed;
+    }
+
+    /// <summary>
+    /// The macOS look on Windows or Linux: draws traffic lights where macOS puts them (the window draws its own
+    /// frame there, see ClientDecorations).
+    /// </summary>
+    public void UseOwnWindowButtons()
+    {
+        var lights = new WindowButtons(WindowButtonStyle.Mac, ["close", "minimize", "maximize"])
+        {
+            HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Left,
+            Margin = new Thickness(20, 0, 0, 0),
+        };
+        Grid.SetRow(lights, 0);
+        Grid.SetColumnSpan(lights, 2);
+        Root.Children.Add(lights);
     }
 
     public object? Body

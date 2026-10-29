@@ -16,6 +16,8 @@ image
 import
 keyboard
 languages
+menu
+minus
 palette
 panel-left
 redo-2
@@ -28,6 +30,7 @@ scan-line
 settings
 share
 sliders-horizontal
+square
 text-cursor-input
 trash-2
 undo-2

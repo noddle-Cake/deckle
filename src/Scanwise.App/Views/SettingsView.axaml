@@ -9,7 +9,8 @@
              x:DataType="vm:SettingsViewModel">
   <ScrollViewer HorizontalScrollBarVisibility="Disabled">
     <StackPanel Margin="32,24" Spacing="6" MaxWidth="920" HorizontalAlignment="Stretch">
-      <TextBlock Classes="title" FontSize="28" Text="Settings" Margin="0,0,0,12" />
+      <!-- The GNOME Preferences window's own title says it. -->
+      <TextBlock Classes="title" FontSize="28" Text="Settings" Margin="0,0,0,12" IsVisible="{x:Static svc:PlatformLook.IsWindows}" />
 
       <TextBlock Classes="heading" Text="Saving" Margin="0,8,0,4" />
       <ui:SettingsExpander Header="Save location" Description="{Binding SaveFolder}" IconSource="{c:LucideSource Folder}" IsExpanded="True">
@@ -176,6 +177,17 @@
         <ui:SettingsExpander.Footer>
           <ComboBox ItemsSource="{Binding Themes}" SelectedItem="{Binding Theme}" MinWidth="180" />
         </ui:SettingsExpander.Footer>
+      </ui:SettingsExpander>
+      <ui:SettingsExpander Header="Look" Description="Window layout and conventions: Windows, macOS or GNOME. Automatic follows this computer."
+                           IconSource="{c:LucideSource PanelLeft}">
+        <ui:SettingsExpander.Footer>
+          <ComboBox ItemsSource="{Binding Looks}" SelectedItem="{Binding Look}" MinWidth="180" />
+        </ui:SettingsExpander.Footer>
+        <ui:SettingsExpanderItem Content="Takes effect after Scanwise restarts." IsVisible="{Binding LookNeedsRestart}">
+          <ui:SettingsExpanderItem.Footer>
+            <Button Content="Restart Now" Command="{Binding RestartNowCommand}" />
+          </ui:SettingsExpanderItem.Footer>
+        </ui:SettingsExpanderItem>
       </ui:SettingsExpander>
 
       <TextBlock Classes="heading" Text="About" Margin="0,16,0,4" />

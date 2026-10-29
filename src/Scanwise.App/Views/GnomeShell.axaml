@@ -1,0 +1,86 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Scanwise.App.ViewModels"
+             xmlns:svc="using:Scanwise.App.Services"
+             xmlns:c="using:Scanwise.App.Controls"
+             x:Class="Scanwise.App.Views.GnomeShell"
+             x:DataType="vm:MainViewModel">
+  <!--
+    The GNOME window (tasks.md phase 11), shaped like libadwaita's split view: the scan options are a sidebar with
+    its own header, and the content has the header bar, which is also the window's title bar (client-side
+    decorations). Header bar, per the GNOME HIG: main actions at the start (Scan, Import), the window heading in the
+    centre (a Pages | Editor switcher replaces it when narrow), menus at the end (Share, the primary menu), then the
+    window buttons from GNOME's button-layout setting. Flat buttons, all with tooltips; blank space drags the
+    window. MainWindow puts its content in BodyHost.
+  -->
+  <Grid x:Name="Root" RowDefinitions="46,*">
+    <Grid.ColumnDefinitions>
+      <ColumnDefinition Width="340" />
+      <ColumnDefinition Width="*" />
+    </Grid.ColumnDefinitions>
+
+    <Border Grid.Column="1" Grid.RowSpan="2" Background="{DynamicResource ContentBackground}" />
+    <Border x:Name="SidebarBack" Grid.Column="0" Grid.RowSpan="2" Background="{DynamicResource SidebarBackground}" />
+
+    <!-- Sidebar header: window buttons on the start side (when the layout puts them there), and its title. -->
+    <Grid x:Name="SidebarHeader" Grid.Row="0" Grid.Column="0" ColumnDefinitions="Auto,*,Auto" Margin="8,0" Background="Transparent">
+      <ContentControl x:Name="SidebarStartButtons" VerticalAlignment="Center" />
+      <TextBlock Grid.Column="1" Text="Scan Options" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" />
+    </Grid>
+
+    <!-- Content header bar. -->
+    <Grid x:Name="HeaderBar" Grid.Row="0" Grid.Column="1" ColumnDefinitions="Auto,*,Auto" Margin="6,0" Background="Transparent">
+      <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+        <ContentControl x:Name="HeaderStartButtons" VerticalAlignment="Center" />
+        <ToggleButton Classes="icon" Command="{Binding ToggleSidebarCommand}" IsChecked="{Binding SidebarVisible, Mode=OneWay}"
+                      ToolTip.Tip="{svc:ShortcutTip 'Show sidebar', ToggleSidebar}">
+          <c:LucideIcon Kind="PanelLeft" />
+        </ToggleButton>
+        <SplitButton Command="{Binding ScanCommand}" IsEnabled="{Binding CanScan}" ToolTip.Tip="{svc:ShortcutTip Scan, Scan}"
+                     AutomationProperties.Name="Scan" Background="Transparent" BorderThickness="0">
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <c:LucideIcon Kind="ScanLine" FontSize="16" />
+            <TextBlock Text="Scan" FontWeight="SemiBold" />
+          </StackPanel>
+          <SplitButton.Flyout>
+            <MenuFlyout Placement="BottomEdgeAlignedLeft">
+              <MenuItem Header="Scan and add to current document" Command="{Binding ScanAddToDocumentCommand}" />
+              <MenuItem Header="Scan into new document" Command="{Binding ScanStartFreshCommand}" InputGesture="{svc:Shortcut ScanNew}" />
+              <MenuItem Header="Scan and insert between pages…" Command="{Binding ScanMergeCommand}" />
+              <Separator />
+              <MenuItem Header="Batch scan…" Command="{Binding BatchScanCommand}" />
+            </MenuFlyout>
+          </SplitButton.Flyout>
+        </SplitButton>
+        <Button Classes="icon" Command="{Binding ImportCommand}" ToolTip.Tip="{svc:ShortcutTip 'Import images or PDFs', Import}">
+          <c:LucideIcon Kind="Import" />
+        </Button>
+      </StackPanel>
+
+      <!-- Centre: the window heading, or the view switcher when there is room for only one pane. -->
+      <StackPanel Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center" IsVisible="{Binding PagesPaneIsColumn}">
+        <TextBlock Text="{Binding WindowTitle}" FontWeight="Bold" HorizontalAlignment="Center" TextTrimming="CharacterEllipsis" MaxWidth="320" />
+        <TextBlock Classes="caption" Text="{Binding Pages.SelectionSummary}" HorizontalAlignment="Center" IsVisible="{Binding HasPages}" />
+      </StackPanel>
+      <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center"
+                  IsVisible="{Binding !PagesPaneIsColumn}">
+        <ToggleButton Classes="segment" Content="Pages" IsChecked="{Binding IsPagesShown, Mode=OneWay}"
+                      Command="{Binding NavigateCommand}" CommandParameter="{x:Static vm:Section.Pages}" CornerRadius="6,0,0,6" />
+        <ToggleButton Classes="segment" Content="Editor" IsChecked="{Binding IsEditorShown, Mode=OneWay}"
+                      Command="{Binding NavigateCommand}" CommandParameter="{x:Static vm:Section.Editor}" CornerRadius="0,6,6,0" />
+      </StackPanel>
+
+      <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+        <Button Classes="icon" Command="{Binding ShareCommand}" IsEnabled="{Binding HasPages}" ToolTip.Tip="{svc:ShortcutTip 'Share selected pages, or all pages', Share}">
+          <c:LucideIcon Kind="Share" />
+        </Button>
+        <Button x:Name="PrimaryMenuButton" Classes="icon" ToolTip.Tip="Main menu" AutomationProperties.Name="Main menu">
+          <c:LucideIcon Kind="Menu" />
+        </Button>
+        <ContentControl x:Name="HeaderEndButtons" VerticalAlignment="Center" Margin="6,0,0,0" />
+      </StackPanel>
+    </Grid>
+
+    <ContentControl x:Name="BodyHost" Grid.Row="1" Grid.ColumnSpan="2" />
+  </Grid>
+</UserControl>

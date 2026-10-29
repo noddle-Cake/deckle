@@ -9,9 +9,9 @@ public partial class ScanOptionsView : UserControl
     public ScanOptionsView()
     {
         InitializeComponent();
-        if (AppShortcuts.IsMac)
+        if (PlatformLook.IsToolbarLook)
         {
-            // Scan moved to the toolbar, so Preview has the action bar to itself.
+            // Scan moved to the toolbar / header bar, so Preview has the action bar to itself.
             Grid.SetColumnSpan(PreviewButton, 2);
             PreviewButton.Margin = default;
             PreviewButton.HorizontalAlignment = HorizontalAlignment.Stretch;

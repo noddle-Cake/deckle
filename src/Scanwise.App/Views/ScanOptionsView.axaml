@@ -13,7 +13,7 @@
       <!-- Header: profile picker -->
       <Grid Grid.Row="0" Margin="16,14,12,6" ColumnDefinitions="*,Auto">
         <StackPanel Spacing="2">
-          <TextBlock Classes="title" Text="Scan" />
+          <TextBlock Classes="title" Text="Scan" IsVisible="{x:Static svc:PlatformLook.NotGnome}" /> <!-- GNOME: the sidebar header says it. -->
           <ComboBox ItemsSource="{Binding ProfileNames}" SelectedItem="{Binding SelectedProfileName}"
                     HorizontalAlignment="Stretch" ToolTip.Tip="Scan profile: a saved set of scan options" />
         </StackPanel>
@@ -174,7 +174,7 @@
           </Button>
           <!-- macOS: Scan is the toolbar's primary button (one primary action per window). -->
           <SplitButton Grid.Column="1" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
-                       IsVisible="{x:Static svc:PlatformLook.NotMac}"
+                       IsVisible="{x:Static svc:PlatformLook.IsWindows}"
                        Classes="accent" Command="{Binding ScanCommand}" IsEnabled="{Binding CanScan}"
                        ToolTip.Tip="{svc:ShortcutTip Scan, Scan}">
             <StackPanel Orientation="Horizontal" Spacing="8">

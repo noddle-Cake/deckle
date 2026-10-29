@@ -74,7 +74,7 @@ public sealed partial class MainViewModel : ObservableObject
     /// macOS titles the window with the document's name ("Untitled" until saved) and shows unsaved changes as the
     /// dot in the close button (see <see cref="DocumentPath"/>); elsewhere the title carries the page count and "•".
     /// </summary>
-    public string WindowTitle => AppShortcuts.IsMac
+    public string WindowTitle => PlatformLook.IsToolbarLook
         ? Document.Count == 0 ? "Scanwise" : Path.GetFileName(DocumentPath) ?? "Untitled"
         : Document.Count == 0 ? "Scanwise" : $"Scanwise · {Document.Count} page{(Document.Count == 1 ? "" : "s")}{(HasUnsavedChanges ? " •" : "")}";
 
@@ -783,8 +783,9 @@ public sealed partial class MainViewModel : ObservableObject
             return;
         }
         var count = _services.Session.SavedPageCount;
-        // macOS: no alert at launch (Alerts HIG). The pages come back and the status bar offers to clear them.
-        if (!AppShortcuts.IsMac
+        // macOS and GNOME looks: no alert at launch (Apple Alerts HIG). The pages come back and the status bar offers
+        // to clear them.
+        if (!PlatformLook.IsToolbarLook
             && !await _ui.ConfirmAsync("Restore pages?", $"{count} page(s) from your last session were not cleared. Restore them?", "Restore", "Discard"))
         {
             _services.Session.Clear();
@@ -801,7 +802,7 @@ public sealed partial class MainViewModel : ObservableObject
         {
             EndOperation();
         }
-        if (AppShortcuts.IsMac && Document.Count > 0)
+        if (PlatformLook.IsToolbarLook && Document.Count > 0)
         {
             ShowStatus("Pages restored", $"{Document.Count} page(s) from your last session are back.", InfoBarSeverity.Informational);
             StatusCanClear = true;

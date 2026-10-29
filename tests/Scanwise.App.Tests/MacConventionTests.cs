@@ -38,17 +38,19 @@ public sealed class MacConventionTests : IDisposable
     /// <summary>The standard macOS shortcuts that do include Control: ⌃⌘F full screen and ⌃⌘S show/hide sidebar.</summary>
     private static readonly string[] ControlCommandShortcuts = [AppShortcuts.FullScreen, AppShortcuts.ToggleSidebar];
 
+    /// <summary>A Mac: ⌘ keyboard and the macOS look (both switched, as on a real Mac with Look = Automatic).</summary>
     private static void As(bool mac, Action body)
     {
-        var was = AppShortcuts.IsMac;
+        var was = (AppShortcuts.IsMac, PlatformLook.Current);
         AppShortcuts.IsMac = mac;
+        PlatformLook.Current = mac ? AppLook.MacOS : AppLook.Windows;
         try
         {
             body();
         }
         finally
         {
-            AppShortcuts.IsMac = was;
+            (AppShortcuts.IsMac, PlatformLook.Current) = was;
         }
     }
 
@@ -109,7 +111,7 @@ public sealed class MacConventionTests : IDisposable
         Assert.Contains(window.KeyBindings, b => b.Gesture.Equals(new KeyGesture(Key.OemComma, KeyModifiers.Meta)));
         Assert.DoesNotContain(window.KeyBindings, b => b.Gesture.KeyModifiers.HasFlag(KeyModifiers.Control));
         // Settings and Help are menu bar windows on macOS; the Fluent nav rail isn't in the window at all.
-        Assert.IsType<MacShell>(window.Content);
+        Assert.NotNull(window.MacShell);
         Assert.Null(window.FindControl<NavigationView>("Nav")!.Parent);
         window.Close();
     });
@@ -193,9 +195,11 @@ public sealed class MacConventionTests : IDisposable
     public void MacWindowUsesASidebarAndATitleBarToolbar() => As(true, () =>
     {
         var (window, vm) = Open(mac: true);
-        var shell = Assert.IsType<MacShell>(window.Content);
-        Assert.NotNull(window.MacShell);
-        Assert.True(window.ExtendClientAreaToDecorationsHint);
+        var shell = window.MacShell!;
+        // On Linux the macOS look draws its own frame: traffic lights and an in-window menu bar.
+        Assert.Equal(SystemDecorations.None, window.SystemDecorations);
+        Assert.Contains(window.GetVisualDescendants(), v => v is NativeMenuBar);
+        Assert.Equal(3, window.GetVisualDescendants().OfType<Button>().Count(b => b.Classes.Contains("trafficlight")));
         Assert.True(vm.SidebarVisible);
         Assert.Equal("Scanwise", window.Title); // No document yet; with pages it's the file name or "Untitled".
         Screenshot(window, "mac-01-wide");
@@ -341,7 +345,7 @@ public sealed class MacConventionTests : IDisposable
         var window = new Window { Width = 600, Height = 400 };
         if (mac)
         {
-            window.Styles.Add(new StyleInclude(new Uri("avares://Scanwise/")) { Source = new Uri("avares://Scanwise/MacStyles.axaml") });
+            LookStyles.AddTo(window, AppLook.MacOS);
         }
         window.Show();
         var dialog = new ContentDialog { Title = "Delete profile?", PrimaryButtonText = "Delete", CloseButtonText = "Cancel", DefaultButton = ContentDialogButton.Primary };
@@ -388,7 +392,7 @@ public sealed class MacConventionTests : IDisposable
         if (mac)
         {
             // App.Initialize ran without macOS styles in the test app; add them to this window.
-            window.Styles.Add(new StyleInclude(new Uri("avares://Scanwise/")) { Source = new Uri("avares://Scanwise/MacStyles.axaml") });
+            LookStyles.AddTo(window, AppLook.MacOS);
         }
         var vm = new MainViewModel(services, new FakeUi());
         window.DataContext = vm;

@@ -46,7 +46,15 @@ public sealed class MacSelfCheck
 
         // Managed side: the Mac conventions are switched on.
         Expect("mac conventions", AppShortcuts.IsMac, "AppShortcuts.IsMac is false");
-        Expect("mac shell", window.Content is MacShell, $"window content is {window.Content?.GetType().Name}");
+        Info("look", PlatformLook.Current.ToString());
+        if (PlatformLook.IsMac)
+        {
+            Expect("mac shell", window.MacShell is not null, $"window content is {window.Content?.GetType().Name}");
+        }
+        else
+        {
+            Skip("mac shell", $"Look is set to {PlatformLook.Current}; the native menu bar and Dock still apply");
+        }
         Expect("command shortcuts", window.KeyBindings.Any(b => b.Gesture.KeyModifiers == KeyModifiers.Meta),
             "no ⌘ key bindings on the window");
         Info("default font", FontManager.Current.DefaultFontFamily.Name);

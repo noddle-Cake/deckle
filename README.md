@@ -41,6 +41,13 @@ Scanwise combines two projects:
   sheet, the macOS share menu (AirDrop, Mail, Messages…), or a new email via `xdg-email` (Linux). One page is shared as JPG, several as one PDF.
   On Linux, copying images needs `wl-clipboard` (Wayland) or `xclip` (X11)
 
+**Looks like it belongs**
+- Follows each platform's design guidelines: Microsoft's Fluent design on Windows (Mica, standard shortcuts),
+  Apple's on macOS (menu bar, ⌘ shortcuts, toolbar, sidebar, Liquid Glass on macOS 26), GNOME's on Linux
+  (header bar, primary menu, Preferences window)
+- Settings ▸ Look lets any of the three run on any system (Automatic matches the OS); shortcuts keep following
+  your keyboard (⌘ on a Mac, Ctrl elsewhere)
+
 **Editing**
 - Thumbnail page list: multi-select, drag to reorder, drop files to import, undo/redo
 - Rotate, duplicate, delete, move, reverse, interleave/deinterleave
@@ -77,6 +84,7 @@ SCANWISE_TEST_GSETTINGS=1 scripts/test.sh   # also the GNOME shortcut (uses a te
 dotnet run --project src/Scanwise.App
 scripts/publish.sh                    # self-contained builds for linux-x64/arm64, win-x64, osx-x64/arm64
 scripts/make-icon-font.py             # rebuild the Lucide icon font after editing Assets/Fonts/lucide-icons.txt
+dotnet run --project src/Scanwise.App -- --look=gnome   # try another look (windows, macos, gnome) without changing Settings
 ```
 
 Layout: `src/Scanwise.Core` (scanning, export, import, page model, no UI), `src/Scanwise.App` (Avalonia +

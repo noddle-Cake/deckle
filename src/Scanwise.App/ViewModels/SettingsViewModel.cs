@@ -21,6 +21,8 @@ public sealed partial class SettingsViewModel : ObservableObject
         _ui = ui;
         var s = services.Settings;
         _theme = Themes.First(t => t.Value == s.Theme);
+        _look = Looks.First(l => l.Value == s.Look);
+        _startLook = s.Look;
         _saveFolder = s.SaveFolder;
         _askEveryTime = s.SaveLocation == SaveLocationMode.AskEveryTime;
         _autoSave = s.AutoSave;
@@ -50,6 +52,24 @@ public sealed partial class SettingsViewModel : ObservableObject
         new(AppTheme.Light, "Light"),
         new(AppTheme.Dark, "Dark"),
     ];
+
+    public IReadOnlyList<Choice<AppLook>> Looks { get; } =
+    [
+        new(AppLook.Automatic, "Automatic (" + PlatformLook.Resolve(AppLook.Automatic) switch
+        {
+            AppLook.MacOS => "macOS",
+            AppLook.Gnome => "GNOME",
+            _ => "Windows",
+        } + ")"),
+        new(AppLook.Windows, "Windows"),
+        new(AppLook.MacOS, "macOS"),
+        new(AppLook.Gnome, "GNOME"),
+    ];
+
+    private readonly AppLook _startLook;
+
+    /// <summary>The look decides the window's structure, so a new one applies after a restart.</summary>
+    public bool LookNeedsRestart => Look.Value != _startLook;
 
     public IReadOnlyList<Choice<string>> NamingPresets { get; } =
     [
@@ -81,6 +101,7 @@ public sealed partial class SettingsViewModel : ObservableObject
     public ObservableCollection<string> OcrLanguages { get; } = [];
 
     [ObservableProperty] private Choice<AppTheme> _theme;
+    [ObservableProperty] private Choice<AppLook> _look;
     [ObservableProperty] private string _saveFolder;
     [ObservableProperty] private bool _askEveryTime;
     [ObservableProperty] private bool _autoSave;
@@ -124,6 +145,16 @@ public sealed partial class SettingsViewModel : ObservableObject
         Save(s => s.Theme = value.Value);
         App.ApplyTheme(value.Value);
     }
+
+    partial void OnLookChanged(Choice<AppLook> value)
+    {
+        Save(s => s.Look = value.Value);
+        OnPropertyChanged(nameof(LookNeedsRestart));
+    }
+
+    /// <summary>Opens Scanwise again with the new look; the pages come back through the session.</summary>
+    [RelayCommand]
+    private void RestartNow() => App.RequestRestart?.Invoke();
 
     partial void OnAskEveryTimeChanged(bool value) => Save(s => s.SaveLocation = value ? SaveLocationMode.AskEveryTime : SaveLocationMode.Folder);
     partial void OnAutoSaveChanged(bool value) => Save(s => s.AutoSave = value);

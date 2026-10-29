@@ -23,7 +23,7 @@
         </StackPanel>
 
         <!-- On macOS these are in the window toolbar and the Page menu. -->
-        <WrapPanel Grid.Column="1" HorizontalAlignment="Center" IsEnabled="{Binding HasPage}" IsVisible="{x:Static svc:PlatformLook.NotMac}">
+        <WrapPanel Grid.Column="1" HorizontalAlignment="Center" IsEnabled="{Binding HasPage}" IsVisible="{x:Static svc:PlatformLook.HasPaneActions}">
           <Button Classes="icon" Command="{Binding RotateLeftCommand}" ToolTip.Tip="Rotate left">
             <c:LucideIcon Kind="RotateCcw" />
           </Button>
