@@ -72,6 +72,7 @@ dotnet build
 scripts/test.sh                       # unit + headless UI tests; enables SANE's virtual test scanner
 SCANWISE_TEST_OSD_DIR=/path/with/osd.traineddata scripts/test.sh   # also covers orientation detection
 SCANWISE_SCREENSHOTS=/tmp/shots scripts/test.sh                    # keep UI screenshots
+SCANWISE_ROTATE_EVAL=1 scripts/test.sh      # also measure auto-rotate accuracy on 28 realistic pages (slow)
 SCANWISE_TEST_GSETTINGS=1 scripts/test.sh   # also the GNOME shortcut (uses a temporary keyfile backend, not dconf)
 dotnet run --project src/Scanwise.App
 scripts/publish.sh                    # self-contained builds for linux-x64/arm64, win-x64, osx-x64/arm64

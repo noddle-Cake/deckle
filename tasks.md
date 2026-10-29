@@ -422,6 +422,20 @@ Prepared 2026-10-29; **the Mac run itself is still to do.** On a Mac: `scripts/m
 
 ## Verification log
 
+- 2026-10-29: Auto-rotate (user report: about 80% of pages right, landscape pages scanned in portrait).
+  New `AutoRotateAccuracyTests` (opt-in, `SCANWISE_ROTATE_EVAL=1`): 28 pages covering six landscape layouts
+  (letter, table, slide, photo with caption, small print, three columns) turned 90° and 270°, clean and rough
+  (grey, noise, blur, 1.5–2.5° skew), plus portrait pages at 0°/180°.
+  Before: 24/28 (86%). All four misses were small print where OSD picked the wrong direction (90↔270, so
+  landscape but upside down) with confidence 2.9–5.6, which was trusted unchecked.
+  After: 28/28 with orientation data, 28/28 without. Changes:
+  - OSD below 10 confidence is checked by reading the page both ways round.
+  - Low-confidence OSD no longer means "don't rotate": it falls through to the four-way comparison.
+  - The parallel OCR runs use one thread each (`OMP_THREAD_LIMIT=1`). Before, several Tesseracts at once
+    thrashed into the 60 s timeout, and a timeout silently meant "don't rotate".
+  - One slow angle no longer sinks the rest.
+  Real scans may still differ; the test's page set is the place to add a failing case.
+
 - 2026-10-29: Phase 9.1 (macOS HIG). App tests 19/19 (8 new in `MacConventionTests`: ⌘ gestures and labels,
   window bindings, Settings window, menu bar contents and order, Edit menu on a text field, dialog button
   order with and without `MacStyles.axaml`); core 47 passed, 4 skipped (OSD/GNOME env not set). `publish.sh
