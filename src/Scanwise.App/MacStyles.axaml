@@ -1,6 +1,7 @@
 <Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:ui="using:FluentAvalonia.UI.Controls">
+        xmlns:ui="using:FluentAvalonia.UI.Controls"
+        xmlns:v="using:Scanwise.App.Views">
 
   <Styles.Resources>
     <ResourceDictionary>
@@ -29,6 +30,11 @@
   </Style>
   <Style Selector=":is(Button).icon:disabled /template/ ContentPresenter#PART_ContentPresenter">
     <Setter Property="Background" Value="Transparent" />
+  </Style>
+
+  <!-- macOS 26: the sidebar floats on a Liquid Glass panel, so it needs no divider line. -->
+  <Style Selector="v|MacShell.glass Border.sidebar">
+    <Setter Property="BorderThickness" Value="0" />
   </Style>
 
   <!-- Pages | Editor segmented control in the toolbar. -->

@@ -291,6 +291,26 @@ public sealed class MacConventionTests : IDisposable
         window.Close();
     });
 
+    [Fact]
+    public void LiquidGlassPanelIsAnInsetPanelBehindTheSidebar()
+    {
+        Assert.Equal((8.0, 8.0, 332.0, 784.0), SidebarGlass.Frame(340, 800));
+        Assert.Null(SidebarGlass.Frame(0, 800)); // Sidebar hidden or narrow window: no panel.
+        Assert.Null(SidebarGlass.Frame(340, 10));
+    }
+
+    [AvaloniaFact]
+    public void GlassStyleDropsTheSidebarDivider() => As(true, () =>
+    {
+        var (window, _) = Open(mac: true);
+        var divider = Assert.IsType<Border>(window.FindControl<ScanOptionsView>("ScanPane")!.Content);
+        Assert.Equal(new Thickness(0, 0, 1, 0), divider.BorderThickness);
+        window.MacShell!.Classes.Add("glass");
+        Pump();
+        Assert.Equal(default, divider.BorderThickness);
+        window.Close();
+    });
+
     [AvaloniaFact]
     public void EveryLucideIconIsInTheBundledFont()
     {

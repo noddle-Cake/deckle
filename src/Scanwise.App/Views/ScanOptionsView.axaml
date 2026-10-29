@@ -7,7 +7,7 @@
              xmlns:scan="using:Scanwise.Core.Scanning"
              x:Class="Scanwise.App.Views.ScanOptionsView"
              x:DataType="vm:MainViewModel">
-  <Border Background="{DynamicResource SidebarBackground}" BorderBrush="{DynamicResource CardBorder}" BorderThickness="0,0,1,0">
+  <Border Classes="sidebar" Background="{DynamicResource SidebarBackground}" BorderBrush="{DynamicResource CardBorder}">
     <Grid RowDefinitions="Auto,*,Auto" DataContext="{Binding ScanOptions}" x:DataType="vm:ScanOptionsViewModel">
 
       <!-- Header: profile picker -->

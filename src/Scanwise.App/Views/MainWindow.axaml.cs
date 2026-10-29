@@ -34,8 +34,16 @@ public partial class MainWindow : Window
         {
             _settingsWindow?.Close();
             _helpWindow?.Close();
+            if (OperatingSystem.IsMacOS())
+            {
+                RemoveSidebarGlass();
+            }
         };
-        Opened += (_, _) => UpdateMacDocumentState();
+        Opened += (_, _) =>
+        {
+            UpdateMacDocumentState();
+            UpdateSidebarGlass();
+        };
         Nav.ItemInvoked += OnNavItemInvoked;
         AddHandler(DragDrop.DragOverEvent, OnDragOver);
         AddHandler(DragDrop.DropEvent, OnDrop);
@@ -246,7 +254,52 @@ public partial class MainWindow : Window
         columns[1].Width = pages;
         columns[2].Width = editor;
         // A narrow window shows the scan options as the only pane, on the content background.
-        _macShell?.SetSidebarWidth(vm.ShowScanPane && vm.Layout != LayoutMode.Narrow ? 340 : 0);
+        _sidebarWidth = vm.ShowScanPane && vm.Layout != LayoutMode.Narrow ? 340 : 0;
+        _macShell?.SetSidebarWidth(_sidebarWidth);
+        UpdateSidebarGlass();
+    }
+
+    private double _sidebarWidth;
+    private IntPtr _sidebarGlass;
+
+    /// <summary>
+    /// macOS 26: the Liquid Glass panel behind the sidebar follows its width, and hides with it. Created once the
+    /// window has a native view; does nothing before macOS 26, where the AcrylicBlur vibrancy remains.
+    /// </summary>
+    private void UpdateSidebarGlass()
+    {
+        if (!OperatingSystem.IsMacOS() || _macShell is null || !SidebarGlass.Enabled
+            || TryGetPlatformHandle() is not { HandleDescriptor: "NSView", Handle: var view } || view == IntPtr.Zero)
+        {
+            return;
+        }
+        PlaceSidebarGlass(view, SidebarGlass.Frame(_sidebarWidth, ClientSize.Height));
+    }
+
+    [SupportedOSPlatform("macos")]
+    private void PlaceSidebarGlass(IntPtr view, (double X, double Y, double Width, double Height)? frame) => CallMac(() =>
+    {
+        if (_sidebarGlass == IntPtr.Zero)
+        {
+            _sidebarGlass = MacIntegration.AddGlassPanel(view, SidebarGlass.CornerRadius);
+            if (_sidebarGlass == IntPtr.Zero)
+            {
+                return;
+            }
+            _macShell?.Classes.Add("glass");
+        }
+        MacIntegration.SetGlassPanelFrame(_sidebarGlass, frame);
+    });
+
+    [SupportedOSPlatform("macos")]
+    private void RemoveSidebarGlass()
+    {
+        if (_sidebarGlass != IntPtr.Zero)
+        {
+            var glass = _sidebarGlass;
+            _sidebarGlass = IntPtr.Zero;
+            CallMac(() => MacIntegration.RemoveGlassPanel(glass));
+        }
     }
 
     private void SyncNavSelection(MainViewModel vm)

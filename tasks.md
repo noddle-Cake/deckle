@@ -380,7 +380,18 @@ Tested on Linux with `AppShortcuts.IsMac` on (`MacConventionTests`, 24 tests).
   "Scan into New Document".
 
 #### 9.4 Liquid Glass (macOS 26), optional, after 9.1–9.2
-- [ ] Spike: put a native `NSGlassEffectView` behind the sidebar region of Avalonia's `NSWindow` (fall back
+- [~] Spike: **implemented 2026-10-29, not yet run on macOS 26.** `MacIntegration.AddGlassPanel` puts an
+  `NSGlassEffectView` (regular style, corner radius 18) into the container that holds Avalonia's view and
+  its blur view, *below* Avalonia's view, so the sidebar controls draw over it. It's sized as an inset,
+  rounded panel behind the sidebar (8 pt from the top, leading and bottom edges; `SidebarGlass.Frame`,
+  unit-tested). It follows the sidebar width and hides with it, and the window's AcrylicBlur stays underneath.
+  So if the glass doesn't appear, the window looks as in 9.2, and before macOS 26 (no such class) nothing
+  changes. The sidebar's divider line goes away while the panel is shown. `SCANWISE_LIQUID_GLASS=0` turns
+  it off for comparison.
+  **Check on macOS 26:** the panel shows and sits behind the controls; the traffic lights land on it; it
+  tracks window resizes and Hide Sidebar; light and dark; Reduce Transparency. If Avalonia's container turns
+  out not to be the view's superview, or the panel draws above the content, stop here and keep 9.2's blur.
+  Original plan: put a native `NSGlassEffectView` behind the sidebar region of Avalonia's `NSWindow` (fall back
   to `NSVisualEffectView` with the `.sidebar` material on macOS 15 and earlier), through the ObjC runtime as
   in `MacIntegration.cs`, with Avalonia's surface transparent over it. Only the sidebar and the
   title/toolbar band get glass. The page canvas, thumbnails and settings stay in the content layer

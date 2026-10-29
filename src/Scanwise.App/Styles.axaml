@@ -47,6 +47,11 @@
     <Setter Property="TextWrapping" Value="Wrap" />
   </Style>
 
+  <!-- Divider on the scan options pane's trailing edge (a style, so the macOS glass sidebar can drop it). -->
+  <Style Selector="Border.sidebar">
+    <Setter Property="BorderThickness" Value="0,0,1,0" />
+  </Style>
+
   <!-- Rounded cards like Scanner's option groups. -->
   <Style Selector="Border.card">
     <Setter Property="Background" Value="{DynamicResource CardBackground}" />

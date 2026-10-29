@@ -199,6 +199,52 @@ internal static unsafe class MacIntegration
         Send(tile, Sel("setBadgeLabel:"), text is null ? IntPtr.Zero : NSString(text));
     }
 
+    /// <summary>
+    /// Adds a Liquid Glass panel (NSGlassEffectView, macOS 26+) behind Avalonia's view, in the same container
+    /// that holds Avalonia's blur view, so the sidebar's controls draw on top of it. Returns the view, or zero
+    /// where Liquid Glass doesn't exist (macOS 15 and earlier keep the blur from AcrylicBlur).
+    /// </summary>
+    public static IntPtr AddGlassPanel(IntPtr nsView, double cornerRadius)
+    {
+        var glassClass = Class("NSGlassEffectView");
+        var container = Send(nsView, Sel("superview"));
+        if (glassClass == IntPtr.Zero || container == IntPtr.Zero)
+        {
+            return IntPtr.Zero;
+        }
+        var glass = Send(Send(glassClass, Sel("alloc")), Sel("init"));
+        if (glass == IntPtr.Zero)
+        {
+            return IntPtr.Zero;
+        }
+        SendDouble(glass, Sel("setCornerRadius:"), cornerRadius);
+        // Keeps its top and bottom gaps when the window is resized; the width follows the sidebar.
+        const nint MaxXMargin = 4, HeightSizable = 16;
+        Send(glass, Sel("setAutoresizingMask:"), MaxXMargin | HeightSizable);
+        Send(glass, Sel("setHidden:"), 1);
+        const nint Below = -1; // NSWindowBelow
+        Send(container, Sel("addSubview:positioned:relativeTo:"), glass, Below, nsView);
+        return glass; // Owned by the container now, and by us until the window closes.
+    }
+
+    /// <summary>Places the glass panel, or hides it when <paramref name="frame"/> is null.</summary>
+    public static void SetGlassPanelFrame(IntPtr glass, (double X, double Y, double Width, double Height)? frame)
+    {
+        if (frame is not { } f)
+        {
+            Send(glass, Sel("setHidden:"), 1);
+            return;
+        }
+        SetFrame(glass, Sel("setFrame:"), new NSRect(f.X, f.Y, f.Width, f.Height));
+        Send(glass, Sel("setHidden:"), IntPtr.Zero);
+    }
+
+    public static void RemoveGlassPanel(IntPtr glass)
+    {
+        Send(glass, Sel("removeFromSuperview"));
+        Send(glass, Sel("release"));
+    }
+
     private static double ViewHeight(IntPtr nsView)
     {
         // -frame returns an NSRect; read it with the struct-returning entry point on x64.
@@ -258,6 +304,8 @@ internal static unsafe class MacIntegration
     [DllImport(ObjC, EntryPoint = "objc_msgSend")] private static extern IntPtr Send(IntPtr receiver, IntPtr selector, IntPtr arg);
     [DllImport(ObjC, EntryPoint = "objc_msgSend")] private static extern IntPtr Send(IntPtr receiver, IntPtr selector, IntPtr arg1, IntPtr arg2);
     [DllImport(ObjC, EntryPoint = "objc_msgSend")] private static extern IntPtr Send(IntPtr receiver, IntPtr selector, IntPtr arg1, IntPtr arg2, IntPtr arg3);
+    [DllImport(ObjC, EntryPoint = "objc_msgSend")] private static extern void SendDouble(IntPtr receiver, IntPtr selector, double arg);
+    [DllImport(ObjC, EntryPoint = "objc_msgSend")] private static extern void SetFrame(IntPtr receiver, IntPtr selector, NSRect frame);
     [DllImport(ObjC, EntryPoint = "objc_msgSend")] private static extern void ShowPicker(IntPtr receiver, IntPtr selector, NSRect rect, IntPtr view, nuint edge);
     [DllImport(ObjC, EntryPoint = "objc_msgSend")] private static extern NSRect FrameArm64(IntPtr receiver, IntPtr selector);
     [DllImport(ObjC, EntryPoint = "objc_msgSend_stret")] private static extern void FrameX64Stret(out NSRect result, IntPtr receiver, IntPtr selector);
