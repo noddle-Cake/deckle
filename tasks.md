@@ -402,10 +402,23 @@ Tested on Linux with `AppShortcuts.IsMac` on (`MacConventionTests`, 24 tests).
   real `NSToolbar`, sidebars and Liquid Glass. Revisit when the ICA task starts.
 
 #### 9.5 Verification (needs a Mac)
+
+Prepared 2026-10-29; **the Mac run itself is still to do.** On a Mac: `scripts/mac-check.sh`, then
+`docs/MAC-VERIFICATION.md`.
+- `Scanwise --self-check[=report.txt] [--keep-open=N]` (`MacSelfCheck`) reads back from AppKit what the
+  app installed and writes PASS/FAIL lines. It checks: menu order, ⌘ on every key equivalent, Save/Import/
+  Settings/Redo shortcuts, no ⌘E, the Dock menu, the edited dot, the Dock badge, PNG+TIFF on the pasteboard,
+  the bundle ID, and the Liquid Glass panel's container, order and width. It exits with the number of failures.
+- `scripts/mac-check.sh` runs the tests, builds `Scanwise.app`, lints `Info.plist`, runs the self-check with
+  Liquid Glass on and off, and screenshots the native window each time (glass included).
+- The test app now starts with Windows/Linux conventions on every OS, so the suite gives the same results on a
+  Mac.
+
 - [ ] Run on macOS 15 and 26, in light and dark, with Increase Contrast, Reduce Transparency and VoiceOver.
 - [ ] Every menu item works and shows its ⌘ shortcut; no Ctrl shortcut remains on Mac.
 - [ ] Alerts: Return chooses the default (trailing) button, Esc and ⌘. cancel (leading).
-- [ ] Unit-test the shortcut/label helpers and the menu construction on Linux with a faked macOS platform.
+- [x] Unit-test the shortcut/label helpers and the menu construction on Linux with a faked macOS platform
+  (`MacConventionTests`, done in 9.1–9.4).
 
 ## Verification log
 

@@ -262,6 +262,9 @@ public partial class MainWindow : Window
     private double _sidebarWidth;
     private IntPtr _sidebarGlass;
 
+    /// <summary>The native Liquid Glass panel, for the self-check; zero when there isn't one.</summary>
+    internal IntPtr SidebarGlassView => _sidebarGlass;
+
     /// <summary>
     /// macOS 26: the Liquid Glass panel behind the sidebar follows its width, and hides with it. Created once the
     /// window has a native view; does nothing before macOS 26, where the AcrylicBlur vibrancy remains.

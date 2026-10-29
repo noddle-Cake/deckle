@@ -8,6 +8,7 @@ using Avalonia.Controls;
 using Avalonia.Styling;
 using Avalonia.Threading;
 using Scanwise.App.Services;
+using Scanwise.App.Services.Platform;
 using Scanwise.App.ViewModels;
 using Scanwise.App.Views;
 using Scanwise.Core.Settings;
@@ -18,6 +19,15 @@ public partial class App : Application
 {
     /// <summary>Started with --scan (from a shortcut or the jump list / launcher / Dock menu).</summary>
     public static bool ScanOnStart { get; set; }
+
+    /// <summary>Started with --self-check: where the macOS self-check report goes.</summary>
+    public static string? SelfCheckReport { get; set; }
+
+    /// <summary>--keep-open=N: seconds to stay open after the self-check (for a screenshot).</summary>
+    public static int SelfCheckKeepOpenSeconds { get; set; }
+
+    /// <summary>The process exit code: the self-check's failure count, otherwise 0.</summary>
+    public static int ExitCode { get; private set; }
 
     private readonly SingleInstance _instance = new();
 
@@ -56,6 +66,10 @@ public partial class App : Application
             desktop.MainWindow = window;
             desktop.ShutdownRequested += (_, _) => vm.OnShutdown();
             window.Opened += async (_, _) => await vm.InitializeAsync();
+            if (SelfCheckReport is { } report && OperatingSystem.IsMacOS())
+            {
+                ScheduleSelfCheck(desktop, window, vm, report);
+            }
             if (ScanOnStart)
             {
                 window.Opened += async (_, _) => await vm.ScanFromShortcutAsync();
@@ -90,6 +104,16 @@ public partial class App : Application
         }
         base.OnFrameworkInitializationCompleted();
     }
+
+    [System.Runtime.Versioning.SupportedOSPlatform("macos")]
+    private static void ScheduleSelfCheck(IClassicDesktopStyleApplicationLifetime desktop, MainWindow window, MainViewModel vm, string report) =>
+        window.Opened += async (_, _) =>
+        {
+            await Task.Delay(1500); // Let the menu bar, Dock menu and glass panel settle.
+            ExitCode = await MacSelfCheck.RunAsync(window, vm, report);
+            await Task.Delay(TimeSpan.FromSeconds(SelfCheckKeepOpenSeconds));
+            desktop.Shutdown(ExitCode);
+        };
 
     private static void BringToFront(Window window)
     {

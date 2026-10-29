@@ -245,6 +245,116 @@ internal static unsafe class MacIntegration
         Send(glass, Sel("release"));
     }
 
+    // ---------------------------------------------------------------- Read-back for the self-check (9.5)
+
+    public readonly record struct MenuEntry(string Menu, string Title, string Key, ulong Modifiers);
+
+    public const ulong ShiftMask = 1 << 17, ControlMask = 1 << 18, OptionMask = 1 << 19, CommandMask = 1 << 20;
+
+    /// <summary>Every item of the menu bar as AppKit has it: menu title, item title, key equivalent, modifiers.</summary>
+    public static List<MenuEntry> MenuBarItems()
+    {
+        var result = new List<MenuEntry>();
+        var mainMenu = Send(Send(Class("NSApplication"), Sel("sharedApplication")), Sel("mainMenu"));
+        foreach (var top in Items(Send(mainMenu, Sel("itemArray"))))
+        {
+            var menuTitle = Str(Send(top, Sel("title")));
+            var submenu = Send(top, Sel("submenu"));
+            if (submenu == IntPtr.Zero)
+            {
+                continue;
+            }
+            CollectItems(submenu, menuTitle, result);
+        }
+        return result;
+    }
+
+    private static void CollectItems(IntPtr menu, string menuTitle, List<MenuEntry> result)
+    {
+        foreach (var item in Items(Send(menu, Sel("itemArray"))))
+        {
+            if (IsTrue(Send(item, Sel("isSeparatorItem"))))
+            {
+                continue;
+            }
+            var title = Str(Send(item, Sel("title")));
+            result.Add(new MenuEntry(menuTitle, title, Str(Send(item, Sel("keyEquivalent"))),
+                (ulong)Send(item, Sel("keyEquivalentModifierMask"))));
+            var submenu = Send(item, Sel("submenu"));
+            if (submenu != IntPtr.Zero)
+            {
+                CollectItems(submenu, $"{menuTitle} ▸ {title}", result);
+            }
+        }
+    }
+
+    /// <summary>The Dock menu's item titles, asked from the app delegate as the Dock would.</summary>
+    public static List<string> DockMenuTitles()
+    {
+        var app = Send(Class("NSApplication"), Sel("sharedApplication"));
+        var appDelegate = Send(app, Sel("delegate"));
+        if (appDelegate == IntPtr.Zero || !IsTrue(Send(appDelegate, Sel("respondsToSelector:"), Sel("applicationDockMenu:"))))
+        {
+            return [];
+        }
+        var menu = Send(appDelegate, Sel("applicationDockMenu:"), app);
+        return menu == IntPtr.Zero ? [] : Items(Send(menu, Sel("itemArray"))).Select(i => Str(Send(i, Sel("title")))).ToList();
+    }
+
+    public static List<string> PasteboardTypes() =>
+        Items(Send(Send(Class("NSPasteboard"), Sel("generalPasteboard")), Sel("types"))).Select(Str).ToList();
+
+    public static bool IsDocumentEdited(IntPtr nsView) => IsTrue(Send(Send(nsView, Sel("window")), Sel("isDocumentEdited")));
+
+    public static string RepresentedFilename(IntPtr nsView) => Str(Send(Send(nsView, Sel("window")), Sel("representedFilename")));
+
+    public static string DockBadge()
+    {
+        var tile = Send(Send(Class("NSApplication"), Sel("sharedApplication")), Sel("dockTile"));
+        return Str(Send(tile, Sel("badgeLabel")));
+    }
+
+    public static long WindowNumber(IntPtr nsView) => (long)Send(Send(nsView, Sel("window")), Sel("windowNumber"));
+
+    public static string BundleIdentifier() => Str(Send(Send(Class("NSBundle"), Sel("mainBundle")), Sel("bundleIdentifier")));
+
+    public static bool HasClass(string name) => Class(name) != IntPtr.Zero;
+
+    public static string ClassName(IntPtr obj) => obj == IntPtr.Zero ? "" : Marshal.PtrToStringUTF8(object_getClassName(obj)) ?? "";
+
+    public readonly record struct GlassState(bool SameContainer, int GlassIndex, int ViewIndex, bool Hidden, double Width, double Height, string Container);
+
+    /// <summary>Where the glass panel sits relative to Avalonia's view: it must share the container and come first.</summary>
+    public static GlassState Glass(IntPtr glass, IntPtr nsView)
+    {
+        var container = Send(nsView, Sel("superview"));
+        var subviews = Items(Send(container, Sel("subviews")));
+        var frame = RuntimeInformation.ProcessArchitecture == Architecture.Arm64 ? FrameArm64(glass, Sel("frame")) : FrameX64(glass, Sel("frame"));
+        return new GlassState(Send(glass, Sel("superview")) == container, Array.IndexOf(subviews, glass), Array.IndexOf(subviews, nsView),
+            IsTrue(Send(glass, Sel("isHidden"))), frame.Width, frame.Height, ClassName(container));
+    }
+
+    private static IntPtr[] Items(IntPtr nsArray)
+    {
+        if (nsArray == IntPtr.Zero)
+        {
+            return [];
+        }
+        var count = (long)Send(nsArray, Sel("count"));
+        var items = new IntPtr[count];
+        for (var i = 0; i < count; i++)
+        {
+            items[i] = Send(nsArray, Sel("objectAtIndex:"), (IntPtr)i);
+        }
+        return items;
+    }
+
+    private static string Str(IntPtr nsString) =>
+        nsString == IntPtr.Zero ? "" : Marshal.PtrToStringUTF8(Send(nsString, Sel("UTF8String"))) ?? "";
+
+    /// <summary>BOOL comes back in the low byte of the return register.</summary>
+    private static bool IsTrue(IntPtr value) => (value & 0xFF) != 0;
+
     private static double ViewHeight(IntPtr nsView)
     {
         // -frame returns an NSRect; read it with the struct-returning entry point on x64.
@@ -299,6 +409,7 @@ internal static unsafe class MacIntegration
     [DllImport(ObjC)] private static extern IntPtr objc_getClass(string name);
     [DllImport(ObjC)] private static extern IntPtr sel_registerName(string name);
     [DllImport(ObjC)] private static extern IntPtr object_getClass(IntPtr obj);
+    [DllImport(ObjC)] private static extern IntPtr object_getClassName(IntPtr obj);
     [DllImport(ObjC)] private static extern bool class_addMethod(IntPtr cls, IntPtr sel, IntPtr imp, string types);
     [DllImport(ObjC, EntryPoint = "objc_msgSend")] private static extern IntPtr Send(IntPtr receiver, IntPtr selector);
     [DllImport(ObjC, EntryPoint = "objc_msgSend")] private static extern IntPtr Send(IntPtr receiver, IntPtr selector, IntPtr arg);
