@@ -178,6 +178,171 @@ Status: `[ ]` todo · `[x]` done · `[~]` partial/deferred (see note)
 - [x] README: features, install, build, OS notes (SANE packages, Tesseract languages), credits to Scanner and NAPS2
 - [x] Final review pass (`/code-review`-style self review), all tests green, commit
 
+### Phase 9: macOS Human Interface Guidelines
+
+Audit of 2026-10-29 against https://developer.apple.com/design/human-interface-guidelines/ (Menu bar,
+Keyboards, Toolbars, Sidebars, Materials/Liquid Glass, Alerts, App icons, Accessibility). The UI is a
+Windows 11 Fluent shell on every OS (FluentAvalonia `NavigationView`, `ContentDialog`, `SettingsExpander`).
+That's the right call on Windows (see Decisions) and acceptable on Linux, but on macOS it breaks several HIG
+rules. Almost every fix is a Mac-only branch, so Windows and Linux stay as they are. Items are ordered by
+impact. Nothing here has been checked on a real Mac.
+
+**What Avalonia 11.2 can and can't do.** Real Liquid Glass (macOS 26) comes from AppKit: `NSToolbar`,
+`NSSplitViewController` sidebars, `NSGlassEffectView`. Avalonia draws its own controls, so it doesn't get
+Liquid Glass. The realistic goal is a Mac-native *structure*: menu bar, ⌘ shortcuts, unified title bar,
+translucent sidebar, Mac-ordered alerts. Do not paint imitation glass. The Materials page warns against glass
+in the content layer ("can result in unnecessary complexity and a confusing visual hierarchy") and against
+overusing it in custom controls.
+
+#### 9.1 Must fix
+- [ ] **⌘ instead of Ctrl on macOS.** Every gesture is hard-coded `Ctrl+…` (`MainWindow.axaml` KeyBindings,
+  `PageListView.axaml`, `ScanOptionsView.axaml`, Ctrl+wheel in `EditorView.axaml.cs`). Keyboards page:
+  "Prefer the Command key as the main modifier" and "Avoid using the Control key as a modifier". On a Mac
+  the shortcuts are effectively missing.
+  *Fix:* create the bindings in code from `PlatformSettings.HotkeyConfiguration.CommandModifiers` (Meta on
+  macOS, Control elsewhere) rather than literal strings. On Mac: redo ⇧⌘Z (no Ctrl+Y), delete page ⌘⌫
+  (keep Delete too), move page ⌥⌘↑/⌥⌘↓ instead of Alt+↑/↓, zoom with ⌘+wheel and trackpad pinch. Add a
+  test that the macOS gestures use `KeyModifiers.Meta`.
+- [ ] **Shortcut text says "Ctrl".** Tooltips, `InputGesture=` on menu items, "Press Ctrl+Z to undo"
+  (`MainViewModel.cs:550`), the shortcut table in `HelpView.axaml`, "Save (Ctrl+S)" in `SettingsView.axaml`,
+  and the drawing caption in `EditorView.axaml`.
+  *Fix:* one helper that renders `⌘S`, `⇧⌘S`, `⌥⌘↑` on Mac (modifier order ⌃⌥⇧⌘, as the HIG requires) and
+  `Ctrl+S` elsewhere. Use it everywhere a shortcut appears in text.
+- [ ] **No menu bar.** On macOS the app has only Avalonia's default app menu. Menu bar page: support App ·
+  File · Edit · View · (app menus) · Window · Help in that order, and "Even when commands are available
+  elsewhere in your app, it's important to list them in the menu bar". Toolbars page: "Make every toolbar
+  item available as a command in the menu bar". Full Keyboard Access and VoiceOver users depend on it.
+  *Fix:* on macOS only, set `NativeMenu.Menu` on the `Application` and on `MainWindow`, bound to the existing
+  commands so each item's enabled state follows `CanExecute`. Disable items that can't run; don't hide them
+  ("Always show the same set of menu items"). Proposed menus:
+  - **Scanwise:** About Scanwise · Settings… ⌘, · Services · Hide / Hide Others / Show All · Quit ⌘Q
+  - **File:** Scan ⌘N · Scan into New Document ⇧⌘N · Scan and Insert Between Pages… · Batch Scan… ·
+    Preview · — · Import… ⌘O · — · Save ⌘S · Save As… ⇧⌘S · Save Selected Pages As… · Open in Another
+    App · Share ▸ · Show Save Folder in Finder · — · Close Window ⌘W
+  - **Edit:** Undo ⌘Z · Redo ⇧⌘Z · — · Copy ⌘C · Delete ⌘⌫ · Duplicate ⌘D · Select All ⌘A · Clear All
+    Pages…
+  - **Page:** Rotate Left ⌘L · Rotate Right ⌘R · Rotate 180° · Move Up ⌥⌘↑ · Move Down ⌥⌘↓ · Crop ·
+    Adjust · Draw · Undo Edits on Page · Page Order ▸ (Reverse, Interleave…, Deinterleave…)
+  - **View:** Scan / Pages / Editor ⌘1–⌘3 · Show/Hide Sidebar ⌃⌘S · Zoom In ⌘+ · Zoom Out ⌘− · Fit ⌘0 ·
+    Previous/Next Page · Enter Full Screen ⌃⌘F
+  - **Window:** Minimize ⌘M · Zoom · Bring All to Front
+  - **Help:** Scanwise Help (opens the Help view)
+- [ ] **Settings is a page inside the main window.** On macOS it belongs in its own window, opened with
+  Scanwise ▸ Settings… or ⌘, (Menu bar and Keyboards pages). Today it also replaces the scan workspace while
+  it's open.
+  *Fix (Mac):* host `SettingsView` in a single non-resizable `Window` titled "Settings" (a second ⌘, brings it
+  to the front). Remove Settings from the nav rail on Mac.
+- [ ] **Alert buttons are in Windows order.** FluentAvalonia's `ContentDialog` puts the primary button on the
+  left and Close/Cancel on the right. Alerts page: "Always place the default button on the trailing side of
+  a row … Cancel buttons are typically on the leading side". This affects every dialog in `UiServices`
+  (confirm, text prompt, merge, scan area, batch). Esc and ⌘. must cancel, and Return must choose the default.
+  *Fix (Mac):* a small dialog window shown with `ShowDialog(owner)` and laid out Cancel · secondary ·
+  default, from leading to trailing. Use the destructive style for "Clear all pages". Keep `ContentDialog`
+  on Windows.
+- [ ] **Ship a real `.app` bundle.** `scripts/publish.sh` makes a bare folder and a tar.gz for `osx-*`. With
+  no `Scanwise.app` and no `Info.plist`, the Dock shows no proper name or icon, Finder treats the binary as a
+  Unix executable, and macOS has no bundle ID for permissions or the share sheet.
+  *Fix:* build `Scanwise.app/Contents/{MacOS,Resources,Info.plist}` with `CFBundleIdentifier`,
+  `CFBundleName`, `CFBundleIconFile`, `LSApplicationCategoryType=public.app-category.productivity`,
+  `NSHighResolutionCapable` and `LSMinimumSystemVersion`. Archive it with `ditto -c -k --keepParent` (not
+  tar) and sign/notarize once a Developer ID is available.
+- [ ] **No macOS app icon.** There's only `scanwise.ico`/`.png`. App icons page: use Apple's
+  rounded-rectangle grid and let the system apply the shape. On macOS 26 the icon is layered (Icon Composer
+  `.icon`), so the system can render it in Liquid Glass and in the dark, clear and tinted appearances.
+  *Fix:* separate foreground/background layers on the 1024 px template, exported with Icon Composer, plus an
+  `.icns` (16–1024 at @1x/@2x) for macOS 14–15.
+
+#### 9.2 Should fix: layout and structure
+- [ ] **Unified title bar and window title.** The app uses a standard title bar over a Fluent nav rail, and
+  the title is "Scanwise · 3 pages •". Toolbars page: "Don't title windows with your app name" and keep titles
+  short. On macOS unsaved changes appear as the dot in the close button, not in the title.
+  *Fix (Mac):* `ExtendClientAreaToDecorationsHint=true` with a ~78 px leading inset for the traffic lights.
+  Title = document name ("Untitled" until saved, then the file name). Show the page count in the Pages
+  header. Set `NSWindow.documentEdited` through the ObjC runtime (as `MacIntegration.cs` already does for the
+  Dock menu) instead of appending "•".
+- [ ] **Sidebar instead of a Fluent compact nav rail.** `NavigationView PaneDisplayMode="LeftCompact"` is a
+  Windows pattern. On Mac the scan options are the natural sidebar and pages/editor are the content and
+  detail columns. Sidebars page: "consider using a split view interface that includes a content list between
+  the sidebar items and detail view". Settings, Help and "Open save folder" sit at the bottom of the rail;
+  the same page says "Avoid putting critical information or actions at the bottom of a sidebar". Once 9.1 is
+  done they live in the menu bar.
+  *Fix (Mac):* drop the nav rail and keep the three-column `Workspace` grid. Make the scan-options column a
+  full-height sidebar under the traffic lights, with system vibrancy: `TransparencyLevelHint=AcrylicBlur` on
+  the window and a transparent `PaneBackground` on Mac. Add View ▸ Show/Hide Sidebar. When the window narrows,
+  collapse the sidebar instead of switching to top navigation, as the Sidebars page suggests. Don't hide it by
+  default.
+- [ ] **Toolbar grouping.** The borderless icon buttons already match the HIG's "no bezel" style. But there
+  are two toolbars with many groups and no single primary action. Toolbars page: "aim for a maximum of three"
+  groups. Leading: sidebar toggle and title. Centre: common actions. Trailing: inspector, search, More.
+  "Only specify one primary action, and put it on the trailing side".
+  *Fix (Mac):* one toolbar in the unified title bar. Leading: sidebar toggle and document title. Centre:
+  Rotate Left/Right, Crop, Adjust, Draw. Trailing: Share and **Scan**, which is the only prominent button.
+  Duplicate, Move, Page order and Open in another app stay in More and in the menu bar. Drop the painted
+  toolbar background ("Reduce the use of toolbar backgrounds and tinted controls").
+- [ ] **The editor's tool panel acts as an inspector.** Crop/Adjust/Draw open a 280 px right-hand panel.
+  On Mac, toggle it from a trailing toolbar button and View ▸ Show Inspector ⌥⌘I, using the sidebar's
+  material.
+- [ ] **Share opens Mail only.** `PlatformShell.ShareAsync` runs `open -a Mail`. Mac users expect the system
+  share menu (AirDrop, Messages, Notes, Mail…).
+  *Fix:* show `NSSharingServicePicker` via the ObjC runtime, anchored to the Share button, with the files as
+  `NSURL`s. Drop the ⌘E binding on Mac: the Keyboards page reserves ⌘E for "Use the selection for a find
+  operation".
+- [ ] **Copying runs AppleScript.** `CopyImageAsync` calls `osascript` with a script built from a string.
+  That's slow and may raise an Automation permission prompt. Write PNG and TIFF to
+  `NSPasteboard.generalPasteboard` directly.
+- [ ] **Settings controls.** `SettingsExpander` cards with `ToggleSwitch` look like Windows Settings. On Mac,
+  use a grouped form in the Settings window, with labels on the leading side and controls on the trailing
+  side, and checkboxes for most options. The HIG Toggles page reserves macOS switches for major on/off
+  settings. Split the window into tabs: General, Saving, Text Recognition, PDF & Images.
+- [ ] **Global hotkey uses Control.** `MacIntegration.RegisterHotkey` registers ⌃⌥ + key. Global shortcuts
+  are a special case, but Command is still preferred: default to ⌥⌘ + key, keep ⌃⌥ selectable, and render
+  the label as `⌥⌘S`.
+
+#### 9.3 Polish
+- [ ] **System font.** `WithInterFont()` puts Inter everywhere. On macOS use the system font (San Francisco)
+  so text matches menus and alerts: skip `WithInterFont()` on Mac, or set the default family to
+  `.AppleSystemUIFont`. In `ScanMergeDialog`, put `SF Mono,Menlo` first on Mac.
+- [ ] **Hard-coded Windows colours.** `Styles.axaml` uses Windows 11 greys (`#F3F3F3`, `#202020`, …). On Mac,
+  read the system colours (window background, control background, separator) so the app follows Increase
+  Contrast and the wallpaper tint. Make the corner radii of toolbar controls concentric with the window
+  corners (Toolbars page).
+- [ ] **Sidebar icons use the accent colour.** `PreferUserAccentColor="True"` already picks it up; check that
+  the sidebar icons do too (Sidebars page).
+- [ ] **Icons look like Windows.** The Fluent symbols read as Windows. SF Symbols may be used only in apps for
+  Apple platforms, which a cross-platform build isn't. Use a neutral outline icon set that doesn't read as
+  Windows-specific.
+- [ ] **VoiceOver labels.** The repo has no `AutomationProperties.Name` at all. Icon-only buttons have a
+  tooltip and nothing else, so VoiceOver just says "button". Name every icon button, the thumbnails
+  ("Page 3 of 12") and the colour swatches.
+- [ ] **Reduce Motion / Reduce Transparency.** Respect both. With Reduce Transparency on, the sidebar falls
+  back to an opaque background.
+- [ ] **Alert at launch.** Session recovery prompts on start. Alerts page: "Avoid showing an alert when your
+  app starts". Restore the pages and show the non-modal InfoBar with a "Clear" action instead.
+- [ ] **Progress.** The busy bar pushes the content down. On Mac show a small indicator in the toolbar, and
+  show progress on the Dock tile (`NSDockTile`) during long batch scans.
+- [ ] **Window behaviour.** Check full screen and tiling from the green button, check that the 420×520
+  minimum size still fits sidebar + content, and remember the window frame between launches.
+- [ ] **Title case.** macOS uses title case for menu items and buttons ("Save Selected Pages As…",
+  "Scan Into New Document"). Apply it on Mac only, since the headers are sentence case today. Add
+  "Scan Into New Document" to the Dock menu next to "Scan".
+
+#### 9.4 Liquid Glass (macOS 26), optional, after 9.1–9.2
+- [ ] Spike: put a native `NSGlassEffectView` behind the sidebar region of Avalonia's `NSWindow` (fall back
+  to `NSVisualEffectView` with the `.sidebar` material on macOS 15 and earlier), through the ObjC runtime as
+  in `MacIntegration.cs`, with Avalonia's surface transparent over it. Only the sidebar and the
+  title/toolbar band get glass. The page canvas, thumbnails and settings stay in the content layer
+  (Materials: "Don't use Liquid Glass in the content layer"). Use the *regular* variant: the sidebar is
+  text-heavy, and the clear variant is meant for media backgrounds. If it proves brittle, stop at the
+  `AcrylicBlur` vibrancy from 9.2.
+- [ ] Long term: a native AppKit shell (the `net*-macos` target already planned for Apple ICA) would give
+  real `NSToolbar`, sidebars and Liquid Glass. Revisit when the ICA task starts.
+
+#### 9.5 Verification (needs a Mac)
+- [ ] Run on macOS 15 and 26, in light and dark, with Increase Contrast, Reduce Transparency and VoiceOver.
+- [ ] Every menu item works and shows its ⌘ shortcut; no Ctrl shortcut remains on Mac.
+- [ ] Alerts: Return chooses the default (trailing) button, Esc and ⌘. cancel (leading).
+- [ ] Unit-test the shortcut/label helpers and the menu construction on Linux with a faked macOS platform.
+
 ## Verification log
 
 - 2026-10-28: Full suite 57/57 with no skips (51 core + 6 UI). `scripts/publish.sh` produces Release
