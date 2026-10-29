@@ -217,6 +217,9 @@ public sealed partial class MainViewModel : ObservableObject
             Progress = p.PageFraction * 100;
         });
         var autoRotate = Settings.AutoRotate && _services.AutoRotate.IsAvailable;
+        // Reversed: each page goes in front of the ones from this scan, so pages still show up as they arrive.
+        var reverse = Settings.ReverseScanOrder;
+        var insertAt = Document.Count;
         var time = DateTime.Now;
         try
         {
@@ -231,10 +234,10 @@ public sealed partial class MainViewModel : ObservableObject
                         finalImage = await _services.AutoRotate.AutoRotateAsync(image, Settings.OcrLanguage, cts.Token);
                     }
                     var page = new Page(finalImage, PageInfo.FromScan(settings, scanner.Name, time));
-                    newPages.Add(page);
+                    newPages.Insert(reverse ? 0 : newPages.Count, page);
                     if (addToDocument)
                     {
-                        Document.Add(page);
+                        Document.Insert(reverse ? Math.Min(insertAt, Document.Count) : Document.Count, [page]);
                     }
                 }
             }
@@ -552,6 +555,85 @@ public sealed partial class MainViewModel : ObservableObject
         catch (Exception ex)
         {
             await _ui.ShowMessageAsync("Could not open the page", ex.Message);
+        }
+    }
+
+    /// <summary>Copies the selected (or shown) page to the clipboard as an image, without saving it anywhere.</summary>
+    [RelayCommand]
+    private async Task CopyPage()
+    {
+        var item = Pages.SelectedItem ?? Editor.Current;
+        if (item is null || IsBusy)
+        {
+            return;
+        }
+        var path = Path.Combine(_services.Paths.TempDir, $"Scanwise page {item.Number} {DateTime.Now:HHmmssfff}.png");
+        try
+        {
+            await _services.Export.ExportPagesAsync([item.Page.Image], [path], OutputFormat.Png, Settings);
+            await _ui.CopyImageAsync(path);
+            ShowStatus("Copied", $"Page {item.Number} is on the clipboard.", InfoBarSeverity.Success);
+        }
+        catch (Exception ex)
+        {
+            await _ui.ShowMessageAsync("Could not copy the page", ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// Shares the selected pages (all pages when none are selected) without saving them first:
+    /// one page as a JPEG, several as one PDF.
+    /// </summary>
+    [RelayCommand]
+    private async Task Share()
+    {
+        var pages = Pages.SelectedItems.Count > 0
+            ? Pages.SelectedItems.OrderBy(i => i.Number).Select(i => i.Page).ToList()
+            : Document.Pages.ToList();
+        if (pages.Count == 0 || IsBusy)
+        {
+            return;
+        }
+        var folder = Path.Combine(_services.Paths.TempDir, "share-" + DateTime.Now.ToString("yyyyMMddHHmmssfff"));
+        var name = $"Scan {DateTime.Now:yyyy-MM-dd HH.mm}";
+        var format = pages.Count == 1 ? OutputFormat.Jpeg : OutputFormat.Pdf;
+        var path = Path.Combine(folder, name + format.Extension());
+        using (var cts = BeginOperation("Preparing to share…", cancellable: true))
+        {
+            try
+            {
+                Directory.CreateDirectory(folder);
+                var images = pages.Select(p => p.Image).ToList();
+                if (format == OutputFormat.Pdf)
+                {
+                    await _services.Export.ExportDocumentAsync(images, path, format, Settings, SaveProgress(), cts.Token);
+                }
+                else
+                {
+                    await _services.Export.ExportPagesAsync(images, [path], format, Settings, SaveProgress(), cts.Token);
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                return;
+            }
+            catch (Exception ex)
+            {
+                await _ui.ShowMessageAsync("Could not share", ex.Message);
+                return;
+            }
+            finally
+            {
+                EndOperation();
+            }
+        }
+        try
+        {
+            await _ui.ShareFilesAsync([path], name);
+        }
+        catch (Exception ex)
+        {
+            await _ui.ShowMessageAsync("Could not share", ex.Message);
         }
     }
 

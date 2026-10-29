@@ -40,6 +40,12 @@
           <ToggleButton Classes="icon" Padding="8" Background="Transparent" BorderThickness="0" Command="{Binding StartDrawCommand}" IsChecked="{Binding IsDrawing, Mode=OneWay}" ToolTip.Tip="Draw and highlight">
             <ui:SymbolIcon Symbol="Highlight" FontSize="18" />
           </ToggleButton>
+          <Button Classes="icon" Command="{Binding $parent[UserControl].((vm:MainViewModel)DataContext).CopyPageCommand}" ToolTip.Tip="Copy page to clipboard (Ctrl+C)">
+            <ui:SymbolIcon Symbol="Copy" />
+          </Button>
+          <Button Classes="icon" Command="{Binding $parent[UserControl].((vm:MainViewModel)DataContext).ShareCommand}" ToolTip.Tip="Share (Ctrl+E)">
+            <ui:SymbolIcon Symbol="Share" />
+          </Button>
           <Button Classes="icon" Command="{Binding DeleteCommand}" ToolTip.Tip="Delete page">
             <ui:SymbolIcon Symbol="Delete" />
           </Button>

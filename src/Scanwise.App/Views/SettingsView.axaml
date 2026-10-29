@@ -35,6 +35,11 @@
             <ToggleSwitch IsChecked="{Binding AddToExisting}" OnContent="" OffContent="" />
           </ui:SettingsExpanderItem.Footer>
         </ui:SettingsExpanderItem>
+        <ui:SettingsExpanderItem Content="Reverse page order" Description="Puts the pages of each scan in reverse order, for when the last page comes out first.">
+          <ui:SettingsExpanderItem.Footer>
+            <ToggleSwitch IsChecked="{Binding ReverseScanOrder}" OnContent="" OffContent="" />
+          </ui:SettingsExpanderItem.Footer>
+        </ui:SettingsExpanderItem>
         <ui:SettingsExpanderItem Content="Restore pages after closing" Description="Pages that are still in the list come back the next time you open the app.">
           <ui:SettingsExpanderItem.Footer>
             <ToggleSwitch IsChecked="{Binding RestoreSession}" OnContent="" OffContent="" />

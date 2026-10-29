@@ -201,7 +201,8 @@ public sealed class ShellTests : IDisposable
             Assert.False(vm.HasUnsavedChanges);
             Assert.Single(Directory.GetFiles(services.Settings.SaveFolder));
 
-            // Feeder into JPG: one file per page.
+            // Feeder into JPG: one file per page (with "reverse page order" on).
+            services.Settings.ReverseScanOrder = true;
             vm.ScanOptions.IsFeeder = true;
             vm.ScanOptions.Dpi = 50;
             vm.ScanOptions.Format = vm.ScanOptions.Formats.First(f => f.Value == OutputFormat.Jpeg);
@@ -210,6 +211,21 @@ public sealed class ShellTests : IDisposable
             Assert.True(vm.Pages.Count > 1);
             var jpgs = Directory.GetFiles(services.Settings.SaveFolder, "*.jpg");
             Assert.True(vm.Pages.Count == jpgs.Length, $"pages={vm.Pages.Count} doc={services.Document.Count} files={string.Join(", ", Directory.GetFiles(services.Settings.SaveFolder).Select(Path.GetFileName))} msgs={string.Join(" | ", ui.Messages)} status={vm.StatusTitle}: {vm.StatusMessage}");
+
+            // Copy and share work straight from the page list, without saving first.
+            vm.Pages.Select([vm.Pages.Items[1].Id]);
+            await vm.CopyPageCommand.ExecuteAsync(null);
+            var copied = Assert.Single(ui.CopiedImages);
+            Assert.Equal(".png", Path.GetExtension(copied));
+            Assert.True(new FileInfo(copied).Length > 0);
+            await vm.ShareCommand.ExecuteAsync(null);
+            Assert.Equal(".jpg", Path.GetExtension(Assert.Single(ui.Shared[0])));
+            vm.Pages.Select([vm.Pages.Items[0].Id, vm.Pages.Items[1].Id]);
+            await vm.ShareCommand.ExecuteAsync(null);
+            var sharedPdf = Assert.Single(ui.Shared[1]);
+            Assert.Equal(".pdf", Path.GetExtension(sharedPdf));
+            Assert.True(File.Exists(sharedPdf));
+            Assert.Empty(ui.Messages);
 
             vm.Pages.Select([vm.Pages.Items[0].Id, vm.Pages.Items[1].Id]);
             vm.DeleteSelectedCommand.Execute(null);

@@ -37,6 +37,9 @@ public sealed class AppSettings
     public string SaveFolder { get; set; } = AppPaths.DefaultScanFolder();
     public bool AutoSave { get; set; } = true;
     public ScanAction ScanAction { get; set; } = ScanAction.AddToExisting;
+
+    /// <summary>Puts each scan's pages in reverse order (for feeders that deliver the last page first).</summary>
+    public bool ReverseScanOrder { get; set; }
     public string FileNamePattern { get; set; } = FileNamer.DateTimePattern;
 
     // Processing

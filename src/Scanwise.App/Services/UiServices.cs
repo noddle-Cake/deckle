@@ -25,6 +25,12 @@ public interface IUiServices
     Task OpenUrlAsync(string url);
     Task CopyTextAsync(string text);
 
+    /// <summary>Puts an image (a PNG file) on the clipboard.</summary>
+    Task CopyImageAsync(string pngPath);
+
+    /// <summary>Opens the system share sheet (Windows) or a new email (elsewhere) with these files.</summary>
+    Task ShareFilesAsync(IReadOnlyList<string> paths, string title);
+
     /// <summary>Scanner's scan-merge options; null when cancelled.</summary>
     Task<(int AfterIndex, bool Reverse)?> AskMergeOptionsAsync(int pageCount);
 
@@ -172,6 +178,11 @@ public sealed class UiServices : IUiServices
             await clipboard.SetTextAsync(text);
         }
     }
+
+    public Task CopyImageAsync(string pngPath) => PlatformShell.CopyImageAsync(pngPath);
+
+    public Task ShareFilesAsync(IReadOnlyList<string> paths, string title) =>
+        PlatformShell.ShareAsync(paths, title, _window.TryGetPlatformHandle()?.Handle ?? IntPtr.Zero);
 
     public async Task<(int AfterIndex, bool Reverse)?> AskMergeOptionsAsync(int pageCount)
     {

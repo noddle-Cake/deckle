@@ -28,6 +28,7 @@ public sealed partial class SettingsViewModel : ObservableObject
         _namingPreset = NamingPresets.FirstOrDefault(p => p.Value == s.FileNamePattern) ?? NamingPresets[^1];
         _customPattern = s.FileNamePattern;
         _autoRotate = s.AutoRotate;
+        _reverseScanOrder = s.ReverseScanOrder;
         _ocrLanguage = s.OcrLanguage;
         _pdfOcr = s.Pdf.Ocr;
         _pdfStandard = PdfStandards.First(p => p.Value == s.Pdf.Standard);
@@ -85,6 +86,7 @@ public sealed partial class SettingsViewModel : ObservableObject
     [ObservableProperty] private Choice<string> _namingPreset;
     [ObservableProperty] private string _customPattern;
     [ObservableProperty] private bool _autoRotate;
+    [ObservableProperty] private bool _reverseScanOrder;
     [ObservableProperty] private string _ocrLanguage;
     [ObservableProperty] private bool _pdfOcr;
     [ObservableProperty] private Choice<PdfStandardKind> _pdfStandard;
@@ -123,6 +125,7 @@ public sealed partial class SettingsViewModel : ObservableObject
     partial void OnAutoSaveChanged(bool value) => Save(s => s.AutoSave = value);
     partial void OnAddToExistingChanged(bool value) => Save(s => s.ScanAction = value ? ScanAction.AddToExisting : ScanAction.StartFresh);
     partial void OnAutoRotateChanged(bool value) => Save(s => s.AutoRotate = value);
+    partial void OnReverseScanOrderChanged(bool value) => Save(s => s.ReverseScanOrder = value);
     partial void OnPdfOcrChanged(bool value) => Save(s => s.Pdf.Ocr = value);
     partial void OnPdfTitleChanged(string value) => Save(s => s.Pdf.Title = string.IsNullOrWhiteSpace(value) ? null : value);
     partial void OnPdfAuthorChanged(string value) => Save(s => s.Pdf.Author = string.IsNullOrWhiteSpace(value) ? null : value);

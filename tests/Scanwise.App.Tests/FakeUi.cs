@@ -49,6 +49,21 @@ public sealed class FakeUi : IUiServices
 
     public Task OpenUrlAsync(string url) => Task.CompletedTask;
     public Task CopyTextAsync(string text) => Task.CompletedTask;
+
+    public List<string> CopiedImages { get; } = [];
+    public List<IReadOnlyList<string>> Shared { get; } = [];
+
+    public Task CopyImageAsync(string pngPath)
+    {
+        CopiedImages.Add(pngPath);
+        return Task.CompletedTask;
+    }
+
+    public Task ShareFilesAsync(IReadOnlyList<string> paths, string title)
+    {
+        Shared.Add(paths);
+        return Task.CompletedTask;
+    }
     public Task<(int AfterIndex, bool Reverse)?> AskMergeOptionsAsync(int pageCount) => Task.FromResult<(int, bool)?>(MergeAnswer);
     public Task<(ScanRegion? Region, bool Ok)?> AskRegionAsync(Bitmap preview, ScanRegion? current) => Task.FromResult<(ScanRegion?, bool)?>(null);
     public Task<BatchOptions?> AskBatchOptionsAsync() => Task.FromResult<BatchOptions?>(null);

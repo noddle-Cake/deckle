@@ -38,6 +38,12 @@
         <Button Classes="icon" Command="{Binding SaveAsCommand}" IsEnabled="{Binding HasPages}" ToolTip.Tip="Save as… (Ctrl+Shift+S)">
           <ui:SymbolIcon Symbol="SaveAs" />
         </Button>
+        <Button Classes="icon" Command="{Binding CopyPageCommand}" IsEnabled="{Binding Pages.HasSelection}" ToolTip.Tip="Copy page to clipboard (Ctrl+C)">
+          <ui:SymbolIcon Symbol="Copy" />
+        </Button>
+        <Button Classes="icon" Command="{Binding ShareCommand}" IsEnabled="{Binding HasPages}" ToolTip.Tip="Share selected pages, or all pages (Ctrl+E)">
+          <ui:SymbolIcon Symbol="Share" />
+        </Button>
         <Button Classes="icon" ToolTip.Tip="More page actions" IsEnabled="{Binding HasPages}">
           <ui:SymbolIcon Symbol="More" />
           <Button.Flyout>
@@ -45,6 +51,8 @@
               <MenuItem Header="Save" Command="{Binding SaveCommand}" InputGesture="Ctrl+S" />
               <MenuItem Header="Save selected pages as…" Command="{Binding SaveSelectionAsCommand}" IsEnabled="{Binding Pages.HasSelection}" />
               <MenuItem Header="Open selected page in another app" Command="{Binding OpenSelectedExternallyCommand}" IsEnabled="{Binding Pages.HasSelection}" />
+              <MenuItem Header="Copy page to clipboard" Command="{Binding CopyPageCommand}" IsEnabled="{Binding Pages.HasSelection}" InputGesture="Ctrl+C" />
+              <MenuItem Header="Share…" Command="{Binding ShareCommand}" InputGesture="Ctrl+E" />
               <Separator />
               <MenuItem Header="Select all" Command="{Binding Pages.SelectAllCommand}" InputGesture="Ctrl+A" />
               <MenuItem Header="Rotate 180°" Command="{Binding Pages.Rotate180Command}" />
@@ -115,6 +123,8 @@
             <Separator />
             <MenuItem Header="Save selected pages as…" Command="{Binding SaveSelectionAsCommand}" />
             <MenuItem Header="Open in another app" Command="{Binding OpenSelectedExternallyCommand}" />
+            <MenuItem Header="Copy to clipboard" Command="{Binding CopyPageCommand}" InputGesture="Ctrl+C" />
+            <MenuItem Header="Share…" Command="{Binding ShareCommand}" InputGesture="Ctrl+E" />
             <Separator />
             <MenuItem Header="Delete" Command="{Binding DeleteSelectedCommand}" InputGesture="Delete" />
           </ContextMenu>

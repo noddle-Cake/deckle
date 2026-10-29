@@ -23,6 +23,7 @@ Scanwise combines two projects:
 - Profiles: save complete sets of scan options; the last-used options are always remembered
 - **Scan merge**: insert a second pass between existing pages (two-sided documents without duplex)
 - **Batch scan**: several scans in a row, waiting or asking in between, saved to one file or one file per scan
+- Optional reverse page order, for feeders that deliver the last page first
 
 **Saving**
 - **PDF, JPG, PNG, TIF, BMP**. PDF and TIF hold all pages in one file; the image formats write one file per page
@@ -32,6 +33,9 @@ Scanwise combines two projects:
   source, brightness, contrast, file type, plus your own text
 - Searchable PDFs (OCR in 100+ languages, downloadable in-app), PDF/A, metadata and password protection
 - JPG quality and TIFF compression (CCITT G4 for black & white)
+- **Copy a page to the clipboard** (Ctrl+C) or **share** pages (Ctrl+E) without saving first: the Windows share
+  sheet, or a new email via `xdg-email` (Linux) / Mail (macOS). One page is shared as JPG, several as one PDF.
+  On Linux, copying images needs `wl-clipboard` (Wayland) or `xclip` (X11)
 
 **Editing**
 - Thumbnail page list: multi-select, drag to reorder, drop files to import, undo/redo
@@ -53,7 +57,7 @@ no .NET install is needed.
 | macOS | Network scanners work without drivers; USB scanners use the bundled SANE. The download is not signed: right-click → Open the first time. |
 
 Text recognition (auto-rotate, searchable PDFs) uses a system Tesseract if one is installed, otherwise the copy
-bundled with Scanwise. Languages and the orientation data are downloaded from Settings.
+bundled with Scanwise. English and the orientation data are included; other languages download from Settings.
 
 ## Build
 

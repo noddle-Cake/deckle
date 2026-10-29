@@ -56,7 +56,7 @@
       </Expander>
 
       <Expander Header="Keyboard shortcuts">
-        <Grid ColumnDefinitions="Auto,24,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto">
+        <Grid ColumnDefinitions="Auto,24,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto">
           <TextBlock Grid.Row="0" Text="Ctrl+N" FontWeight="SemiBold" />
           <TextBlock Grid.Row="0" Grid.Column="2" Text="Scan" />
           <TextBlock Grid.Row="1" Text="Ctrl+Shift+N" FontWeight="SemiBold" />
@@ -65,6 +65,8 @@
           <TextBlock Grid.Row="2" Grid.Column="2" Text="Save / Save as" />
           <TextBlock Grid.Row="3" Text="Ctrl+O" FontWeight="SemiBold" />
           <TextBlock Grid.Row="3" Grid.Column="2" Text="Import images or PDFs" />
+          <TextBlock Grid.Row="9" Text="Ctrl+C / Ctrl+E" FontWeight="SemiBold" />
+          <TextBlock Grid.Row="9" Grid.Column="2" Text="Copy page to clipboard / share pages" />
           <TextBlock Grid.Row="4" Text="Ctrl+Z / Ctrl+Y" FontWeight="SemiBold" />
           <TextBlock Grid.Row="4" Grid.Column="2" Text="Undo / redo" />
           <TextBlock Grid.Row="5" Text="Delete, Ctrl+A" FontWeight="SemiBold" />
