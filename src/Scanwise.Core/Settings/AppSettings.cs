@@ -40,6 +40,10 @@ public sealed class AppSettings
 
     /// <summary>Puts each scan's pages in reverse order (for feeders that deliver the last page first).</summary>
     public bool ReverseScanOrder { get; set; }
+
+    /// <summary>Ctrl+Alt+<see cref="ScanHotkeyKey"/> (Control+Option on macOS) starts a scan from anywhere.</summary>
+    public bool ScanHotkey { get; set; }
+    public string ScanHotkeyKey { get; set; } = "S";
     public string FileNamePattern { get; set; } = FileNamer.DateTimePattern;
 
     // Processing

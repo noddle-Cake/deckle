@@ -24,6 +24,10 @@ Scanwise combines two projects:
 - **Scan merge**: insert a second pass between existing pages (two-sided documents without duplex)
 - **Batch scan**: several scans in a row, waiting or asking in between, saved to one file or one file per scan
 - Optional reverse page order, for feeders that deliver the last page first
+- **Scan from outside the app**: right-click Scanwise in the taskbar (Windows), dock or app list (Linux) or Dock
+  (macOS) and choose Scan, or set a Ctrl+Alt+key shortcut in Settings (Windows and GNOME: works even when Scanwise
+  is closed; macOS: Control+Option+key while it runs). Everything runs `Scanwise --scan`, which hands the scan to
+  the open window if there is one
 
 **Saving**
 - **PDF, JPG, PNG, TIF, BMP**. PDF and TIF hold all pages in one file; the image formats write one file per page
@@ -68,6 +72,7 @@ dotnet build
 scripts/test.sh                       # unit + headless UI tests; enables SANE's virtual test scanner
 SCANWISE_TEST_OSD_DIR=/path/with/osd.traineddata scripts/test.sh   # also covers orientation detection
 SCANWISE_SCREENSHOTS=/tmp/shots scripts/test.sh                    # keep UI screenshots
+SCANWISE_TEST_GSETTINGS=1 scripts/test.sh   # also the GNOME shortcut (uses a temporary keyfile backend, not dconf)
 dotnet run --project src/Scanwise.App
 scripts/publish.sh                    # self-contained builds for linux-x64/arm64, win-x64, osx-x64/arm64
 ```

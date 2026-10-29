@@ -27,6 +27,7 @@ public sealed class AppServices : IDisposable
         AutoRotate = new AutoRotateService(imageContext, Tesseract, paths.TempDir);
         Session = new SessionStore(paths.SessionDir, Context.Scanning);
         Renderer = new Imaging.PageRenderer(imageContext);
+        Shortcuts = new ScanShortcuts();
     }
 
     public AppPaths Paths { get; }
@@ -41,6 +42,7 @@ public sealed class AppServices : IDisposable
     public AutoRotateService AutoRotate { get; }
     public SessionStore Session { get; }
     public Imaging.PageRenderer Renderer { get; }
+    public ScanShortcuts Shortcuts { get; }
     public PageDocument Document { get; } = new();
 
     public void SaveSettings() => JsonStore.Save(Paths.SettingsFile, Settings);

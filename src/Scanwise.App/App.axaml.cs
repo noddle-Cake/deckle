@@ -1,7 +1,9 @@
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
+using Avalonia.Controls;
 using Avalonia.Styling;
+using Avalonia.Threading;
 using Scanwise.App.Services;
 using Scanwise.App.ViewModels;
 using Scanwise.App.Views;
@@ -11,6 +13,11 @@ namespace Scanwise.App;
 
 public partial class App : Application
 {
+    /// <summary>Started with --scan (from a shortcut or the jump list / launcher / Dock menu).</summary>
+    public static bool ScanOnStart { get; set; }
+
+    private readonly SingleInstance _instance = new();
+
     public override void Initialize()
     {
         AvaloniaXamlLoader.Load(this);
@@ -29,9 +36,56 @@ public partial class App : Application
             desktop.MainWindow = window;
             desktop.ShutdownRequested += (_, _) => vm.OnShutdown();
             window.Opened += async (_, _) => await vm.InitializeAsync();
-            desktop.Exit += (_, _) => services.Dispose();
+            if (ScanOnStart)
+            {
+                window.Opened += async (_, _) => await vm.ScanFromShortcutAsync();
+            }
+            desktop.Exit += (_, _) =>
+            {
+                _instance.Dispose();
+                services.Dispose();
+            };
+
+            void HandleRequest(string request) => Dispatcher.UIThread.Post(async () =>
+            {
+                BringToFront(window);
+                if (request == SingleInstance.ScanRequest)
+                {
+                    await vm.ScanFromShortcutAsync();
+                }
+            });
+            _instance.Listen(HandleRequest);
+            services.Shortcuts.ScanRequested += () => HandleRequest(SingleInstance.ScanRequest);
+            services.Shortcuts.InstallLauncherEntries();
+            if (services.Settings.ScanHotkey)
+            {
+                // Re-point the shortcut at this copy (the folder may have moved) and register the macOS hotkey.
+                _ = RefreshHotkeyAsync(services);
+            }
         }
         base.OnFrameworkInitializationCompleted();
+    }
+
+    private static void BringToFront(Window window)
+    {
+        if (window.WindowState == WindowState.Minimized)
+        {
+            window.WindowState = WindowState.Normal;
+        }
+        window.Show();
+        window.Activate();
+    }
+
+    private static async Task RefreshHotkeyAsync(AppServices services)
+    {
+        try
+        {
+            await services.Shortcuts.ApplyHotkeyAsync(true, services.Settings.ScanHotkeyKey.FirstOrDefault('S'));
+        }
+        catch (InvalidOperationException ex)
+        {
+            System.Diagnostics.Trace.WriteLine($"Scanwise: {ex.Message}");
+        }
     }
 
     public static void ApplyTheme(AppTheme theme)

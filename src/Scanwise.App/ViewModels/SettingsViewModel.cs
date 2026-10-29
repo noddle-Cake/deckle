@@ -39,6 +39,8 @@ public sealed partial class SettingsViewModel : ObservableObject
         _jpegQuality = s.Images.JpegQuality;
         _tiffCompression = TiffCompressions.First(t => t.Value == s.Images.TiffCompression);
         _restoreSession = s.RestoreSession;
+        _scanHotkey = s.ScanHotkey;
+        _scanHotkeyKey = HotkeyLetters.Contains(s.ScanHotkeyKey.ToUpperInvariant()) ? s.ScanHotkeyKey.ToUpperInvariant() : "S";
         RefreshOcr();
     }
 
@@ -87,6 +89,8 @@ public sealed partial class SettingsViewModel : ObservableObject
     [ObservableProperty] private string _customPattern;
     [ObservableProperty] private bool _autoRotate;
     [ObservableProperty] private bool _reverseScanOrder;
+    [ObservableProperty] private bool _scanHotkey;
+    [ObservableProperty] private string _scanHotkeyKey;
     [ObservableProperty] private string _ocrLanguage;
     [ObservableProperty] private bool _pdfOcr;
     [ObservableProperty] private Choice<PdfStandardKind> _pdfStandard;
@@ -126,6 +130,81 @@ public sealed partial class SettingsViewModel : ObservableObject
     partial void OnAddToExistingChanged(bool value) => Save(s => s.ScanAction = value ? ScanAction.AddToExisting : ScanAction.StartFresh);
     partial void OnAutoRotateChanged(bool value) => Save(s => s.AutoRotate = value);
     partial void OnReverseScanOrderChanged(bool value) => Save(s => s.ReverseScanOrder = value);
+
+    // ---------------------------------------------------------------- Scan shortcut
+
+    public IReadOnlyList<string> HotkeyLetters { get; } = Enumerable.Range('A', 26).Select(c => ((char)c).ToString()).ToList();
+    public bool HotkeyIsAutomatic => ScanShortcuts.HotkeyKind != ScanHotkeyKind.Manual;
+    public bool HotkeyIsManual => !HotkeyIsAutomatic;
+    public string ScanCommandLine => ScanShortcuts.ScanCommand;
+
+    public string HotkeyDescription
+    {
+        get
+        {
+            var label = ScanShortcuts.KeyLabel(ScanHotkeyKey[0]);
+            return ScanShortcuts.HotkeyKind switch
+            {
+                ScanHotkeyKind.Global when OperatingSystem.IsWindows() =>
+                    $"{label} scans from anywhere, even when Scanwise is closed. Adds a \"Scanwise Scan\" shortcut to the Start menu.",
+                ScanHotkeyKind.Global => $"{label} scans from anywhere, even when Scanwise is closed. Added to GNOME's keyboard shortcuts.",
+                ScanHotkeyKind.WhileRunning => $"{label} scans from any app while Scanwise is open.",
+                _ => "Add a custom shortcut in your desktop's keyboard settings that runs this command:",
+            };
+        }
+    }
+
+    public string LauncherHint =>
+        OperatingSystem.IsWindows() ? "Right-click Scanwise in the taskbar and choose Scan. Pin Scanwise to the taskbar to keep it there."
+        : OperatingSystem.IsMacOS() ? "Right-click Scanwise in the Dock and choose Scan."
+        : "Right-click Scanwise in the dock or app list and choose Scan.";
+
+    private bool _revertingHotkey;
+
+    partial void OnScanHotkeyChanged(bool value) => _ = ApplyHotkeyAsync();
+
+    partial void OnScanHotkeyKeyChanged(string value)
+    {
+        OnPropertyChanged(nameof(HotkeyDescription));
+        if (ScanHotkey)
+        {
+            _ = ApplyHotkeyAsync();
+        }
+        else if (!_revertingHotkey)
+        {
+            Save(s => s.ScanHotkeyKey = value);
+        }
+    }
+
+    private async Task ApplyHotkeyAsync()
+    {
+        if (_revertingHotkey)
+        {
+            return;
+        }
+        var enabled = ScanHotkey;
+        var key = ScanHotkeyKey;
+        try
+        {
+            await _services.Shortcuts.ApplyHotkeyAsync(enabled, key[0]);
+            Save(s =>
+            {
+                s.ScanHotkey = enabled;
+                s.ScanHotkeyKey = key;
+            });
+        }
+        catch (InvalidOperationException ex)
+        {
+            _revertingHotkey = true;
+            ScanHotkey = _services.Settings.ScanHotkey;
+            ScanHotkeyKey = _services.Settings.ScanHotkeyKey;
+            _revertingHotkey = false;
+            await _ui.ShowMessageAsync("Shortcut not set", ex.Message);
+        }
+    }
+
+    [RelayCommand]
+    private Task CopyScanCommandLine() => _ui.CopyTextAsync(ScanCommandLine);
     partial void OnPdfOcrChanged(bool value) => Save(s => s.Pdf.Ocr = value);
     partial void OnPdfTitleChanged(string value) => Save(s => s.Pdf.Title = string.IsNullOrWhiteSpace(value) ? null : value);
     partial void OnPdfAuthorChanged(string value) => Save(s => s.Pdf.Author = string.IsNullOrWhiteSpace(value) ? null : value);

@@ -94,11 +94,48 @@ public sealed partial class MainViewModel : ObservableObject
     public bool PagesPaneIsColumn => Layout == LayoutMode.Wide;
     public bool ShowEditorNavItem => Layout != LayoutMode.Wide;
 
+    private readonly TaskCompletionSource _discoveryStarted = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
     public async Task InitializeAsync()
     {
-        await RestoreSessionAsync();
+        try
+        {
+            await RestoreSessionAsync();
+        }
+        finally
+        {
+            // Continuations run after DiscoverAsync has started searching (asynchronous continuations).
+            _discoveryStarted.TrySetResult();
+        }
         await ScanOptions.DiscoverAsync();
         OnPropertyChanged(nameof(CanScan));
+    }
+
+    /// <summary>
+    /// "Scanwise --scan", the jump list / launcher / Dock menu entry or the shortcut key: scans with the current
+    /// options as soon as the remembered scanner has been found, without waiting for the whole device search.
+    /// </summary>
+    public async Task ScanFromShortcutAsync()
+    {
+        await _discoveryStarted.Task;
+        if (!IsWorkspace)
+        {
+            Section = Section.Scan;
+        }
+        var start = Environment.TickCount64;
+        while (ScanOptions.SelectedScanner is null || ScanOptions.IsLoadingCapabilities)
+        {
+            if ((ScanOptions.SelectedScanner is null && !ScanOptions.IsSearching) || Environment.TickCount64 - start > 60_000)
+            {
+                ShowStatus("No scanner found", "Connect or turn on your scanner, then scan again.", InfoBarSeverity.Warning);
+                return;
+            }
+            await Task.Delay(100);
+        }
+        if (!IsBusy)
+        {
+            await ScanCommand.ExecuteAsync(null);
+        }
     }
 
     public void UpdateLayout(double width)

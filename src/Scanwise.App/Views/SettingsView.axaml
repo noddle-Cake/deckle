@@ -47,6 +47,28 @@
         </ui:SettingsExpanderItem>
       </ui:SettingsExpander>
 
+      <ui:SettingsExpander Header="Scan shortcut" Description="{Binding LauncherHint}" IconSource="Keyboard" IsExpanded="True">
+        <ui:SettingsExpanderItem Content="Shortcut key" Description="{Binding HotkeyDescription}" IsVisible="{Binding HotkeyIsAutomatic}">
+          <ui:SettingsExpanderItem.Footer>
+            <StackPanel Orientation="Horizontal" Spacing="12">
+              <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                <TextBlock Text="{OnPlatform Default='Ctrl+Alt+', macOS='⌃⌥'}" VerticalAlignment="Center" />
+                <ComboBox ItemsSource="{Binding HotkeyLetters}" SelectedItem="{Binding ScanHotkeyKey}" MinWidth="64" />
+              </StackPanel>
+              <ToggleSwitch IsChecked="{Binding ScanHotkey}" OnContent="" OffContent="" />
+            </StackPanel>
+          </ui:SettingsExpanderItem.Footer>
+        </ui:SettingsExpanderItem>
+        <ui:SettingsExpanderItem Content="Shortcut key" Description="{Binding HotkeyDescription}" IsVisible="{Binding HotkeyIsManual}">
+          <ui:SettingsExpanderItem.Footer>
+            <StackPanel Orientation="Horizontal" Spacing="8">
+              <TextBox Text="{Binding ScanCommandLine, Mode=OneWay}" IsReadOnly="True" MinWidth="240" />
+              <Button Content="Copy" Command="{Binding CopyScanCommandLineCommand}" />
+            </StackPanel>
+          </ui:SettingsExpanderItem.Footer>
+        </ui:SettingsExpanderItem>
+      </ui:SettingsExpander>
+
       <ui:SettingsExpander Header="File names" Description="{Binding NamingPreview}" IconSource="Rename" IsExpanded="True">
         <ui:SettingsExpander.Footer>
           <ComboBox ItemsSource="{Binding NamingPresets}" SelectedItem="{Binding NamingPreset}" MinWidth="160" />
