@@ -280,12 +280,26 @@ public sealed partial class EditorViewModel : ObservableObject
 
     private ProcessedImage? _renderedImage;
 
+    /// <summary>A preview rendered with pending adjustments; not cached, so it's disposed when replaced.</summary>
+    private Bitmap? _ownedPreview;
+
+    private const int CachedPreviews = 6;
+
+    /// <summary>
+    /// Recently shown pages, most recent last, keyed by image identity (an edit makes a new image, so a stale
+    /// entry is never hit and just ages out). Makes going back and forth between pages instant.
+    /// </summary>
+    private readonly List<(ProcessedImage Image, Bitmap Bitmap, double Scale)> _previewCache = [];
+
+    private CancellationTokenSource? _prefetchCts;
+    private ProcessedImage? _prefetchImage;
+    private Task? _prefetchTask;
+
     private async Task RenderAsync(IReadOnlyList<Transform>? extra = null)
     {
         if (Current is null)
         {
-            Preview = null;
-            PreviewPixels = default;
+            SetPreview(null, 1, owned: false);
             _renderedImage = null;
             return;
         }
@@ -296,50 +310,82 @@ public sealed partial class EditorViewModel : ObservableObject
         }
         _renderCts?.Cancel();
         var cts = _renderCts = new CancellationTokenSource();
+        if (extra is null && TakeCached(image) is { } cached)
+        {
+            SetPreview(cached.Bitmap, cached.Scale, owned: false);
+            _renderedImage = image;
+            IsRendering = false;
+            Prefetch();
+            return;
+        }
+        if (extra is null && Current.Thumbnail is { } thumbnail && !ReferenceEquals(image, _renderedImage))
+        {
+            // Show the (blurry) thumbnail straight away so a click responds at once; the sharp preview replaces it.
+            SetPreview(CopyBitmap(thumbnail), PreviewScale, owned: true);
+            _renderedImage = null;
+        }
         IsRendering = true;
         try
         {
-            ProcessedImage source = image;
-            var temp = new List<ProcessedImage>();
-            if (extra is { Count: > 0 })
+            if (extra is null && ReferenceEquals(image, _prefetchImage) && _prefetchTask is { } pending)
             {
-                source = image.Clone();
-                temp.Add(source);
-                foreach (var t in extra)
+                await pending;
+                if (cts.IsCancellationRequested)
                 {
-                    source = source.WithTransform(t, disposeSelf: false);
-                    temp.Add(source);
-                }
-            }
-            try
-            {
-                var bitmap = await _services.Renderer.RenderAsync(source, PreviewSize, cts.Token);
-                if (extra is null)
-                {
-                    var full = await _services.Renderer.MeasureAsync(image);
-                    PreviewScale = bitmap is null || bitmap.PixelSize.Width == 0 ? 1 : (double)full.Width / bitmap.PixelSize.Width;
-                }
-                if (bitmap is null || cts.IsCancellationRequested)
-                {
-                    bitmap?.Dispose();
                     return;
                 }
-                var old = Preview;
-                Preview = bitmap;
-                PreviewPixels = bitmap.PixelSize;
-                if (extra is null)
+                if (TakeCached(image) is { } prefetched)
                 {
+                    SetPreview(prefetched.Bitmap, prefetched.Scale, owned: false);
                     _renderedImage = image;
+                    Prefetch();
+                    return;
                 }
-                old?.Dispose();
             }
-            finally
+            if (extra is { Count: > 0 })
             {
-                foreach (var t in temp)
+                var temp = new List<ProcessedImage>();
+                try
                 {
-                    t.Dispose();
+                    ProcessedImage source = image.Clone();
+                    temp.Add(source);
+                    foreach (var t in extra)
+                    {
+                        source = source.WithTransform(t, disposeSelf: false);
+                        temp.Add(source);
+                    }
+                    var bitmap = await _services.Renderer.RenderAsync(source, PreviewSize, cts.Token);
+                    if (bitmap is null || cts.IsCancellationRequested)
+                    {
+                        bitmap?.Dispose();
+                        return;
+                    }
+                    SetPreview(bitmap, PreviewScale, owned: true);
                 }
+                finally
+                {
+                    foreach (var t in temp)
+                    {
+                        t.Dispose();
+                    }
+                }
+                return;
             }
+
+            var result = await _services.Renderer.RenderPreviewAsync(image, PreviewSize, cts.Token);
+            if (result is not { } rendered)
+            {
+                return;
+            }
+            var scale = rendered.Bitmap.PixelSize.Width == 0 ? 1 : (double)rendered.FullSize.Width / rendered.Bitmap.PixelSize.Width;
+            AddCached(image, rendered.Bitmap, scale);
+            if (cts.IsCancellationRequested)
+            {
+                return;
+            }
+            SetPreview(rendered.Bitmap, scale, owned: false);
+            _renderedImage = image;
+            Prefetch();
         }
         finally
         {
@@ -348,6 +394,101 @@ public sealed partial class EditorViewModel : ObservableObject
                 IsRendering = false;
             }
         }
+    }
+
+    private void SetPreview(Bitmap? bitmap, double scale, bool owned)
+    {
+        var old = _ownedPreview;
+        PreviewScale = scale;
+        Preview = bitmap;
+        PreviewPixels = bitmap?.PixelSize ?? default;
+        _ownedPreview = owned ? bitmap : null;
+        if (old is not null && !ReferenceEquals(old, bitmap))
+        {
+            old.Dispose();
+        }
+    }
+
+    private (Bitmap Bitmap, double Scale)? TakeCached(ProcessedImage image)
+    {
+        var index = _previewCache.FindIndex(e => ReferenceEquals(e.Image, image));
+        if (index < 0)
+        {
+            return null;
+        }
+        var entry = _previewCache[index];
+        _previewCache.RemoveAt(index);
+        _previewCache.Add(entry);
+        return (entry.Bitmap, entry.Scale);
+    }
+
+    private void AddCached(ProcessedImage image, Bitmap bitmap, double scale)
+    {
+        _previewCache.RemoveAll(e => ReferenceEquals(e.Image, image) && ReferenceEquals(e.Bitmap, bitmap));
+        _previewCache.Add((image, bitmap, scale));
+        for (var i = 0; _previewCache.Count > CachedPreviews && i < _previewCache.Count;)
+        {
+            if (ReferenceEquals(_previewCache[i].Bitmap, Preview))
+            {
+                i++;
+                continue;
+            }
+            _previewCache[i].Bitmap.Dispose();
+            _previewCache.RemoveAt(i);
+        }
+    }
+
+    /// <summary>Renders the next page in the background, so stepping through pages doesn't wait.</summary>
+    private void Prefetch()
+    {
+        if (Current is null || Current.Number >= _pages.Count)
+        {
+            return;
+        }
+        var next = _pages.Items[Current.Number].Page.Image;
+        if (ReferenceEquals(next, _prefetchImage) || _previewCache.Exists(e => ReferenceEquals(e.Image, next)))
+        {
+            return;
+        }
+        _prefetchCts?.Cancel();
+        var cts = _prefetchCts = new CancellationTokenSource();
+        _prefetchImage = next;
+        _prefetchTask = PrefetchAsync(next, cts.Token);
+    }
+
+    private async Task PrefetchAsync(ProcessedImage image, CancellationToken cancelToken)
+    {
+        try
+        {
+            // Let the current page's preview and thumbnails go first.
+            await Task.Delay(150, CancellationToken.None);
+            if (cancelToken.IsCancellationRequested)
+            {
+                return;
+            }
+            var result = await _services.Renderer.RenderPreviewAsync(image, PreviewSize, cancelToken);
+            if (result is { } rendered)
+            {
+                var scale = rendered.Bitmap.PixelSize.Width == 0 ? 1 : (double)rendered.FullSize.Width / rendered.Bitmap.PixelSize.Width;
+                AddCached(image, rendered.Bitmap, scale);
+            }
+        }
+        finally
+        {
+            if (ReferenceEquals(_prefetchImage, image))
+            {
+                _prefetchImage = null;
+                _prefetchTask = null;
+            }
+        }
+    }
+
+    private static Bitmap CopyBitmap(Bitmap source)
+    {
+        using var stream = new MemoryStream();
+        source.Save(stream);
+        stream.Position = 0;
+        return new Bitmap(stream);
     }
 
     partial void OnPreviewPixelsChanged(PixelSize value) => RaiseZoom();

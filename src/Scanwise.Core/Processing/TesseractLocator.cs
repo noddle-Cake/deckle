@@ -29,7 +29,7 @@ public sealed record TesseractInstall(string ExePath, IReadOnlyList<string> Data
 
 /// <summary>
 /// Finds Tesseract: a system install first (it usually ships language data), then the copy bundled with the app.
-/// Downloaded language files go to the app's own tessdata folder.
+/// Downloaded language files go to the app's own tessdata folder; English and OSD data ship with the app.
 /// </summary>
 public sealed class TesseractLocator
 {
@@ -45,6 +45,9 @@ public sealed class TesseractLocator
     }
 
     public string UserDataDir => _paths.TessdataDir;
+
+    /// <summary>Language data shipped next to the app by scripts/publish.sh.</summary>
+    public static string BundledDataDir => Path.Combine(AppContext.BaseDirectory, "tessdata");
 
     public TesseractInstall? Find()
     {
@@ -104,8 +107,10 @@ public sealed class TesseractLocator
         {
             return null;
         }
+        // Downloaded languages first, then system data, then the English/OSD data shipped with the app.
         var dirs = new List<string> { UserDataDir };
         dirs.AddRange(SystemDataDirs());
+        dirs.Add(BundledDataDir);
         dirs = dirs.Distinct().ToList();
         return new TesseractInstall(exe, dirs, IsBundled: systemExe is null);
     }

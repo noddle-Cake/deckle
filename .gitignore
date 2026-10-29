@@ -10,3 +10,4 @@ publish/
 TestResults/
 *.swp
 sixlabors.lic
+.cache/

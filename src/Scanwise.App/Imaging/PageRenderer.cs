@@ -4,6 +4,7 @@ using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using NAPS2.Images;
 using NAPS2.Images.ImageSharp;
+using NAPS2.Images.Transforms;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 
@@ -38,6 +39,49 @@ public sealed class PageRenderer
                 cancelToken.ThrowIfCancellationRequested();
                 using var rendered = await _thumbnails.Render(copy, maxSide);
                 return ToBitmap(rendered);
+            }, cancelToken);
+        }
+        catch (OperationCanceledException)
+        {
+            return null;
+        }
+        finally
+        {
+            _throttle.Release();
+            copy.Dispose();
+        }
+    }
+
+    /// <summary>
+    /// Renders a page for the editor: one decode gives both the scaled bitmap and the full-size dimensions
+    /// (rendering and measuring separately decoded the whole scan twice).
+    /// </summary>
+    public async Task<(Bitmap Bitmap, PixelSize FullSize)?> RenderPreviewAsync(ProcessedImage image, int maxSide, CancellationToken cancelToken = default)
+    {
+        var copy = image.Clone();
+        try
+        {
+            await _throttle.WaitAsync(cancelToken);
+        }
+        catch (OperationCanceledException)
+        {
+            copy.Dispose();
+            return null;
+        }
+        try
+        {
+            return await Task.Run(() =>
+            {
+                cancelToken.ThrowIfCancellationRequested();
+                using var full = _imageContext.Render(copy);
+                var size = new PixelSize(full.Width, full.Height);
+                cancelToken.ThrowIfCancellationRequested();
+                if (Math.Max(full.Width, full.Height) <= maxSide)
+                {
+                    return (ToBitmap(full), size);
+                }
+                using var scaled = full.PerformTransform(new ThumbnailTransform(maxSide));
+                return (ToBitmap(scaled), size);
             }, cancelToken);
         }
         catch (OperationCanceledException)

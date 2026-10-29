@@ -11,6 +11,23 @@ if [ ${#rids[@]} -eq 0 ]; then
 fi
 version="$(sed -n 's:.*<Version>\(.*\)</Version>.*:\1:p' Directory.Build.props)"
 mkdir -p publish
+
+# OCR works out of the box: English and orientation data ship in <app>/tessdata (more languages download from
+# Settings). Pinned to a tessdata_fast commit and checked, cached in .cache/tessdata.
+tessdata_commit=87416418657359cb625c412a48b6e1d6d41c29bd
+declare -A tessdata_sha=(
+  [eng]=7d4322bd2a7749724879683fc3912cb542f19906c83bcc1a52132556427170b2
+  [osd]=9cf5d576fcc47564f11265841e5ca839001e7e6f38ff7f7aacf46d15a96b00ff
+)
+mkdir -p .cache/tessdata
+for lang in "${!tessdata_sha[@]}"; do
+  file=".cache/tessdata/$lang.traineddata"
+  if ! echo "${tessdata_sha[$lang]}  $file" | sha256sum -c --status 2>/dev/null; then
+    curl -sSfL -o "$file" "https://raw.githubusercontent.com/tesseract-ocr/tessdata_fast/$tessdata_commit/$lang.traineddata"
+    echo "${tessdata_sha[$lang]}  $file" | sha256sum -c --quiet
+  fi
+done
+
 for rid in "${rids[@]}"; do
   out="publish/$rid"
   rm -rf "$out"
@@ -24,6 +41,8 @@ for rid in "${rids[@]}"; do
       *) [ -d "$dir" ] && rm -rf "$dir" ;;
     esac
   done
+  mkdir -p "$out/tessdata"
+  cp .cache/tessdata/*.traineddata "$out/tessdata/"
   case "$rid" in
     win-*) (cd publish && rm -f "scanwise-$version-$rid.zip" && zip -qr "scanwise-$version-$rid.zip" "$rid") ;;
     *) chmod +x "$out/Scanwise"; find "$out" -path '*/_*/tesseract' -exec chmod +x {} +

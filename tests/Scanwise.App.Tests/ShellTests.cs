@@ -82,6 +82,16 @@ public sealed class ShellTests : IDisposable
             Assert.True(vm.ShowScanPane && vm.ShowPagesPane && vm.ShowEditorPane);
             Screenshot(window, "01-wide-empty");
 
+            // The resolution box shows the saved/default dpi, also after its list is rebuilt (switching source).
+            var resolution = window.GetVisualDescendants().OfType<ComboBox>().First(c => ReferenceEquals(c.ItemsSource, vm.ScanOptions.Resolutions));
+            Assert.Equal(300, resolution.SelectedItem);
+            vm.ScanOptions.IsFeeder = true;
+            Pump();
+            vm.ScanOptions.IsFlatbed = true;
+            Pump();
+            Assert.Equal(300, resolution.SelectedItem);
+            Assert.Equal(300, vm.ScanOptions.Settings.Dpi);
+
             window.Width = 900;
             Pump();
             Assert.Equal(LayoutMode.Medium, vm.Layout);

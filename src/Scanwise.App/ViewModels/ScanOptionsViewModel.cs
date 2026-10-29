@@ -105,6 +105,22 @@ public sealed partial class ScanOptionsViewModel : ObservableObject
     public bool CanPreview => HasScanner && Source == ScanSource.Flatbed;
     public bool IsMultiPageFormat => Format?.Value.IsMultiPage() == true;
 
+    /// <summary>
+    /// What the resolution box binds to. Rebuilding <see cref="Resolutions"/> makes the ComboBox push a null
+    /// selection back; that is ignored here instead of failing the int conversion and blanking the box.
+    /// </summary>
+    public int? SelectedResolution
+    {
+        get => Resolutions.Contains(Dpi) ? Dpi : null;
+        set
+        {
+            if (value is int dpi)
+            {
+                Dpi = dpi;
+            }
+        }
+    }
+
     public string ResolutionHint => Dpi switch
     {
         < 150 => "Fast, for previews and on-screen reading",
@@ -367,6 +383,8 @@ public sealed partial class ScanOptionsViewModel : ObservableObject
         }
         _loading = wasLoading;
         Dpi = Capabilities.NearestResolution(Source, wanted);
+        // Dpi may be unchanged (no change notification), but the ComboBox lost its selection when the list was cleared.
+        OnPropertyChanged(nameof(SelectedResolution));
     }
 
     partial void OnSourceChanged(ScanSource value)
@@ -402,6 +420,7 @@ public sealed partial class ScanOptionsViewModel : ObservableObject
             Settings.Dpi = value;
         }
         OnPropertyChanged(nameof(ResolutionHint));
+        OnPropertyChanged(nameof(SelectedResolution));
         ScheduleSave();
     }
 

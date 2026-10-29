@@ -89,7 +89,7 @@
           <!-- Resolution -->
           <StackPanel Spacing="6">
             <TextBlock Classes="heading" Text="Resolution" />
-            <ComboBox ItemsSource="{Binding Resolutions}" SelectedItem="{Binding Dpi}" HorizontalAlignment="Stretch">
+            <ComboBox ItemsSource="{Binding Resolutions}" SelectedItem="{Binding SelectedResolution}" HorizontalAlignment="Stretch">
               <ComboBox.ItemTemplate>
                 <DataTemplate>
                   <TextBlock Text="{Binding StringFormat='{}{0} dpi'}" />

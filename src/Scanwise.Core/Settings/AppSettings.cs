@@ -56,8 +56,8 @@ public sealed class AppSettings
 
 public sealed class PdfSettings
 {
-    /// <summary>Embed a text layer with Tesseract so the PDF is searchable.</summary>
-    public bool Ocr { get; set; }
+    /// <summary>Embed a text layer with Tesseract so the PDF is searchable (skipped when no language data is found).</summary>
+    public bool Ocr { get; set; } = true;
     public PdfStandard Standard { get; set; } = PdfStandard.Default;
     public string? Title { get; set; }
     public string? Author { get; set; }
