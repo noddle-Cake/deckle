@@ -67,6 +67,9 @@ public sealed partial class MainViewModel : ObservableObject
     /// <summary>True while the status bar is reporting a save, so Open / Show in folder make sense.</summary>
     [ObservableProperty] private bool _statusHasFileActions;
 
+    /// <summary>The status bar offers "Clear" (restored pages on macOS, instead of asking at launch).</summary>
+    [ObservableProperty] private bool _statusCanClear;
+
     /// <summary>
     /// macOS titles the window with the document's name ("Untitled" until saved) and shows unsaved changes as the
     /// dot in the close button (see <see cref="DocumentPath"/>); elsewhere the title carries the page count and "•".
@@ -93,6 +96,12 @@ public sealed partial class MainViewModel : ObservableObject
     [ObservableProperty] private bool _sidebarHidden;
 
     public bool SidebarVisible => ShowScanPane;
+
+    /// <summary>
+    /// The toolbar's own sidebar button: needed when the sidebar is hidden, and always in a narrow window, where
+    /// the scan options fill the window and the sidebar's title bar area (with its button) has no room.
+    /// </summary>
+    public bool ShowToolbarSidebarButton => !SidebarVisible || Layout == LayoutMode.Narrow;
     public string SidebarMenuHeader => SidebarVisible ? "Hide Sidebar" : "Show Sidebar";
 
     /// <summary>
@@ -214,7 +223,7 @@ public sealed partial class MainViewModel : ObservableObject
         {
             nameof(IsWorkspace), nameof(ShowSettings), nameof(ShowHelp), nameof(ShowScanPane), nameof(ShowPagesPane),
             nameof(ShowEditorPane), nameof(PagesPaneIsColumn), nameof(ShowEditorNavItem), nameof(SidebarVisible),
-            nameof(SidebarMenuHeader), nameof(IsPagesShown), nameof(IsEditorShown), nameof(ShowToolbarActions),
+            nameof(SidebarMenuHeader), nameof(IsPagesShown), nameof(IsEditorShown), nameof(ShowToolbarActions), nameof(ShowToolbarSidebarButton),
         })
         {
             OnPropertyChanged(name);
@@ -774,7 +783,9 @@ public sealed partial class MainViewModel : ObservableObject
             return;
         }
         var count = _services.Session.SavedPageCount;
-        if (!await _ui.ConfirmAsync("Restore pages?", $"{count} page(s) from your last session were not cleared. Restore them?", "Restore", "Discard"))
+        // macOS: no alert at launch (Alerts HIG). The pages come back and the status bar offers to clear them.
+        if (!AppShortcuts.IsMac
+            && !await _ui.ConfirmAsync("Restore pages?", $"{count} page(s) from your last session were not cleared. Restore them?", "Restore", "Discard"))
         {
             _services.Session.Clear();
             return;
@@ -789,6 +800,11 @@ public sealed partial class MainViewModel : ObservableObject
         finally
         {
             EndOperation();
+        }
+        if (AppShortcuts.IsMac && Document.Count > 0)
+        {
+            ShowStatus("Pages restored", $"{Document.Count} page(s) from your last session are back.", InfoBarSeverity.Informational);
+            StatusCanClear = true;
         }
     }
 
@@ -894,6 +910,7 @@ public sealed partial class MainViewModel : ObservableObject
     private void ShowStatus(string title, string message, InfoBarSeverity severity)
     {
         StatusHasFileActions = false;
+        StatusCanClear = false;
         StatusTitle = title;
         StatusMessage = message;
         StatusSeverity = severity;

@@ -16,13 +16,15 @@ internal static unsafe class MacIntegration
     private const string Carbon = "/System/Library/Frameworks/Carbon.framework/Carbon";
 
     private static Action? _onScan;
+    private static Action? _onScanNew;
     private static IntPtr _dockMenu;
     private static IntPtr _hotKeyRef;
     private static bool _hotKeyHandlerInstalled;
 
-    public static void InstallDockMenu(Action onScan)
+    public static void InstallDockMenu(Action onScan, Action onScanNew)
     {
         _onScan = onScan;
+        _onScanNew = onScanNew;
         var app = Send(Class("NSApplication"), Sel("sharedApplication"));
         var appDelegate = Send(app, Sel("delegate"));
         if (appDelegate == IntPtr.Zero)
@@ -34,13 +36,17 @@ internal static unsafe class MacIntegration
             (IntPtr)(delegate* unmanaged<IntPtr, IntPtr, IntPtr, IntPtr>)&DockMenu, "@@:@");
         class_addMethod(delegateClass, Sel("scanwiseScan:"),
             (IntPtr)(delegate* unmanaged<IntPtr, IntPtr, IntPtr, void>)&OnScanMenuItem, "v@:@");
+        class_addMethod(delegateClass, Sel("scanwiseScanNew:"),
+            (IntPtr)(delegate* unmanaged<IntPtr, IntPtr, IntPtr, void>)&OnScanNewMenuItem, "v@:@");
 
         var menu = Send(Send(Class("NSMenu"), Sel("alloc")), Sel("init"));
-        var title = NSString("Scan");
         var noKey = NSString("");
-        var item = Send(Send(Class("NSMenuItem"), Sel("alloc")), Sel("initWithTitle:action:keyEquivalent:"), title, Sel("scanwiseScan:"), noKey);
-        Send(item, Sel("setTarget:"), appDelegate);
-        Send(menu, Sel("addItem:"), item);
+        foreach (var (title, action) in new[] { ("Scan", "scanwiseScan:"), ("Scan into New Document", "scanwiseScanNew:") })
+        {
+            var item = Send(Send(Class("NSMenuItem"), Sel("alloc")), Sel("initWithTitle:action:keyEquivalent:"), NSString(title), Sel(action), noKey);
+            Send(item, Sel("setTarget:"), appDelegate);
+            Send(menu, Sel("addItem:"), item);
+        }
         _dockMenu = menu; // Kept for the life of the app.
         // NSApplication looks up which optional methods its delegate implements when the delegate is set.
         Send(app, Sel("setDelegate:"), appDelegate);
@@ -90,6 +96,18 @@ internal static unsafe class MacIntegration
 
     [UnmanagedCallersOnly]
     private static void OnScanMenuItem(IntPtr self, IntPtr cmd, IntPtr sender) => RaiseScan();
+
+    [UnmanagedCallersOnly]
+    private static void OnScanNewMenuItem(IntPtr self, IntPtr cmd, IntPtr sender)
+    {
+        try
+        {
+            _onScanNew?.Invoke();
+        }
+        catch (Exception)
+        {
+        }
+    }
 
     [UnmanagedCallersOnly]
     private static int OnHotKey(IntPtr callRef, IntPtr eventRef, IntPtr userData)
@@ -171,6 +189,14 @@ internal static unsafe class MacIntegration
         }
         Send(window, Sel("setDocumentEdited:"), edited ? 1 : IntPtr.Zero);
         Send(window, Sel("setRepresentedFilename:"), NSString(path ?? ""));
+    }
+
+    /// <summary>Text on the Dock icon's badge (scan progress); null removes it.</summary>
+    public static void SetDockBadge(string? text)
+    {
+        var app = Send(Class("NSApplication"), Sel("sharedApplication"));
+        var tile = Send(app, Sel("dockTile"));
+        Send(tile, Sel("setBadgeLabel:"), text is null ? IntPtr.Zero : NSString(text));
     }
 
     private static double ViewHeight(IntPtr nsView)

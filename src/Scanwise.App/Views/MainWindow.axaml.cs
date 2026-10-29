@@ -1,4 +1,6 @@
 using System.ComponentModel;
+using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 using System.Windows.Input;
 using Avalonia;
 using Avalonia.Controls;
@@ -70,11 +72,15 @@ public partial class MainWindow : Window
     {
         var body = (Control)Nav.Content!;
         Nav.Content = null;
+        // Progress shows in the toolbar and on the Dock icon instead of a bar that pushes the content down.
+        BusyBar.IsVisible = false;
         var shell = new MacShell { Body = body };
         Content = shell;
         ExtendClientAreaToDecorationsHint = true;
         ExtendClientAreaChromeHints = Avalonia.Platform.ExtendClientAreaChromeHints.PreferSystemChrome;
         ExtendClientAreaTitleBarHeightHint = 52;
+        // Narrowest width at which the toolbar's title, Pages | Editor switch, Share and Scan still fit.
+        MinWidth = 560;
         TransparencyLevelHint = [WindowTransparencyLevel.AcrylicBlur, WindowTransparencyLevel.None];
         Background = Brushes.Transparent;
         return shell;
@@ -129,11 +135,35 @@ public partial class MainWindow : Window
         {
             return;
         }
+        SetDocumentState(view, vm.HasUnsavedChanges, vm.DocumentPath);
+    }
+
+    [SupportedOSPlatform("macos")]
+    private static void SetDocumentState(IntPtr view, bool edited, string? path) =>
+        CallMac(() => MacIntegration.SetDocumentState(view, edited, path));
+
+    [SupportedOSPlatform("macos")]
+    private static void SetDockBadge(string? label) => CallMac(() => MacIntegration.SetDockBadge(label));
+
+    /// <summary>Scan and save progress on the Dock icon, so it shows while the window is in the background.</summary>
+    private static void UpdateDockBadge(MainViewModel vm)
+    {
+        if (!OperatingSystem.IsMacOS() || !AppShortcuts.IsMac)
+        {
+            return;
+        }
+        var label = !vm.IsBusy ? null : vm.IsProgressIndeterminate ? "…" : $"{vm.Progress:0}%";
+        SetDockBadge(label);
+    }
+
+    /// <summary>Native macOS extras are nice to have; a failure there must never take the window down.</summary>
+    private static void CallMac(Action call)
+    {
         try
         {
-            MacIntegration.SetDocumentState(view, vm.HasUnsavedChanges, vm.DocumentPath);
+            call();
         }
-        catch (Exception ex) when (ex is EntryPointNotFoundException or DllNotFoundException)
+        catch (Exception ex) when (ex is EntryPointNotFoundException or DllNotFoundException or MarshalDirectiveException)
         {
             System.Diagnostics.Trace.WriteLine($"Scanwise: {ex.Message}");
         }
@@ -190,6 +220,10 @@ public partial class MainWindow : Window
         else if (e.PropertyName is nameof(MainViewModel.HasUnsavedChanges) or nameof(MainViewModel.DocumentPath))
         {
             UpdateMacDocumentState();
+        }
+        else if (e.PropertyName is nameof(MainViewModel.IsBusy) or nameof(MainViewModel.Progress) or nameof(MainViewModel.IsProgressIndeterminate))
+        {
+            UpdateDockBadge(vm);
         }
     }
 

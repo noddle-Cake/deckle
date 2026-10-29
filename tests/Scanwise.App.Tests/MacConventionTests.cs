@@ -1,3 +1,4 @@
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
@@ -225,6 +226,69 @@ public sealed class MacConventionTests : IDisposable
         Pump();
         Assert.Null(window.OpenHelpWindow);
         _ = shell;
+    });
+
+    [Theory]
+    [InlineData("Save as new profile…", "Save as New Profile…")]
+    [InlineData("Save as…", "Save As…")]
+    [InlineData("Open selected page in another app", "Open Selected Page in Another App")]
+    [InlineData("Interleave (fronts, then backs reversed)", "Interleave (Fronts, Then Backs Reversed)")]
+    [InlineData("Undo edits on page", "Undo Edits on Page")]
+    [InlineData("Copy page to clipboard", "Copy Page to Clipboard")]
+    [InlineData("Rotate 180°", "Rotate 180°")]
+    [InlineData("Scan into New Document", "Scan into New Document")]
+    [InlineData("Deinterleave (backs reversed)", "Deinterleave (Backs Reversed)")]
+    public void MenuHeadersGetMacTitleCase(string sentence, string title) => Assert.Equal(title, TitleCase.Convert(sentence));
+
+    [Theory]
+    [InlineData("Save as… (⇧⌘S)", "Save as…")]
+    [InlineData("Undo (Ctrl+Z)", "Undo")]
+    [InlineData("Share", "Share")]
+    public void ScreenReaderNamesDropTheShortcut(string tooltip, string name) => Assert.Equal(name, AccessibleName.Strip(tooltip));
+
+    [AvaloniaFact]
+    public void IconButtonsHaveScreenReaderNames()
+    {
+        var (window, _) = Open();
+        var icons = window.GetVisualDescendants().OfType<Button>().Where(b => b.Classes.Contains("icon") && b.IsEffectivelyVisible).ToList();
+        Assert.NotEmpty(icons);
+        Assert.All(icons, b => Assert.False(string.IsNullOrWhiteSpace(Avalonia.Automation.AutomationProperties.GetName(b)), b.ToString()));
+        Assert.Contains(icons, b => Avalonia.Automation.AutomationProperties.GetName(b) == "Import images or PDFs");
+        window.Close();
+    }
+
+    [AvaloniaFact]
+    public void MaximizedWindowRemembersItsNormalFrame()
+    {
+        var window = new Window { Width = 900, Height = 700 };
+        window.Show();
+        var normal = new WindowFrame { X = 100, Y = 80, Width = 900, Height = 700 };
+        window.WindowState = WindowState.Maximized;
+        var saved = WindowFrames.Capture(window, normal);
+        Assert.True(saved.Maximized);
+        Assert.Equal((100, 80, 900.0, 700.0), (saved.X, saved.Y, saved.Width, saved.Height));
+        window.Close();
+
+        // A frame on a screen that's gone is ignored, so the window can't open out of reach.
+        var next = new Window { Width = 800, Height = 600 };
+        WindowFrames.Restore(next, new WindowFrame { X = -50_000, Y = -50_000, Width = 1000, Height = 800 });
+        Assert.Equal(800, next.Width);
+        Assert.NotEqual(new PixelPoint(-50_000, -50_000), next.Position);
+    }
+
+    [AvaloniaFact]
+    public void MacWindowKeepsTheToolbarUsableAtItsMinimumWidth() => As(true, () =>
+    {
+        var (window, vm) = Open(mac: true);
+        Assert.Equal(560, window.MinWidth);
+        Assert.False(window.FindControl<Border>("BusyBar")!.IsVisible); // Progress lives in the toolbar on macOS.
+        window.Width = window.MinWidth;
+        Pump();
+        Assert.Equal(LayoutMode.Narrow, vm.Layout);
+        Assert.True(vm.ShowScanPane);
+        Assert.True(vm.ShowToolbarSidebarButton); // The only way back to the pages from here.
+        Screenshot(window, "mac-05-minimum-width");
+        window.Close();
     });
 
     [AvaloniaFact]

@@ -341,32 +341,41 @@ share menu's position, and that pasted images arrive in Preview/Pages.
   the label as `⌥⌘S`.
 
 #### 9.3 Polish
-- [ ] **System font.** `WithInterFont()` puts Inter everywhere. On macOS use the system font (San Francisco)
-  so text matches menus and alerts: skip `WithInterFont()` on Mac, or set the default family to
-  `.AppleSystemUIFont`. In `ScanMergeDialog`, put `SF Mono,Menlo` first on Mac.
-- [ ] **Hard-coded Windows colours.** `Styles.axaml` uses Windows 11 greys (`#F3F3F3`, `#202020`, …). On Mac,
-  read the system colours (window background, control background, separator) so the app follows Increase
-  Contrast and the wallpaper tint. Make the corner radii of toolbar controls concentric with the window
-  corners (Toolbars page).
-- [ ] **Sidebar icons use the accent colour.** `PreferUserAccentColor="True"` already picks it up; check that
-  the sidebar icons do too (Sidebars page).
-- [ ] **Icons look like Windows.** The Fluent symbols read as Windows. SF Symbols may be used only in apps for
+
+Status 2026-10-29: done except the icon set (needs a decision) and the parts that need a Mac to check.
+Tested on Linux with `AppShortcuts.IsMac` on (`MacConventionTests`, 24 tests).
+
+- [x] **System font.** Done: no `WithInterFont()` on macOS, so text uses San Francisco. `ScanMergeDialog`'s
+  `Consolas,Menlo,monospace` already lands on Menlo (SF Mono isn't installed as a normal font), so it's
+  unchanged.
+- [~] **Hard-coded Windows colours.** Partly done: Increase Contrast (and Windows contrast themes) now
+  strengthens card/pane borders and shows captions at full opacity (`App.FollowContrastSetting`, via
+  Avalonia's `ContrastPreference`). The sidebar takes its colour from the system vibrancy (9.2). Still to do:
+  read `NSColor` window and separator colours for the content area, and adjust toolbar corner radii, which
+  can only be judged on a Mac.
+- [x] **Sidebar icons use the accent colour.** Not applicable: the Mac sidebar is the scan options form, with
+  no icon list. Checkboxes and radio buttons already follow the accent colour.
+- [ ] **Icons look like Windows.** **Needs a decision:** which icon set to use (licence and look); see the
+  report. Original note: The Fluent symbols read as Windows. SF Symbols may be used only in apps for
   Apple platforms, which a cross-platform build isn't. Use a neutral outline icon set that doesn't read as
   Windows-specific.
-- [ ] **VoiceOver labels.** The repo has no `AutomationProperties.Name` at all. Icon-only buttons have a
-  tooltip and nothing else, so VoiceOver just says "button". Name every icon button, the thumbnails
-  ("Page 3 of 12") and the colour swatches.
-- [ ] **Reduce Motion / Reduce Transparency.** Respect both. With Reduce Transparency on, the sidebar falls
-  back to an opaque background.
-- [ ] **Alert at launch.** Session recovery prompts on start. Alerts page: "Avoid showing an alert when your
-  app starts". Restore the pages and show the non-modal InfoBar with a "Clear" action instead.
-- [ ] **Progress.** The busy bar pushes the content down. On Mac show a small indicator in the toolbar, and
-  show progress on the Dock tile (`NSDockTile`) during long batch scans.
-- [ ] **Window behaviour.** Check full screen and tiling from the green button, check that the 420×520
-  minimum size still fits sidebar + content, and remember the window frame between launches.
-- [ ] **Title case.** macOS uses title case for menu items and buttons ("Save Selected Pages As…",
-  "Scan Into New Document"). Apply it on Mac only, since the headers are sentence case today. Add
-  "Scan Into New Document" to the Dock menu next to "Scan".
+- [x] **VoiceOver labels.** Done on every platform (helps Narrator and Orca too): a style names every icon
+  button after its tooltip, without the shortcut; page thumbnails ("Page 3") and colour swatches are named
+  too. A test checks that every visible icon button has a name.
+- [x] **Reduce Motion / Reduce Transparency.** Nothing to change: the app has no animations of its own (only
+  FluentAvalonia's short dialog fade), and with Reduce Transparency macOS makes the vibrancy behind the
+  sidebar opaque by itself. The window also falls back to a solid background when blur isn't available.
+- [x] **Alert at launch.** Done on macOS: pages are restored without asking, and the status bar says so with a
+  "Clear Pages…" button. Windows and Linux keep the question.
+- [x] **Progress.** Done: on Mac the toolbar subtitle shows the busy text, a small progress bar and Stop
+  (Esc), and the Dock icon shows a percentage badge. The bar above the content is hidden on Mac.
+- [~] **Window behaviour.** Done: the window frame (position, size, maximized) is saved on close and restored
+  on start, on every OS, and ignored if it's off every connected screen. The Mac minimum width is now 560 so
+  the toolbar never overlaps; at minimum width the toolbar's sidebar button always shows. Still to check on a
+  Mac: full screen and tiling from the green button.
+- [x] **Title case.** Done: on macOS every menu item header is converted to title case as it's set
+  (`TitleCase`, Apple's rule for minor words); buttons keep sentence case. The Dock menu now has "Scan" and
+  "Scan into New Document".
 
 #### 9.4 Liquid Glass (macOS 26), optional, after 9.1–9.2
 - [ ] Spike: put a native `NSGlassEffectView` behind the sidebar region of Avalonia's `NSWindow` (fall back

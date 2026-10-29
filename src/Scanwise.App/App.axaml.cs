@@ -2,6 +2,8 @@ using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Avalonia.Markup.Xaml.Styling;
+using Avalonia.Media;
+using Avalonia.Platform;
 using Avalonia.Controls;
 using Avalonia.Styling;
 using Avalonia.Threading;
@@ -24,6 +26,7 @@ public partial class App : Application
         AvaloniaXamlLoader.Load(this);
         if (AppShortcuts.IsMac)
         {
+            TitleCase.ApplyToMenus();
             Styles.Add(new StyleInclude(new Uri("avares://Scanwise/")) { Source = new Uri("avares://Scanwise/MacStyles.axaml") });
         }
     }
@@ -34,7 +37,14 @@ public partial class App : Application
         {
             var services = new AppServices(AppPaths.Default());
             ApplyTheme(services.Settings.Theme);
+            FollowContrastSetting();
             var window = new MainWindow();
+            WindowFrames.Restore(window, services.Settings.MainWindowFrame);
+            window.Closing += (_, _) =>
+            {
+                services.Settings.MainWindowFrame = WindowFrames.Capture(window, services.Settings.MainWindowFrame);
+                services.SaveSettings();
+            };
             var ui = new UiServices(window);
             var vm = new MainViewModel(services, ui);
             window.DataContext = vm;
@@ -66,6 +76,11 @@ public partial class App : Application
             });
             _instance.Listen(HandleRequest);
             services.Shortcuts.ScanRequested += () => HandleRequest(SingleInstance.ScanRequest);
+            services.Shortcuts.ScanNewRequested += () => Dispatcher.UIThread.Post(async () =>
+            {
+                BringToFront(window);
+                await vm.ScanStartFreshCommand.ExecuteAsync(null);
+            });
             services.Shortcuts.InstallLauncherEntries();
             if (services.Settings.ScanHotkey)
             {
@@ -97,6 +112,50 @@ public partial class App : Application
             System.Diagnostics.Trace.WriteLine($"Scanwise: {ex.Message}");
         }
     }
+
+    private ResourceDictionary? _highContrast;
+
+    /// <summary>
+    /// Increase Contrast (macOS) or a contrast theme (Windows): stronger card and pane borders, and captions at
+    /// full strength instead of faded.
+    /// </summary>
+    private void FollowContrastSetting()
+    {
+        if (PlatformSettings is not { } platform)
+        {
+            return;
+        }
+        void Apply(PlatformColorValues values)
+        {
+            var high = values.ContrastPreference == ColorContrastPreference.High;
+            if (high && _highContrast is null)
+            {
+                _highContrast = new ResourceDictionary
+                {
+                    ThemeDictionaries =
+                    {
+                        [ThemeVariant.Light] = new ResourceDictionary { ["CardBorder"] = new SolidColorBrush(Color.Parse("#99000000")) },
+                        [ThemeVariant.Dark] = new ResourceDictionary { ["CardBorder"] = new SolidColorBrush(Color.Parse("#99FFFFFF")) },
+                    },
+                };
+                Resources.MergedDictionaries.Add(_highContrast);
+                Styles.Add(_strongCaptions);
+            }
+            else if (!high && _highContrast is not null)
+            {
+                Resources.MergedDictionaries.Remove(_highContrast);
+                Styles.Remove(_strongCaptions);
+                _highContrast = null;
+            }
+        }
+        Apply(platform.GetColorValues());
+        platform.ColorValuesChanged += (_, values) => Dispatcher.UIThread.Post(() => Apply(values));
+    }
+
+    private readonly Style _strongCaptions = new(x => x.OfType<TextBlock>().Class("caption"))
+    {
+        Setters = { new Setter(Visual.OpacityProperty, 1.0) },
+    };
 
     public static void ApplyTheme(AppTheme theme)
     {

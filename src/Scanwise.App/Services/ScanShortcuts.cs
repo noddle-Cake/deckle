@@ -68,7 +68,7 @@ public sealed class ScanShortcuts
             }
             else if (OperatingSystem.IsMacOS())
             {
-                MacIntegration.InstallDockMenu(RaiseScanRequested);
+                MacIntegration.InstallDockMenu(RaiseScanRequested, RaiseScanNewRequested);
             }
         }
         catch (Exception ex)
@@ -131,4 +131,9 @@ public sealed class ScanShortcuts
     }
 
     private void RaiseScanRequested() => ScanRequested?.Invoke();
+
+    /// <summary>The Dock menu's "Scan into New Document" (macOS).</summary>
+    public event Action? ScanNewRequested;
+
+    private void RaiseScanNewRequested() => ScanNewRequested?.Invoke();
 }

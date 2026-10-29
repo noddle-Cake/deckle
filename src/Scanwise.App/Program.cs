@@ -19,9 +19,14 @@ internal static class Program
     }
 
     // Also used by the XAML previewer.
-    public static AppBuilder BuildAvaloniaApp() =>
-        AppBuilder.Configure<App>()
-            .UsePlatformDetect()
-            .WithInterFont()
-            .LogToTrace();
+    public static AppBuilder BuildAvaloniaApp()
+    {
+        var builder = AppBuilder.Configure<App>().UsePlatformDetect();
+        // macOS keeps its system font (San Francisco), so text matches the menu bar and system dialogs.
+        if (!OperatingSystem.IsMacOS())
+        {
+            builder = builder.WithInterFont();
+        }
+        return builder.LogToTrace();
+    }
 }

@@ -32,6 +32,9 @@ public sealed class AppSettings
     public AppTheme Theme { get; set; } = AppTheme.System;
     public MeasurementUnits Units { get; set; } = MeasurementUnits.Metric;
 
+    /// <summary>Where the main window was last time; null until it has been closed once.</summary>
+    public WindowFrame? MainWindowFrame { get; set; }
+
     // Saving
     public SaveLocationMode SaveLocation { get; set; } = SaveLocationMode.Folder;
     public string SaveFolder { get; set; } = AppPaths.DefaultScanFolder();
@@ -88,3 +91,13 @@ public sealed class ImageSettings
 }
 
 public enum TiffCompression { Auto, Lzw, Ccitt4, None }
+
+/// <summary>A window's position (screen pixels) and size (device-independent units).</summary>
+public sealed class WindowFrame
+{
+    public int X { get; set; }
+    public int Y { get; set; }
+    public double Width { get; set; }
+    public double Height { get; set; }
+    public bool Maximized { get; set; }
+}

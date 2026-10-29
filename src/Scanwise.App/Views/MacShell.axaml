@@ -32,13 +32,30 @@
           Background="Transparent">
       <!-- Leading: show the sidebar again, then the document title. -->
       <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-        <Button Classes="icon" Command="{Binding ToggleSidebarCommand}" IsVisible="{Binding !SidebarVisible}"
-                ToolTip.Tip="{svc:ShortcutTip 'Show sidebar', ToggleSidebar}" AutomationProperties.Name="Show sidebar">
+        <Button Classes="icon" Command="{Binding ToggleSidebarCommand}" IsVisible="{Binding ShowToolbarSidebarButton}"
+                ToolTip.Tip="{svc:ShortcutTip 'Show or hide sidebar', ToggleSidebar}" AutomationProperties.Name="Show or hide sidebar">
           <ui:SymbolIcon Symbol="DockLeft" />
         </Button>
         <StackPanel VerticalAlignment="Center" Margin="4,0,0,0">
           <TextBlock Text="{Binding WindowTitle}" FontSize="14" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" MaxWidth="260" />
-          <TextBlock Classes="caption" Text="{Binding Pages.SelectionSummary}" IsVisible="{Binding HasPages}" Margin="0,-2,0,0" />
+          <TextBlock Classes="caption" Text="{Binding Pages.SelectionSummary}" Margin="0,-2,0,0">
+            <TextBlock.IsVisible>
+              <MultiBinding Converter="{x:Static BoolConverters.And}">
+                <Binding Path="HasPages" />
+                <Binding Path="!IsBusy" />
+              </MultiBinding>
+            </TextBlock.IsVisible>
+          </TextBlock>
+          <!-- Progress: scanning, saving, importing. -->
+          <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding IsBusy}" Margin="0,1,0,0">
+            <TextBlock Classes="caption" Text="{Binding BusyText}" MaxWidth="200" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+            <ProgressBar Width="90" MinWidth="0" Height="4" MinHeight="4" VerticalAlignment="Center"
+                         IsIndeterminate="{Binding IsProgressIndeterminate}" Value="{Binding Progress}" Maximum="100" />
+            <Button Classes="icon" Padding="2" Command="{Binding CancelOperationCommand}" IsVisible="{Binding CanCancel}"
+                    ToolTip.Tip="{svc:ShortcutTip Stop, Cancel}" AutomationProperties.Name="Stop">
+              <ui:SymbolIcon Symbol="Cancel" FontSize="12" />
+            </Button>
+          </StackPanel>
         </StackPanel>
       </StackPanel>
 

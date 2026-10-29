@@ -1,6 +1,7 @@
 <Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:ui="using:FluentAvalonia.UI.Controls">
+        xmlns:ui="using:FluentAvalonia.UI.Controls"
+        xmlns:svc="using:Scanwise.App.Services">
 
   <Styles.Resources>
     <ResourceDictionary>
@@ -63,6 +64,18 @@
   </Style>
   <Style Selector="Button.icon ui|SymbolIcon">
     <Setter Property="FontSize" Value="18" />
+  </Style>
+
+  <!-- Icon-only buttons are named after their tooltip for screen readers; a local AutomationProperties.Name wins. -->
+  <Style Selector=":is(Button).icon">
+    <Setter Property="AutomationProperties.Name"
+            Value="{Binding $self.(ToolTip.Tip), Converter={x:Static svc:AccessibleName.Instance}}" />
+  </Style>
+  <Style Selector="ListBox.pages ListBoxItem">
+    <Setter Property="AutomationProperties.Name" Value="{ReflectionBinding Label}" />
+  </Style>
+  <Style Selector="ListBox.swatches ListBoxItem">
+    <Setter Property="AutomationProperties.Name" Value="{ReflectionBinding Label}" />
   </Style>
 
   <Style Selector="RadioButton">

@@ -39,7 +39,7 @@
 
     <Grid RowDefinitions="Auto,Auto,*">
       <!-- Progress for scans, saves and imports. -->
-      <Border Grid.Row="0" IsVisible="{Binding IsBusy}" Padding="16,8" Background="{DynamicResource PaneBackground}">
+      <Border x:Name="BusyBar" Grid.Row="0" IsVisible="{Binding IsBusy}" Padding="16,8" Background="{DynamicResource PaneBackground}">
         <Grid ColumnDefinitions="*,Auto">
           <StackPanel Spacing="4">
             <TextBlock Text="{Binding BusyText}" FontWeight="SemiBold" />
@@ -57,9 +57,10 @@
                   Severity="{Binding StatusSeverity}"
                   IsClosable="True">
         <ui:InfoBar.ActionButton>
-          <StackPanel Orientation="Horizontal" Spacing="6" IsVisible="{Binding StatusHasFileActions}">
-            <Button Content="Open" Command="{Binding OpenLastSavedCommand}" />
-            <Button Content="Show in folder" Command="{Binding ShowLastSavedInFolderCommand}" />
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <Button Content="Open" Command="{Binding OpenLastSavedCommand}" IsVisible="{Binding StatusHasFileActions}" />
+            <Button Content="{OnPlatform 'Show in folder', macOS='Show in Finder'}" Command="{Binding ShowLastSavedInFolderCommand}" IsVisible="{Binding StatusHasFileActions}" />
+            <Button Content="Clear Pages…" Command="{Binding ClearAllCommand}" IsVisible="{Binding StatusCanClear}" />
           </StackPanel>
         </ui:InfoBar.ActionButton>
       </ui:InfoBar>
