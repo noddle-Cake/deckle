@@ -107,8 +107,8 @@ public sealed class LookTests : IDisposable
     {
         var (window, vm, _) = Open(AppLook.Gnome);
         var shell = Assert.IsType<GnomeShell>(window.GnomeShell);
-        Assert.Equal(SystemDecorations.None, window.SystemDecorations); // The header bar is the title bar.
-        Assert.Null(window.FindControl<FluentAvalonia.UI.Controls.NavigationView>("Nav")!.Parent);
+        Assert.Equal(WindowDecorations.None, window.WindowDecorations); // The header bar is the title bar.
+        Assert.Null(window.FindControl<FluentAvalonia.UI.Controls.FANavigationView>("Nav")!.Parent);
         Assert.Contains(window.GetVisualDescendants(), v => v is WindowButtons);
         Assert.NotEmpty(shell.StartButtonNames.Concat(shell.EndButtonNames));
         Screenshot(window, "gnome-01-wide");
@@ -166,7 +166,7 @@ public sealed class LookTests : IDisposable
         var (window, _, _) = Open(AppLook.Windows);
         Assert.Null(window.MacShell);
         Assert.Null(window.GnomeShell);
-        Assert.NotNull(window.FindControl<FluentAvalonia.UI.Controls.NavigationView>("Nav")!.Parent);
+        Assert.NotNull(window.FindControl<FluentAvalonia.UI.Controls.FANavigationView>("Nav")!.Parent);
         Assert.Contains(window.KeyBindings, b => b.Gesture.Equals(new KeyGesture(Key.F1)));
         Assert.DoesNotContain(window.KeyBindings, b => b.Gesture.Equals(new KeyGesture(Key.OemComma, KeyModifiers.Control)));
         window.Close();

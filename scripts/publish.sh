@@ -4,6 +4,8 @@
 # Output: publish/<rid>/  plus publish/scanwise-<version>-<rid>.{tar.gz,zip}
 #         macOS: publish/osx-*/Scanwise.app, zipped (unsigned; see README)
 set -euo pipefail
+# Prefer a per-user .NET 10 SDK (dotnet-install.sh) over an older system one.
+if [ -x "$HOME/.dotnet/dotnet" ]; then export DOTNET_ROOT="$HOME/.dotnet" PATH="$HOME/.dotnet:$PATH"; fi
 root="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$root"
 rids=("$@")

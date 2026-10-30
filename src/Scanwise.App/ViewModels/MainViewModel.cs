@@ -62,7 +62,7 @@ public sealed partial class MainViewModel : ObservableObject
     [ObservableProperty] private bool _isStatusOpen;
     [ObservableProperty] private string _statusTitle = "";
     [ObservableProperty] private string _statusMessage = "";
-    [ObservableProperty] private InfoBarSeverity _statusSeverity = InfoBarSeverity.Informational;
+    [ObservableProperty] private FAInfoBarSeverity _statusSeverity = FAInfoBarSeverity.Informational;
     [ObservableProperty] private string? _lastSavedPath;
     /// <summary>True while the status bar is reporting a save, so Open / Show in folder make sense.</summary>
     [ObservableProperty] private bool _statusHasFileActions;
@@ -196,7 +196,7 @@ public sealed partial class MainViewModel : ObservableObject
         {
             if ((ScanOptions.SelectedScanner is null && !ScanOptions.IsSearching) || Environment.TickCount64 - start > 60_000)
             {
-                ShowStatus("No scanner found", "Connect or turn on your scanner, then scan again.", InfoBarSeverity.Warning);
+                ShowStatus("No scanner found", "Connect or turn on your scanner, then scan again.", FAInfoBarSeverity.Warning);
                 return;
             }
             await Task.Delay(100);
@@ -322,12 +322,21 @@ public sealed partial class MainViewModel : ObservableObject
     {
         var newPages = new List<Page>();
         using var cts = BeginOperation("Scanning…", cancellable: true);
+        // A steady bar per page instead of the scanner's bursty figures.
+        var bar = new SmoothProgress(v => Progress = v);
+        var pageNumber = 1;
         var progress = new Progress<ScanProgress>(p =>
         {
+            if (p.PageNumber != pageNumber)
+            {
+                pageNumber = p.PageNumber;
+                bar.NextPage();
+            }
             BusyText = $"Scanning page {p.PageNumber}…";
-            IsProgressIndeterminate = p.PageFraction <= 0;
-            Progress = p.PageFraction * 100;
+            bar.Report(p.PageFraction);
         });
+        IsProgressIndeterminate = false;
+        bar.Start();
         var autoRotate = Settings.AutoRotate && _services.AutoRotate.IsAvailable;
         // Reversed: each page goes in front of the ones from this scan, so pages still show up as they arrive.
         var reverse = Settings.ReverseScanOrder;
@@ -357,12 +366,12 @@ public sealed partial class MainViewModel : ObservableObject
             {
                 ShowStatus("Nothing scanned", settings.Source is ScanSource.Feeder or ScanSource.Duplex
                     ? "The feeder returned no pages. Check that paper is loaded."
-                    : "The scanner returned no pages.", InfoBarSeverity.Warning);
+                    : "The scanner returned no pages.", FAInfoBarSeverity.Warning);
             }
         }
         catch (Exception ex) when (ex is OperationCanceledException || cts.IsCancellationRequested)
         {
-            ShowStatus("Scan cancelled", newPages.Count > 0 ? $"Kept {newPages.Count} page(s) scanned before cancelling." : "", InfoBarSeverity.Informational);
+            ShowStatus("Scan cancelled", newPages.Count > 0 ? $"Kept {newPages.Count} page(s) scanned before cancelling." : "", FAInfoBarSeverity.Informational);
         }
         catch (Exception ex)
         {
@@ -371,6 +380,7 @@ public sealed partial class MainViewModel : ObservableObject
         }
         finally
         {
+            bar.Stop();
             EndOperation();
         }
         return newPages;
@@ -487,7 +497,7 @@ public sealed partial class MainViewModel : ObservableObject
             },
             Prompt = async n => await _ui.ConfirmAsync("Next scan", $"Ready for scan {n} of {options.ScanCount}? Load the next document, then continue.", "Scan", "Stop"),
         };
-        await batch.RunAsync(options, new Progress<BatchStatus>(s => ShowStatus("Batch scan", s.Message, InfoBarSeverity.Informational)), CancellationToken.None);
+        await batch.RunAsync(options, new Progress<BatchStatus>(s => ShowStatus("Batch scan", s.Message, FAInfoBarSeverity.Informational)), CancellationToken.None);
     }
 
     [RelayCommand]
@@ -609,7 +619,7 @@ public sealed partial class MainViewModel : ObservableObject
         {
             Document.Insert(insertAt ?? Document.Count, added);
             Pages.Select([added[0].Id]);
-            ShowStatus("Imported", $"Added {added.Count} page(s).", InfoBarSeverity.Success);
+            ShowStatus("Imported", $"Added {added.Count} page(s).", FAInfoBarSeverity.Success);
         }
     }
 
@@ -622,7 +632,7 @@ public sealed partial class MainViewModel : ObservableObject
             return;
         }
         Document.Remove(ids);
-        ShowStatus("Deleted", $"Removed {ids.Count} page(s). Press {AppShortcuts.Label(AppShortcuts.Undo)} to undo.", InfoBarSeverity.Informational);
+        ShowStatus("Deleted", $"Removed {ids.Count} page(s). Press {AppShortcuts.Label(AppShortcuts.Undo)} to undo.", FAInfoBarSeverity.Informational);
         await Task.CompletedTask;
     }
 
@@ -684,7 +694,7 @@ public sealed partial class MainViewModel : ObservableObject
         {
             await _services.Export.ExportPagesAsync([item.Page.Image], [path], OutputFormat.Png, Settings);
             await _ui.CopyImageAsync(path);
-            ShowStatus("Copied", $"Page {item.Number} is on the clipboard.", InfoBarSeverity.Success);
+            ShowStatus("Copied", $"Page {item.Number} is on the clipboard.", FAInfoBarSeverity.Success);
         }
         catch (Exception ex)
         {
@@ -835,7 +845,7 @@ public sealed partial class MainViewModel : ObservableObject
         }
         if (PlatformLook.IsToolbarLook && Document.Count > 0)
         {
-            ShowStatus("Pages restored", $"{Document.Count} page(s) from your last session are back.", InfoBarSeverity.Informational);
+            ShowStatus("Pages restored", $"{Document.Count} page(s) from your last session are back.", FAInfoBarSeverity.Informational);
             StatusCanClear = true;
         }
     }
@@ -935,11 +945,11 @@ public sealed partial class MainViewModel : ObservableObject
     {
         LastSavedPath = result.Paths[^1];
         var what = result.Paths.Count == 1 ? Path.GetFileName(result.Paths[0]) : $"{result.Paths.Count} files";
-        ShowStatus("Saved", $"{what} in {result.Folder}", InfoBarSeverity.Success);
+        ShowStatus("Saved", $"{what} in {result.Folder}", FAInfoBarSeverity.Success);
         StatusHasFileActions = true;
     }
 
-    private void ShowStatus(string title, string message, InfoBarSeverity severity)
+    private void ShowStatus(string title, string message, FAInfoBarSeverity severity)
     {
         StatusHasFileActions = false;
         StatusCanClear = false;

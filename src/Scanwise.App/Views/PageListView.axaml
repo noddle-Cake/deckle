@@ -103,7 +103,7 @@
                         BoxShadow="0 1 4 0 #40000000" Background="White">
                   <Panel>
                     <Image Source="{Binding Thumbnail}" MaxWidth="196" MaxHeight="216" Stretch="Uniform" />
-                    <ui:ProgressRing Width="24" Height="24" IsIndeterminate="True" IsVisible="{Binding Thumbnail, Converter={x:Static ObjectConverters.IsNull}}" Margin="60" />
+                    <ui:FAProgressRing Width="24" Height="24" IsIndeterminate="True" IsVisible="{Binding Thumbnail, Converter={x:Static ObjectConverters.IsNull}}" Margin="60" />
                   </Panel>
                 </Border>
               </Border>

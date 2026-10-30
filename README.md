@@ -72,7 +72,7 @@ bundled with Scanwise. English and the orientation data are included; other lang
 
 ## Build
 
-Requires the .NET 8 SDK (the project switches to .NET 10 with one line in `Directory.Build.props`).
+Requires the .NET 10 SDK.
 
 ```bash
 dotnet build

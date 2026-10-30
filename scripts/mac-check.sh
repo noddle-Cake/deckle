@@ -4,7 +4,7 @@
 # It runs the test suite, builds Scanwise.app, runs the app's self-check (menu bar, Dock menu, pasteboard,
 # edited dot, Dock badge, Liquid Glass panel) with and without Liquid Glass, and screenshots the window each time.
 # Then work through docs/MAC-VERIFICATION.md for what has to be looked at.
-# Needs: .NET 8 SDK, Xcode command line tools. The screenshots need Screen Recording permission for the terminal
+# Needs: .NET 10 SDK, Xcode command line tools. The screenshots need Screen Recording permission for the terminal
 # (System Settings > Privacy & Security). The self-check replaces the clipboard's contents.
 set -euo pipefail
 if [ "$(uname)" != Darwin ]; then

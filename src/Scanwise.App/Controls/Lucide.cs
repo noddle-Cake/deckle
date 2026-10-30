@@ -16,8 +16,8 @@ public static partial class Lucide
     public static string Glyph(LucideKind kind) => Code(kind);
 }
 
-/// <summary>XAML: <c>&lt;c:LucideIcon Kind="Undo2" /&gt;</c>, sized by FontSize like any FontIcon.</summary>
-public class LucideIcon : FontIcon
+/// <summary>XAML: <c>&lt;c:LucideIcon Kind="Undo2" /&gt;</c>, sized by FontSize like any FAFontIcon.</summary>
+public class LucideIcon : FAFontIcon
 {
     public static readonly StyledProperty<LucideKind> KindProperty =
         AvaloniaProperty.Register<LucideIcon, LucideKind>(nameof(Kind));
@@ -33,7 +33,7 @@ public class LucideIcon : FontIcon
         Glyph = Lucide.Glyph(Kind);
     }
 
-    protected override Type StyleKeyOverride => typeof(FontIcon);
+    protected override Type StyleKeyOverride => typeof(FAFontIcon);
 
     public LucideKind Kind
     {
@@ -42,9 +42,9 @@ public class LucideIcon : FontIcon
     }
 }
 
-/// <summary>XAML: <c>IconSource="{c:LucideSource Folder}"</c> for NavigationView and SettingsExpander.</summary>
+/// <summary>XAML: <c>FAIconSource="{c:LucideSource Folder}"</c> for FANavigationView and FASettingsExpander.</summary>
 public sealed class LucideSourceExtension(LucideKind kind) : MarkupExtension
 {
     public override object ProvideValue(IServiceProvider serviceProvider) =>
-        new FontIconSource { FontFamily = Lucide.Font, Glyph = Lucide.Glyph(kind) };
+        new FAFontIconSource { FontFamily = Lucide.Font, Glyph = Lucide.Glyph(kind) };
 }

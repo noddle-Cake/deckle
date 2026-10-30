@@ -85,8 +85,8 @@ public partial class PageListView : UserControl
 
     private void OnDragOver(object? sender, DragEventArgs e)
     {
-        e.DragEffects = e.Data.Contains(PageDrag.PageFormat) ? DragDropEffects.Move
-            : e.Data.Contains(DataFormats.Files) ? DragDropEffects.Copy
+        e.DragEffects = e.DataTransfer.Contains(PageDrag.PageFormat) ? DragDropEffects.Move
+            : e.DataTransfer.Contains(DataFormat.File) ? DragDropEffects.Copy
             : DragDropEffects.None;
         e.Handled = true;
     }
@@ -99,12 +99,12 @@ public partial class PageListView : UserControl
         }
         e.Handled = true;
         var index = DropIndex(e.GetPosition(List), vm);
-        if (e.Data.Get(PageDrag.PageFormat) is string idList)
+        if (e.DataTransfer.TryGetValue(PageDrag.PageFormat) is { } idList)
         {
             var ids = idList.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(Guid.Parse).ToList();
             vm.Pages.MoveTo(ids, index);
         }
-        else if (e.Data.GetFiles() is { } files)
+        else if (e.DataTransfer.TryGetFiles() is { } files)
         {
             await vm.ImportFilesAsync(files.Select(f => f.TryGetLocalPath()).OfType<string>().ToList(), index);
         }

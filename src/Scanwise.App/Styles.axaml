@@ -72,7 +72,7 @@
     <Setter Property="Background" Value="Transparent" />
     <Setter Property="BorderThickness" Value="0" />
   </Style>
-  <Style Selector="Button.icon ui|FontIcon">
+  <Style Selector="Button.icon ui|FAFontIcon">
     <Setter Property="FontSize" Value="18" />
   </Style>
 

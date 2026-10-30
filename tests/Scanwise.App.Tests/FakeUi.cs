@@ -33,7 +33,7 @@ public sealed class FakeUi : IUiServices
     }
 
     public Task<string?> PromptAsync(string title, string label, string initial, string confirm, bool password = false) => Task.FromResult<string?>(initial);
-    public Task<ContentDialogResult> ShowDialogAsync(ContentDialog dialog) => Task.FromResult(ContentDialogResult.None);
+    public Task<FAContentDialogResult> ShowDialogAsync(FAContentDialog dialog) => Task.FromResult(FAContentDialogResult.None);
 
     public Task OpenFileAsync(string path)
     {

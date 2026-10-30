@@ -1,7 +1,7 @@
 <Project>
   <PropertyGroup>
-    <!-- Switch to net10.0 once the .NET 10 SDK is installed (net8 support ends Nov 2026). -->
-    <ScanwiseTargetFramework>net8.0</ScanwiseTargetFramework>
+    <!-- net10.0: FluentAvalonia 3 (for Avalonia 12) targets only .NET 10. -->
+    <ScanwiseTargetFramework>net10.0</ScanwiseTargetFramework>
     <TargetFramework>$(ScanwiseTargetFramework)</TargetFramework>
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
@@ -14,6 +14,6 @@
   </PropertyGroup>
   <PropertyGroup>
     <Naps2Version>1.6.0</Naps2Version>
-    <AvaloniaVersion>11.2.8</AvaloniaVersion>
+    <AvaloniaVersion>12.1.4</AvaloniaVersion>
   </PropertyGroup>
 </Project>

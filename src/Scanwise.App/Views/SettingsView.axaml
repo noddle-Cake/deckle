@@ -13,46 +13,46 @@
       <TextBlock Classes="title" FontSize="28" Text="Settings" Margin="0,0,0,12" IsVisible="{x:Static svc:PlatformLook.IsWindows}" />
 
       <TextBlock Classes="heading" Text="Saving" Margin="0,8,0,4" />
-      <ui:SettingsExpander Header="Save location" Description="{Binding SaveFolder}" IconSource="{c:LucideSource Folder}" IsExpanded="True">
-        <ui:SettingsExpander.Footer>
+      <ui:FASettingsExpander Header="Save location" Description="{Binding SaveFolder}" IconSource="{c:LucideSource Folder}" IsExpanded="True">
+        <ui:FASettingsExpander.Footer>
           <StackPanel Orientation="Horizontal" Spacing="6">
             <Button Content="Change folder…" Command="{Binding ChooseFolderCommand}" />
             <Button Content="Open" Command="{Binding OpenFolderCommand}" />
           </StackPanel>
-        </ui:SettingsExpander.Footer>
-        <ui:SettingsExpanderItem Content="Ask where to save every time" Description="Shows a save dialog for each new file instead of using the folder.">
-          <ui:SettingsExpanderItem.Footer>
+        </ui:FASettingsExpander.Footer>
+        <ui:FASettingsExpanderItem Content="Ask where to save every time" Description="Shows a save dialog for each new file instead of using the folder.">
+          <ui:FASettingsExpanderItem.Footer>
             <ToggleSwitch IsChecked="{Binding AskEveryTime}" OnContent="" OffContent="" />
-          </ui:SettingsExpanderItem.Footer>
-        </ui:SettingsExpanderItem>
-      </ui:SettingsExpander>
+          </ui:FASettingsExpanderItem.Footer>
+        </ui:FASettingsExpanderItem>
+      </ui:FASettingsExpander>
 
-      <ui:SettingsExpander Header="After scanning" Description="What happens to new pages" IconSource="{c:LucideSource ScanLine}" IsExpanded="True">
-        <ui:SettingsExpanderItem Content="Save automatically" Description="{svc:ShortcutTip 'Write every scan to a file straight away. When off, use Save', Save}">
-          <ui:SettingsExpanderItem.Footer>
+      <ui:FASettingsExpander Header="After scanning" Description="What happens to new pages" IconSource="{c:LucideSource ScanLine}" IsExpanded="True">
+        <ui:FASettingsExpanderItem Content="Save automatically" Description="{svc:ShortcutTip 'Write every scan to a file straight away. When off, use Save', Save}">
+          <ui:FASettingsExpanderItem.Footer>
             <ToggleSwitch IsChecked="{Binding AutoSave}" OnContent="" OffContent="" />
-          </ui:SettingsExpanderItem.Footer>
-        </ui:SettingsExpanderItem>
-        <ui:SettingsExpanderItem Content="Add new scans to the current document" Description="PDF and TIFF scans keep growing one file. When off, every scan starts a new document.">
-          <ui:SettingsExpanderItem.Footer>
+          </ui:FASettingsExpanderItem.Footer>
+        </ui:FASettingsExpanderItem>
+        <ui:FASettingsExpanderItem Content="Add new scans to the current document" Description="PDF and TIFF scans keep growing one file. When off, every scan starts a new document.">
+          <ui:FASettingsExpanderItem.Footer>
             <ToggleSwitch IsChecked="{Binding AddToExisting}" OnContent="" OffContent="" />
-          </ui:SettingsExpanderItem.Footer>
-        </ui:SettingsExpanderItem>
-        <ui:SettingsExpanderItem Content="Reverse page order" Description="Puts the pages of each scan in reverse order, for when the last page comes out first.">
-          <ui:SettingsExpanderItem.Footer>
+          </ui:FASettingsExpanderItem.Footer>
+        </ui:FASettingsExpanderItem>
+        <ui:FASettingsExpanderItem Content="Reverse page order" Description="Puts the pages of each scan in reverse order, for when the last page comes out first.">
+          <ui:FASettingsExpanderItem.Footer>
             <ToggleSwitch IsChecked="{Binding ReverseScanOrder}" OnContent="" OffContent="" />
-          </ui:SettingsExpanderItem.Footer>
-        </ui:SettingsExpanderItem>
-        <ui:SettingsExpanderItem Content="Restore pages after closing" Description="Pages that are still in the list come back the next time you open the app.">
-          <ui:SettingsExpanderItem.Footer>
+          </ui:FASettingsExpanderItem.Footer>
+        </ui:FASettingsExpanderItem>
+        <ui:FASettingsExpanderItem Content="Restore pages after closing" Description="Pages that are still in the list come back the next time you open the app.">
+          <ui:FASettingsExpanderItem.Footer>
             <ToggleSwitch IsChecked="{Binding RestoreSession}" OnContent="" OffContent="" />
-          </ui:SettingsExpanderItem.Footer>
-        </ui:SettingsExpanderItem>
-      </ui:SettingsExpander>
+          </ui:FASettingsExpanderItem.Footer>
+        </ui:FASettingsExpanderItem>
+      </ui:FASettingsExpander>
 
-      <ui:SettingsExpander Header="Scan shortcut" Description="{Binding LauncherHint}" IconSource="{c:LucideSource Keyboard}" IsExpanded="True">
-        <ui:SettingsExpanderItem Content="Shortcut key" Description="{Binding HotkeyDescription}" IsVisible="{Binding HotkeyIsAutomatic}">
-          <ui:SettingsExpanderItem.Footer>
+      <ui:FASettingsExpander Header="Scan shortcut" Description="{Binding LauncherHint}" IconSource="{c:LucideSource Keyboard}" IsExpanded="True">
+        <ui:FASettingsExpanderItem Content="Shortcut key" Description="{Binding HotkeyDescription}" IsVisible="{Binding HotkeyIsAutomatic}">
+          <ui:FASettingsExpanderItem.Footer>
             <StackPanel Orientation="Horizontal" Spacing="12">
               <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
                 <TextBlock Text="{OnPlatform Default='Ctrl+Alt+', macOS='⌃⌥'}" VerticalAlignment="Center" />
@@ -60,25 +60,25 @@
               </StackPanel>
               <ToggleSwitch IsChecked="{Binding ScanHotkey}" OnContent="" OffContent="" />
             </StackPanel>
-          </ui:SettingsExpanderItem.Footer>
-        </ui:SettingsExpanderItem>
-        <ui:SettingsExpanderItem Content="Shortcut key" Description="{Binding HotkeyDescription}" IsVisible="{Binding HotkeyIsManual}">
-          <ui:SettingsExpanderItem.Footer>
+          </ui:FASettingsExpanderItem.Footer>
+        </ui:FASettingsExpanderItem>
+        <ui:FASettingsExpanderItem Content="Shortcut key" Description="{Binding HotkeyDescription}" IsVisible="{Binding HotkeyIsManual}">
+          <ui:FASettingsExpanderItem.Footer>
             <StackPanel Orientation="Horizontal" Spacing="8">
               <TextBox Text="{Binding ScanCommandLine, Mode=OneWay}" IsReadOnly="True" MinWidth="240" />
               <Button Content="Copy" Command="{Binding CopyScanCommandLineCommand}" />
             </StackPanel>
-          </ui:SettingsExpanderItem.Footer>
-        </ui:SettingsExpanderItem>
-      </ui:SettingsExpander>
+          </ui:FASettingsExpanderItem.Footer>
+        </ui:FASettingsExpanderItem>
+      </ui:FASettingsExpander>
 
-      <ui:SettingsExpander Header="File names" Description="{Binding NamingPreview}" IconSource="{c:LucideSource TextCursorInput}" IsExpanded="True">
-        <ui:SettingsExpander.Footer>
+      <ui:FASettingsExpander Header="File names" Description="{Binding NamingPreview}" IconSource="{c:LucideSource TextCursorInput}" IsExpanded="True">
+        <ui:FASettingsExpander.Footer>
           <ComboBox ItemsSource="{Binding NamingPresets}" SelectedItem="{Binding NamingPreset}" MinWidth="160" />
-        </ui:SettingsExpander.Footer>
-        <ui:SettingsExpanderItem IsVisible="{Binding IsCustomNaming}">
+        </ui:FASettingsExpander.Footer>
+        <ui:FASettingsExpanderItem IsVisible="{Binding IsCustomNaming}">
           <StackPanel Spacing="8">
-            <TextBox Text="{Binding CustomPattern}" Watermark="e.g. Invoice {year}-{month}-{day} {nnn}" />
+            <TextBox Text="{Binding CustomPattern}" PlaceholderText="e.g. Invoice {year}-{month}-{day} {nnn}" />
             <TextBlock Classes="caption" Text="Click a building block to add it. {n} and {nnn} count up to the first free number; otherwise a number in brackets is added when a name is taken." />
             <ItemsControl ItemsSource="{Binding Tokens}">
               <ItemsControl.ItemsPanel>
@@ -95,104 +95,104 @@
               </ItemsControl.ItemTemplate>
             </ItemsControl>
           </StackPanel>
-        </ui:SettingsExpanderItem>
-      </ui:SettingsExpander>
+        </ui:FASettingsExpanderItem>
+      </ui:FASettingsExpander>
 
       <TextBlock Classes="heading" Text="Text recognition" Margin="0,16,0,4" />
-      <ui:SettingsExpander Header="Rotate pages automatically" Description="Turns upside-down and sideways pages upright after scanning, using text recognition." IconSource="{c:LucideSource RotateCw}" IsExpanded="True">
-        <ui:SettingsExpander.Footer>
+      <ui:FASettingsExpander Header="Rotate pages automatically" Description="Turns upside-down and sideways pages upright after scanning, using text recognition." IconSource="{c:LucideSource RotateCw}" IsExpanded="True">
+        <ui:FASettingsExpander.Footer>
           <ToggleSwitch IsChecked="{Binding AutoRotate}" OnContent="" OffContent="" IsEnabled="{Binding OcrAvailable}" />
-        </ui:SettingsExpander.Footer>
-        <ui:SettingsExpanderItem Content="Orientation detection" Description="Installs Tesseract's orientation data (about 10 MB). Faster and more reliable than reading the page four times." IsVisible="{Binding !HasOsd}">
-          <ui:SettingsExpanderItem.Footer>
+        </ui:FASettingsExpander.Footer>
+        <ui:FASettingsExpanderItem Content="Orientation detection" Description="Installs Tesseract's orientation data (about 10 MB). Faster and more reliable than reading the page four times." IsVisible="{Binding !HasOsd}">
+          <ui:FASettingsExpanderItem.Footer>
             <Button Content="Download" Command="{Binding DownloadOcrLanguageCommand}" CommandParameter="osd" IsEnabled="{Binding OcrAvailable}" />
-          </ui:SettingsExpanderItem.Footer>
-        </ui:SettingsExpanderItem>
-      </ui:SettingsExpander>
+          </ui:FASettingsExpanderItem.Footer>
+        </ui:FASettingsExpanderItem>
+      </ui:FASettingsExpander>
 
-      <ui:SettingsExpander Header="OCR language" Description="{Binding OcrStatus}" IconSource="{c:LucideSource Languages}" IsExpanded="True">
-        <ui:SettingsExpander.Footer>
+      <ui:FASettingsExpander Header="OCR language" Description="{Binding OcrStatus}" IconSource="{c:LucideSource Languages}" IsExpanded="True">
+        <ui:FASettingsExpander.Footer>
           <ComboBox ItemsSource="{Binding OcrLanguages}" SelectedItem="{Binding OcrLanguage}" MinWidth="120" IsEnabled="{Binding OcrAvailable}" />
-        </ui:SettingsExpander.Footer>
-        <ui:SettingsExpanderItem Content="Add a language" Description="Three-letter Tesseract code, e.g. deu, fra, spa, ita, por, chi_sim, jpn.">
-          <ui:SettingsExpanderItem.Footer>
+        </ui:FASettingsExpander.Footer>
+        <ui:FASettingsExpanderItem Content="Add a language" Description="Three-letter Tesseract code, e.g. deu, fra, spa, ita, por, chi_sim, jpn.">
+          <ui:FASettingsExpanderItem.Footer>
             <StackPanel Orientation="Horizontal" Spacing="6">
-              <TextBox Text="{Binding DownloadLanguage}" Width="100" Watermark="deu" />
+              <TextBox Text="{Binding DownloadLanguage}" Width="100" PlaceholderText="deu" />
               <Button Content="Download" Command="{Binding DownloadOcrLanguageCommand}" CommandParameter="{x:Null}" IsEnabled="{Binding OcrAvailable}" />
             </StackPanel>
-          </ui:SettingsExpanderItem.Footer>
-        </ui:SettingsExpanderItem>
-        <ui:SettingsExpanderItem IsVisible="{Binding IsDownloading}">
+          </ui:FASettingsExpanderItem.Footer>
+        </ui:FASettingsExpanderItem>
+        <ui:FASettingsExpanderItem IsVisible="{Binding IsDownloading}">
           <ProgressBar Value="{Binding DownloadProgress}" Maximum="100" />
-        </ui:SettingsExpanderItem>
-      </ui:SettingsExpander>
+        </ui:FASettingsExpanderItem>
+      </ui:FASettingsExpander>
 
       <TextBlock Classes="heading" Text="Output" Margin="0,16,0,4" />
-      <ui:SettingsExpander Header="PDF" Description="Searchable text, archiving and passwords" IconSource="{c:LucideSource FileText}">
-        <ui:SettingsExpanderItem Content="Make PDFs searchable" Description="Adds an invisible text layer so you can search and copy text. Slower to save.">
-          <ui:SettingsExpanderItem.Footer>
+      <ui:FASettingsExpander Header="PDF" Description="Searchable text, archiving and passwords" IconSource="{c:LucideSource FileText}">
+        <ui:FASettingsExpanderItem Content="Make PDFs searchable" Description="Adds an invisible text layer so you can search and copy text. Slower to save.">
+          <ui:FASettingsExpanderItem.Footer>
             <ToggleSwitch IsChecked="{Binding PdfOcr}" OnContent="" OffContent="" IsEnabled="{Binding OcrAvailable}" />
-          </ui:SettingsExpanderItem.Footer>
-        </ui:SettingsExpanderItem>
-        <ui:SettingsExpanderItem Content="PDF type">
-          <ui:SettingsExpanderItem.Footer>
+          </ui:FASettingsExpanderItem.Footer>
+        </ui:FASettingsExpanderItem>
+        <ui:FASettingsExpanderItem Content="PDF type">
+          <ui:FASettingsExpanderItem.Footer>
             <ComboBox ItemsSource="{Binding PdfStandards}" SelectedItem="{Binding PdfStandard}" MinWidth="200" />
-          </ui:SettingsExpanderItem.Footer>
-        </ui:SettingsExpanderItem>
-        <ui:SettingsExpanderItem Content="Title">
-          <ui:SettingsExpanderItem.Footer>
+          </ui:FASettingsExpanderItem.Footer>
+        </ui:FASettingsExpanderItem>
+        <ui:FASettingsExpanderItem Content="Title">
+          <ui:FASettingsExpanderItem.Footer>
             <TextBox Text="{Binding PdfTitle}" Width="240" />
-          </ui:SettingsExpanderItem.Footer>
-        </ui:SettingsExpanderItem>
-        <ui:SettingsExpanderItem Content="Author">
-          <ui:SettingsExpanderItem.Footer>
+          </ui:FASettingsExpanderItem.Footer>
+        </ui:FASettingsExpanderItem>
+        <ui:FASettingsExpanderItem Content="Author">
+          <ui:FASettingsExpanderItem.Footer>
             <TextBox Text="{Binding PdfAuthor}" Width="240" />
-          </ui:SettingsExpanderItem.Footer>
-        </ui:SettingsExpanderItem>
-        <ui:SettingsExpanderItem Content="Protect with a password" Description="Not available for PDF/A." IsEnabled="{Binding CanEncrypt}">
-          <ui:SettingsExpanderItem.Footer>
+          </ui:FASettingsExpanderItem.Footer>
+        </ui:FASettingsExpanderItem>
+        <ui:FASettingsExpanderItem Content="Protect with a password" Description="Not available for PDF/A." IsEnabled="{Binding CanEncrypt}">
+          <ui:FASettingsExpanderItem.Footer>
             <StackPanel Orientation="Horizontal" Spacing="8">
-              <TextBox Text="{Binding PdfPassword}" PasswordChar="•" Width="160" Watermark="Password" IsEnabled="{Binding PdfEncrypt}" />
+              <TextBox Text="{Binding PdfPassword}" PasswordChar="•" Width="160" PlaceholderText="Password" IsEnabled="{Binding PdfEncrypt}" />
               <ToggleSwitch IsChecked="{Binding PdfEncrypt}" OnContent="" OffContent="" />
             </StackPanel>
-          </ui:SettingsExpanderItem.Footer>
-        </ui:SettingsExpanderItem>
-      </ui:SettingsExpander>
+          </ui:FASettingsExpanderItem.Footer>
+        </ui:FASettingsExpanderItem>
+      </ui:FASettingsExpander>
 
-      <ui:SettingsExpander Header="Images" Description="JPG quality and TIFF compression" IconSource="{c:LucideSource Image}">
-        <ui:SettingsExpanderItem Content="JPG quality" Description="{Binding JpegQuality, StringFormat='{}{0} (higher = better quality, larger files)'}">
-          <ui:SettingsExpanderItem.Footer>
+      <ui:FASettingsExpander Header="Images" Description="JPG quality and TIFF compression" IconSource="{c:LucideSource Image}">
+        <ui:FASettingsExpanderItem Content="JPG quality" Description="{Binding JpegQuality, StringFormat='{}{0} (higher = better quality, larger files)'}">
+          <ui:FASettingsExpanderItem.Footer>
             <Slider Minimum="30" Maximum="100" Value="{Binding JpegQuality}" Width="200" />
-          </ui:SettingsExpanderItem.Footer>
-        </ui:SettingsExpanderItem>
-        <ui:SettingsExpanderItem Content="TIFF compression">
-          <ui:SettingsExpanderItem.Footer>
+          </ui:FASettingsExpanderItem.Footer>
+        </ui:FASettingsExpanderItem>
+        <ui:FASettingsExpanderItem Content="TIFF compression">
+          <ui:FASettingsExpanderItem.Footer>
             <ComboBox ItemsSource="{Binding TiffCompressions}" SelectedItem="{Binding TiffCompression}" MaxWidth="320" />
-          </ui:SettingsExpanderItem.Footer>
-        </ui:SettingsExpanderItem>
-      </ui:SettingsExpander>
+          </ui:FASettingsExpanderItem.Footer>
+        </ui:FASettingsExpanderItem>
+      </ui:FASettingsExpander>
 
       <TextBlock Classes="heading" Text="Appearance" Margin="0,16,0,4" />
-      <ui:SettingsExpander Header="Theme" IconSource="{c:LucideSource Palette}">
-        <ui:SettingsExpander.Footer>
+      <ui:FASettingsExpander Header="Theme" IconSource="{c:LucideSource Palette}">
+        <ui:FASettingsExpander.Footer>
           <ComboBox ItemsSource="{Binding Themes}" SelectedItem="{Binding Theme}" MinWidth="180" />
-        </ui:SettingsExpander.Footer>
-      </ui:SettingsExpander>
-      <ui:SettingsExpander Header="Look" Description="Window layout and conventions: Windows, macOS or GNOME. Automatic follows this computer."
+        </ui:FASettingsExpander.Footer>
+      </ui:FASettingsExpander>
+      <ui:FASettingsExpander Header="Look" Description="Window layout and conventions: Windows, macOS or GNOME. Automatic follows this computer."
                            IconSource="{c:LucideSource PanelLeft}">
-        <ui:SettingsExpander.Footer>
+        <ui:FASettingsExpander.Footer>
           <ComboBox ItemsSource="{Binding Looks}" SelectedItem="{Binding Look}" MinWidth="180" />
-        </ui:SettingsExpander.Footer>
-        <ui:SettingsExpanderItem Content="Takes effect after Scanwise restarts." IsVisible="{Binding LookNeedsRestart}">
-          <ui:SettingsExpanderItem.Footer>
+        </ui:FASettingsExpander.Footer>
+        <ui:FASettingsExpanderItem Content="Takes effect after Scanwise restarts." IsVisible="{Binding LookNeedsRestart}">
+          <ui:FASettingsExpanderItem.Footer>
             <Button Content="Restart Now" Command="{Binding RestartNowCommand}" />
-          </ui:SettingsExpanderItem.Footer>
-        </ui:SettingsExpanderItem>
-      </ui:SettingsExpander>
+          </ui:FASettingsExpanderItem.Footer>
+        </ui:FASettingsExpanderItem>
+      </ui:FASettingsExpander>
 
       <TextBlock Classes="heading" Text="About" Margin="0,16,0,4" />
-      <ui:SettingsExpander Header="Scanwise" Description="{Binding Version, StringFormat='Version {0} · Mozilla Public License 2.0'}" IconSource="{c:LucideSource ScanLine}">
-        <ui:SettingsExpanderItem>
+      <ui:FASettingsExpander Header="Scanwise" Description="{Binding Version, StringFormat='Version {0} · Mozilla Public License 2.0'}" IconSource="{c:LucideSource ScanLine}">
+        <ui:FASettingsExpanderItem>
           <StackPanel Spacing="6">
             <TextBlock TextWrapping="Wrap">Scanwise combines the interface ideas of Scanner by Simon Knuth with the scanning engine of NAPS2.</TextBlock>
             <TextBlock Classes="caption" TextWrapping="Wrap">Built with NAPS2.Sdk (LGPL-2.1, Ben Olden-Cooligan and contributors), Tesseract OCR (Apache-2.0), Avalonia and FluentAvalonia (MIT), Lucide icons (ISC), ImageSharp (Six Labors Split License), LibTiff.NET (BSD) and PDFium (BSD).</TextBlock>
@@ -202,8 +202,8 @@
               <HyperlinkButton Content="Tesseract" Command="{Binding OpenUrlCommand}" CommandParameter="https://github.com/tesseract-ocr/tesseract" />
             </StackPanel>
           </StackPanel>
-        </ui:SettingsExpanderItem>
-      </ui:SettingsExpander>
+        </ui:FASettingsExpanderItem>
+      </ui:FASettingsExpander>
     </StackPanel>
   </ScrollViewer>
 </UserControl>

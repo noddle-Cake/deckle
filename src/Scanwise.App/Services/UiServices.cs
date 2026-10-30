@@ -21,7 +21,7 @@ public interface IUiServices
     Task ShowMessageAsync(string title, string message);
     Task<bool> ConfirmAsync(string title, string message, string confirm, string cancel = "Cancel");
     Task<string?> PromptAsync(string title, string label, string initial, string confirm, bool password = false);
-    Task<ContentDialogResult> ShowDialogAsync(ContentDialog dialog);
+    Task<FAContentDialogResult> ShowDialogAsync(FAContentDialog dialog);
     Task OpenFileAsync(string path);
     Task OpenFolderAsync(string folder, string? selectFile = null);
     Task OpenUrlAsync(string url);
@@ -103,42 +103,42 @@ public sealed class UiServices : IUiServices
     }
 
     public Task ShowMessageAsync(string title, string message) =>
-        ShowDialogAsync(new ContentDialog
+        ShowDialogAsync(new FAContentDialog
         {
             Title = title,
             Content = new TextBlock { Text = message, TextWrapping = Avalonia.Media.TextWrapping.Wrap, MaxWidth = 420 },
             CloseButtonText = "OK",
-            DefaultButton = ContentDialogButton.Close,
+            DefaultButton = FAContentDialogButton.Close,
         });
 
     public async Task<bool> ConfirmAsync(string title, string message, string confirm, string cancel = "Cancel")
     {
-        var result = await ShowDialogAsync(new ContentDialog
+        var result = await ShowDialogAsync(new FAContentDialog
         {
             Title = title,
             Content = new TextBlock { Text = message, TextWrapping = Avalonia.Media.TextWrapping.Wrap, MaxWidth = 420 },
             PrimaryButtonText = confirm,
             CloseButtonText = cancel,
-            DefaultButton = ContentDialogButton.Primary,
+            DefaultButton = FAContentDialogButton.Primary,
         });
-        return result == ContentDialogResult.Primary;
+        return result == FAContentDialogResult.Primary;
     }
 
     public async Task<string?> PromptAsync(string title, string label, string initial, string confirm, bool password = false)
     {
-        var box = new TextBox { Text = initial, Watermark = label, MinWidth = 320 };
+        var box = new TextBox { Text = initial, PlaceholderText = label, MinWidth = 320 };
         if (password)
         {
             box.PasswordChar = '•';
             box.RevealPassword = false;
         }
-        var dialog = new ContentDialog
+        var dialog = new FAContentDialog
         {
             Title = title,
             Content = new StackPanel { Spacing = 8, Children = { new TextBlock { Text = label }, box } },
             PrimaryButtonText = confirm,
             CloseButtonText = "Cancel",
-            DefaultButton = ContentDialogButton.Primary,
+            DefaultButton = FAContentDialogButton.Primary,
         };
         dialog.Opened += (_, _) =>
         {
@@ -146,10 +146,10 @@ public sealed class UiServices : IUiServices
             box.SelectAll();
         };
         var result = await ShowDialogAsync(dialog);
-        return result == ContentDialogResult.Primary ? box.Text ?? "" : null;
+        return result == FAContentDialogResult.Primary ? box.Text ?? "" : null;
     }
 
-    public Task<ContentDialogResult> ShowDialogAsync(ContentDialog dialog)
+    public Task<FAContentDialogResult> ShowDialogAsync(FAContentDialog dialog)
     {
         if (AppShortcuts.IsMac)
         {
@@ -215,33 +215,33 @@ public sealed class UiServices : IUiServices
     public async Task<(int AfterIndex, bool Reverse)?> AskMergeOptionsAsync(int pageCount)
     {
         var content = new ScanMergeDialog(pageCount);
-        var result = await ShowDialogAsync(new ContentDialog
+        var result = await ShowDialogAsync(new FAContentDialog
         {
             Title = "Insert scan between pages",
             Content = content,
             PrimaryButtonText = "Scan",
             CloseButtonText = "Cancel",
-            DefaultButton = ContentDialogButton.Primary,
+            DefaultButton = FAContentDialogButton.Primary,
         });
-        return result == ContentDialogResult.Primary ? (content.AfterIndex, content.Reverse) : null;
+        return result == FAContentDialogResult.Primary ? (content.AfterIndex, content.Reverse) : null;
     }
 
     public async Task<(ScanRegion? Region, bool Ok)?> AskRegionAsync(Avalonia.Media.Imaging.Bitmap preview, ScanRegion? current)
     {
         var content = new RegionDialog(preview, current);
-        var result = await ShowDialogAsync(new ContentDialog
+        var result = await ShowDialogAsync(new FAContentDialog
         {
             Title = "Choose scan area",
             Content = content,
             PrimaryButtonText = "Use this area",
             SecondaryButtonText = "Whole page",
             CloseButtonText = "Cancel",
-            DefaultButton = ContentDialogButton.Primary,
+            DefaultButton = FAContentDialogButton.Primary,
         });
         return result switch
         {
-            ContentDialogResult.Primary => (content.Region, true),
-            ContentDialogResult.Secondary => (null, true),
+            FAContentDialogResult.Primary => (content.Region, true),
+            FAContentDialogResult.Secondary => (null, true),
             _ => null,
         };
     }
@@ -249,15 +249,15 @@ public sealed class UiServices : IUiServices
     public async Task<BatchOptions?> AskBatchOptionsAsync()
     {
         var content = new BatchScanDialog();
-        var result = await ShowDialogAsync(new ContentDialog
+        var result = await ShowDialogAsync(new FAContentDialog
         {
             Title = "Batch scan",
             Content = content,
             PrimaryButtonText = "Start",
             CloseButtonText = "Cancel",
-            DefaultButton = ContentDialogButton.Primary,
+            DefaultButton = FAContentDialogButton.Primary,
         });
-        return result == ContentDialogResult.Primary ? content.Options : null;
+        return result == FAContentDialogResult.Primary ? content.Options : null;
     }
 
     private async Task<IStorageFolder?> TryFolder(string? path)

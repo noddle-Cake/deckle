@@ -65,8 +65,8 @@ as a feature checklist, and it matches upstream NAPS2.
 | Topic | Decision | Why |
 |---|---|---|
 | ImageSharp | Pinned to 3.1.12 (what NAPS2 1.6 needs). TIFF **decoding and encoding** both go through LibTiff.NET, so the advisories against ImageSharp's TIFF code can't be reached. | 3.2+ fixes them but fails Release builds without a Six Labors license key. See docs/SECURITY-NOTES.md. |
-| Language/runtime | C# / .NET 8 (`net8.0`); a one-line switch to `net10.0` in `Directory.Build.props` | NAPS2.Sdk is .NET; only the .NET 8 SDK is installed (sudo is needed for 10). .NET 8 support ends Nov 2026, so **retarget to net10 as soon as the SDK is installed**. |
-| UI toolkit | Avalonia 11.2.8 + FluentAvaloniaUI 2.4.1 (NavigationView, InfoBar, ContentDialog, Fluent symbol icons) | Closest cross-platform match to Scanner's WinUI/Fluent look. FA 2.5+/3.x require net10. |
+| Language/runtime | C# / .NET 10 (`net10.0`, set in `Directory.Build.props`) | NAPS2.Sdk is .NET. FluentAvalonia 3 targets only .NET 10. On this host the SDK is a per-user install in `~/.dotnet` (dotnet-install.sh; the system has only .NET 8 and dnf needs sudo); `scripts/test.sh` and `scripts/publish.sh` prefer it. |
+| UI toolkit | Avalonia 12.1 + FluentAvaloniaUI 3.1 (FANavigationView, FAInfoBar, FAContentDialog; FA 3 prefixes its types with `FA`) | Closest cross-platform match to Scanner's WinUI/Fluent look. Avalonia 12 adds X11 drag and drop (XDND), so dragging pages out as files and dropping files in work on Linux too. |
 | MVVM | CommunityToolkit.Mvvm | Scanner already uses the same toolkit (old name). |
 | Scan engine | NAPS2.Sdk (`ScanController`) with `ImageSharpImageContext` everywhere | One managed image backend on every OS. Verified: SANE `test` backend → scan → PDF works on this host. |
 | Drivers per OS | Linux: SANE + ESCL. Windows: WIA + TWAIN (via `NAPS2.Sdk.Worker.Win32`) + ESCL. macOS: SANE (`NAPS2.Sane.Binaries`) + ESCL; Apple ICA needs `net8.0-macos` and is a stretch task. | |

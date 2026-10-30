@@ -24,7 +24,7 @@ public partial class EditorView : UserControl
             }
         };
         AddHandler(PointerWheelChangedEvent, OnWheel, Avalonia.Interactivity.RoutingStrategies.Tunnel);
-        AddHandler(Gestures.PointerTouchPadGestureMagnifyEvent, OnMagnify);
+        AddHandler(PointerTouchPadGestureMagnifyEvent, OnMagnify);
         KeyDown += OnKeyDown;
         PageImage.PointerPressed += OnImagePressed;
         PageImage.PointerMoved += OnImageMoved;

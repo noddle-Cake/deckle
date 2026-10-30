@@ -93,7 +93,7 @@
         <TextBlock Text="Select a page to view and edit it" Opacity="0.7" />
       </StackPanel>
 
-      <ui:ProgressRing Width="28" Height="28" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="16"
+      <ui:FAProgressRing Width="28" Height="28" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="16"
                        IsIndeterminate="True" IsVisible="{Binding IsRendering}" />
 
       <!-- Tool panel -->

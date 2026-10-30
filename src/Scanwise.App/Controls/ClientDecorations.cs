@@ -19,7 +19,7 @@ public static class ClientDecorations
 
     public static void Apply(Window window, Control content)
     {
-        window.SystemDecorations = SystemDecorations.None;
+        window.WindowDecorations = WindowDecorations.None;
         var root = new Grid();
         root.Children.Add(content);
         var border = new Border { BorderThickness = new Thickness(1), IsHitTestVisible = false };

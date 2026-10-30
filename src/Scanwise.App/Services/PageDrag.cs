@@ -11,21 +11,21 @@ namespace Scanwise.App.Services;
 /// </summary>
 public static class PageDrag
 {
-    public const string PageFormat = "application/x-scanwise-pages";
+    /// <summary>Comma-separated page ids; never leaves the process.</summary>
+    public static readonly DataFormat<string> PageFormat = DataFormat.CreateInProcessFormat<string>("scanwise-pages");
 
-    public static async Task StartAsync(PointerEventArgs trigger, Visual source, MainViewModel vm, IReadOnlyList<PageItemViewModel> items)
+    public static async Task StartAsync(PointerPressedEventArgs trigger, Visual source, MainViewModel vm, IReadOnlyList<PageItemViewModel> items)
     {
-        var data = new DataObject();
-        data.Set(PageFormat, string.Join(",", items.Select(i => i.Id)));
+        var item = new DataTransferItem();
+        item.Set(PageFormat, string.Join(",", items.Select(i => i.Id)));
         if (await vm.ExportForDragAsync(items) is { } path
             && TopLevel.GetTopLevel(source)?.StorageProvider is { } storage
             && await storage.TryGetFileFromPathAsync(new Uri(path)) is { } file)
         {
-            data.Set(DataFormats.Files, new[] { file });
-#pragma warning disable CS0618 // Some targets still read the plain path list.
-            data.Set(DataFormats.FileNames, new[] { path });
-#pragma warning restore CS0618
+            item.SetFile(file);
         }
-        await DragDrop.DoDragDrop(trigger, data, DragDropEffects.Copy | DragDropEffects.Move);
+        var data = new DataTransfer();
+        data.Add(item);
+        await DragDrop.DoDragDropAsync(trigger, data, DragDropEffects.Copy | DragDropEffects.Move);
     }
 }

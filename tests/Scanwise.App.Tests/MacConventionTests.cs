@@ -112,7 +112,7 @@ public sealed class MacConventionTests : IDisposable
         Assert.DoesNotContain(window.KeyBindings, b => b.Gesture.KeyModifiers.HasFlag(KeyModifiers.Control));
         // Settings and Help are menu bar windows on macOS; the Fluent nav rail isn't in the window at all.
         Assert.NotNull(window.MacShell);
-        Assert.Null(window.FindControl<NavigationView>("Nav")!.Parent);
+        Assert.Null(window.FindControl<FANavigationView>("Nav")!.Parent);
         window.Close();
     });
 
@@ -197,7 +197,7 @@ public sealed class MacConventionTests : IDisposable
         var (window, vm) = Open(mac: true);
         var shell = window.MacShell!;
         // On Linux the macOS look draws its own frame: traffic lights and an in-window menu bar.
-        Assert.Equal(SystemDecorations.None, window.SystemDecorations);
+        Assert.Equal(WindowDecorations.None, window.WindowDecorations);
         Assert.Contains(window.GetVisualDescendants(), v => v is NativeMenuBar);
         Assert.Equal(3, window.GetVisualDescendants().OfType<Button>().Count(b => b.Classes.Contains("trafficlight")));
         Assert.True(vm.SidebarVisible);
@@ -324,7 +324,7 @@ public sealed class MacConventionTests : IDisposable
         {
             var glyph = Scanwise.App.Controls.Lucide.Glyph(kind);
             Assert.Single(glyph);
-            Assert.True(font.TryGetGlyph(glyph[0], out var id) && id != 0, $"{kind} is missing from lucide.ttf");
+            Assert.True(font.CharacterToGlyphMap.TryGetGlyph(glyph[0], out var id) && id != 0, $"{kind} is missing from lucide.ttf");
         }
     }
 
@@ -348,7 +348,7 @@ public sealed class MacConventionTests : IDisposable
             LookStyles.AddTo(window, AppLook.MacOS);
         }
         window.Show();
-        var dialog = new ContentDialog { Title = "Delete profile?", PrimaryButtonText = "Delete", CloseButtonText = "Cancel", DefaultButton = ContentDialogButton.Primary };
+        var dialog = new FAContentDialog { Title = "Delete profile?", PrimaryButtonText = "Delete", CloseButtonText = "Cancel", DefaultButton = FAContentDialogButton.Primary };
         _ = dialog.ShowAsync(window);
         for (var i = 0; i < 5; i++)
         {

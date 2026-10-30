@@ -13,7 +13,7 @@
     <Setter Property="Background" Value="Transparent" />
     <Setter Property="BorderThickness" Value="0" />
   </Style>
-  <Style Selector="ToggleButton.icon ui|FontIcon">
+  <Style Selector="ToggleButton.icon ui|FAFontIcon">
     <Setter Property="FontSize" Value="18" />
   </Style>
   <Style Selector=":is(Button).icon:disabled /template/ ContentPresenter#PART_ContentPresenter">
@@ -40,51 +40,51 @@
     they win over the two-button ones.
   -->
 
-  <Style Selector="ui|ContentDialog:primary:close /template/ Button#CloseButton">
+  <Style Selector="ui|FAContentDialog:primary:close /template/ Button#CloseButton">
     <Setter Property="Grid.Column" Value="0" />
     <Setter Property="Grid.ColumnSpan" Value="2" />
     <Setter Property="Margin" Value="0,0,4,0" />
   </Style>
-  <Style Selector="ui|ContentDialog:primary:close /template/ Button#PrimaryButton">
+  <Style Selector="ui|FAContentDialog:primary:close /template/ Button#PrimaryButton">
     <Setter Property="Grid.Column" Value="2" />
     <Setter Property="Grid.ColumnSpan" Value="2" />
     <Setter Property="Margin" Value="4,0,0,0" />
   </Style>
 
-  <Style Selector="ui|ContentDialog:primary:secondary /template/ Button#SecondaryButton">
+  <Style Selector="ui|FAContentDialog:primary:secondary /template/ Button#SecondaryButton">
     <Setter Property="Grid.Column" Value="0" />
     <Setter Property="Grid.ColumnSpan" Value="2" />
     <Setter Property="Margin" Value="0,0,4,0" />
   </Style>
-  <Style Selector="ui|ContentDialog:primary:secondary /template/ Button#PrimaryButton">
+  <Style Selector="ui|FAContentDialog:primary:secondary /template/ Button#PrimaryButton">
     <Setter Property="Grid.Column" Value="2" />
     <Setter Property="Grid.ColumnSpan" Value="2" />
     <Setter Property="Margin" Value="4,0,0,0" />
   </Style>
 
-  <Style Selector="ui|ContentDialog:secondary:close /template/ Button#CloseButton">
+  <Style Selector="ui|FAContentDialog:secondary:close /template/ Button#CloseButton">
     <Setter Property="Grid.Column" Value="0" />
     <Setter Property="Grid.ColumnSpan" Value="2" />
     <Setter Property="Margin" Value="0,0,4,0" />
   </Style>
-  <Style Selector="ui|ContentDialog:secondary:close /template/ Button#SecondaryButton">
+  <Style Selector="ui|FAContentDialog:secondary:close /template/ Button#SecondaryButton">
     <Setter Property="IsVisible" Value="True" />
     <Setter Property="Grid.Column" Value="2" />
     <Setter Property="Grid.ColumnSpan" Value="2" />
     <Setter Property="Margin" Value="4,0,0,0" />
   </Style>
 
-  <Style Selector="ui|ContentDialog:primary:secondary:close /template/ Button#CloseButton">
+  <Style Selector="ui|FAContentDialog:primary:secondary:close /template/ Button#CloseButton">
     <Setter Property="Grid.Column" Value="0" />
     <Setter Property="Grid.ColumnSpan" Value="1" />
     <Setter Property="Margin" Value="0,0,4,0" />
   </Style>
-  <Style Selector="ui|ContentDialog:primary:secondary:close /template/ Button#SecondaryButton">
+  <Style Selector="ui|FAContentDialog:primary:secondary:close /template/ Button#SecondaryButton">
     <Setter Property="Grid.Column" Value="1" />
     <Setter Property="Grid.ColumnSpan" Value="2" />
     <Setter Property="Margin" Value="4,0,4,0" />
   </Style>
-  <Style Selector="ui|ContentDialog:primary:secondary:close /template/ Button#PrimaryButton">
+  <Style Selector="ui|FAContentDialog:primary:secondary:close /template/ Button#PrimaryButton">
     <Setter Property="Grid.Column" Value="3" />
     <Setter Property="Grid.ColumnSpan" Value="1" />
     <Setter Property="Margin" Value="4,0,0,0" />

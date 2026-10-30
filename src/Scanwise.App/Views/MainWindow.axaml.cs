@@ -108,7 +108,6 @@ public partial class MainWindow : Window
         }
         Content = shell;
         ExtendClientAreaToDecorationsHint = true;
-        ExtendClientAreaChromeHints = Avalonia.Platform.ExtendClientAreaChromeHints.PreferSystemChrome;
         ExtendClientAreaTitleBarHeightHint = 52;
         TransparencyLevelHint = [WindowTransparencyLevel.AcrylicBlur, WindowTransparencyLevel.None];
         Background = Brushes.Transparent;
@@ -126,7 +125,6 @@ public partial class MainWindow : Window
         _usesMica = true;
         UpdateMicaBackground();
         ExtendClientAreaToDecorationsHint = true;
-        ExtendClientAreaChromeHints = Avalonia.Platform.ExtendClientAreaChromeHints.PreferSystemChrome;
         ExtendClientAreaTitleBarHeightHint = 32;
         var title = new TextBlock { FontSize = 12, VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center, Margin = new Thickness(16, 0, 0, 0) };
         title.Bind(TextBlock.TextProperty, this.GetObservable(TitleProperty));
@@ -424,9 +422,9 @@ public partial class MainWindow : Window
         };
     }
 
-    private void OnNavItemInvoked(object? sender, NavigationViewItemInvokedEventArgs e)
+    private void OnNavItemInvoked(object? sender, FANavigationViewItemInvokedEventArgs e)
     {
-        if (ViewModel is not { } vm || e.InvokedItemContainer is not NavigationViewItem item)
+        if (ViewModel is not { } vm || e.InvokedItemContainer is not FANavigationViewItem item)
         {
             return;
         }
@@ -445,14 +443,14 @@ public partial class MainWindow : Window
     private void OnDragOver(object? sender, DragEventArgs e)
     {
         // A page dragged out of the grid or editor also carries its exported file; don't import it as a copy.
-        e.DragEffects = e.Data.Contains(PageDrag.PageFormat) ? DragDropEffects.None
-            : e.Data.Contains(DataFormats.Files) ? DragDropEffects.Copy
+        e.DragEffects = e.DataTransfer.Contains(PageDrag.PageFormat) ? DragDropEffects.None
+            : e.DataTransfer.Contains(DataFormat.File) ? DragDropEffects.Copy
             : e.DragEffects;
     }
 
     private async void OnDrop(object? sender, DragEventArgs e)
     {
-        if (e.Handled || ViewModel is not { } vm || e.Data.Contains(PageDrag.PageFormat) || e.Data.GetFiles() is not { } items)
+        if (e.Handled || ViewModel is not { } vm || e.DataTransfer.Contains(PageDrag.PageFormat) || e.DataTransfer.TryGetFiles() is not { } items)
         {
             return;
         }

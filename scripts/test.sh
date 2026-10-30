@@ -2,6 +2,8 @@
 # Runs the test suite with SANE's virtual "test" scanner enabled (no root needed).
 # Optional: SCANWISE_TEST_OSD_DIR=/path/with/osd.traineddata to cover orientation detection.
 set -euo pipefail
+# Prefer a per-user .NET 10 SDK (dotnet-install.sh) over an older system one.
+if [ -x "$HOME/.dotnet/dotnet" ]; then export DOTNET_ROOT="$HOME/.dotnet" PATH="$HOME/.dotnet:$PATH"; fi
 root="$(cd "$(dirname "$0")/.." && pwd)"
 sane_dir="$(mktemp -d)"
 trap 'rm -rf "$sane_dir"' EXIT

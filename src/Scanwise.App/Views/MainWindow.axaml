@@ -14,29 +14,29 @@
 
   <!-- Key bindings are added in code from AppShortcuts (⌘ on macOS, Ctrl elsewhere). -->
 
-  <ui:NavigationView x:Name="Nav"
+  <ui:FANavigationView x:Name="Nav"
                      PaneDisplayMode="LeftCompact"
                      IsPaneToggleButtonVisible="False"
                      IsSettingsVisible="False"
                      IsBackButtonVisible="False"
                      OpenPaneLength="220"
                      CompactPaneLength="56">
-    <ui:NavigationView.MenuItems>
-      <ui:NavigationViewItem x:Name="NavScan" Content="Scan" Tag="Scan" IconSource="{c:LucideSource ScanLine}" ToolTip.Tip="Scan options" />
-      <ui:NavigationViewItem x:Name="NavPages" Content="Pages" Tag="Pages" IconSource="{c:LucideSource Files}" ToolTip.Tip="Pages">
-        <ui:NavigationViewItem.InfoBadge>
-          <ui:InfoBadge Value="{Binding Pages.Count}" IsVisible="{Binding HasPages}" />
-        </ui:NavigationViewItem.InfoBadge>
-      </ui:NavigationViewItem>
-      <ui:NavigationViewItem x:Name="NavEditor" Content="Edit" Tag="Editor" IconSource="{c:LucideSource Image}" ToolTip.Tip="Edit page"
+    <ui:FANavigationView.MenuItems>
+      <ui:FANavigationViewItem x:Name="NavScan" Content="Scan" Tag="Scan" IconSource="{c:LucideSource ScanLine}" ToolTip.Tip="Scan options" />
+      <ui:FANavigationViewItem x:Name="NavPages" Content="Pages" Tag="Pages" IconSource="{c:LucideSource Files}" ToolTip.Tip="Pages">
+        <ui:FANavigationViewItem.InfoBadge>
+          <ui:FAInfoBadge Value="{Binding Pages.Count}" IsVisible="{Binding HasPages}" />
+        </ui:FANavigationViewItem.InfoBadge>
+      </ui:FANavigationViewItem>
+      <ui:FANavigationViewItem x:Name="NavEditor" Content="Edit" Tag="Editor" IconSource="{c:LucideSource Image}" ToolTip.Tip="Edit page"
                              IsVisible="{Binding ShowEditorNavItem}" />
-    </ui:NavigationView.MenuItems>
-    <ui:NavigationView.FooterMenuItems>
-      <ui:NavigationViewItem x:Name="NavFolder" Content="Open save folder" Tag="Folder" IconSource="{c:LucideSource FolderOpen}" SelectsOnInvoked="False"
+    </ui:FANavigationView.MenuItems>
+    <ui:FANavigationView.FooterMenuItems>
+      <ui:FANavigationViewItem x:Name="NavFolder" Content="Open save folder" Tag="Folder" IconSource="{c:LucideSource FolderOpen}" SelectsOnInvoked="False"
                              ToolTip.Tip="Open the folder where scans are saved" />
-      <ui:NavigationViewItem x:Name="NavHelp" Content="Help" Tag="Help" IconSource="{c:LucideSource CircleHelp}" ToolTip.Tip="Help" />
-      <ui:NavigationViewItem x:Name="NavSettings" Content="Settings" Tag="Settings" IconSource="{c:LucideSource Settings}" ToolTip.Tip="Settings" />
-    </ui:NavigationView.FooterMenuItems>
+      <ui:FANavigationViewItem x:Name="NavHelp" Content="Help" Tag="Help" IconSource="{c:LucideSource CircleHelp}" ToolTip.Tip="Help" />
+      <ui:FANavigationViewItem x:Name="NavSettings" Content="Settings" Tag="Settings" IconSource="{c:LucideSource Settings}" ToolTip.Tip="Settings" />
+    </ui:FANavigationView.FooterMenuItems>
 
     <Grid RowDefinitions="Auto,Auto,*">
       <!-- Progress for scans, saves and imports. -->
@@ -51,20 +51,20 @@
         </Grid>
       </Border>
 
-      <ui:InfoBar Grid.Row="1" Margin="12,8,12,0"
+      <ui:FAInfoBar Grid.Row="1" Margin="12,8,12,0"
                   IsOpen="{Binding IsStatusOpen, Mode=TwoWay}"
                   Title="{Binding StatusTitle}"
                   Message="{Binding StatusMessage}"
                   Severity="{Binding StatusSeverity}"
                   IsClosable="True">
-        <ui:InfoBar.ActionButton>
+        <ui:FAInfoBar.ActionButton>
           <StackPanel Orientation="Horizontal" Spacing="6">
             <Button Content="Open" Command="{Binding OpenLastSavedCommand}" IsVisible="{Binding StatusHasFileActions}" />
             <Button Content="{OnPlatform 'Show in folder', macOS='Show in Finder'}" Command="{Binding ShowLastSavedInFolderCommand}" IsVisible="{Binding StatusHasFileActions}" />
             <Button Content="Clear Pages…" Command="{Binding ClearAllCommand}" IsVisible="{Binding StatusCanClear}" />
           </StackPanel>
-        </ui:InfoBar.ActionButton>
-      </ui:InfoBar>
+        </ui:FAInfoBar.ActionButton>
+      </ui:FAInfoBar>
 
       <!-- Workspace: scan options | pages | editor. Column widths are set from code for each layout. -->
       <Grid Grid.Row="2" x:Name="Workspace" IsVisible="{Binding IsWorkspace}">
@@ -83,5 +83,5 @@
       </Panel>
       <v:HelpView Grid.Row="2" IsVisible="{Binding ShowHelp}" />
     </Grid>
-  </ui:NavigationView>
+  </ui:FANavigationView>
 </Window>
