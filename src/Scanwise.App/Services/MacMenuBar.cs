@@ -15,14 +15,20 @@ namespace Scanwise.App.Services;
 public static class MacMenuBar
 {
     /// <summary>Items for the app menu; macOS adds Services, Hide, Show All and Quit around them.</summary>
-    public static NativeMenu AppMenu(MainViewModel vm, ICommand openSettings) =>
+    public static NativeMenu AppMenu(MainViewModel vm, ICommand openSettings) => [.. AppMenuItems(vm, openSettings)];
+
+    private static NativeMenuItemBase[] AppMenuItems(MainViewModel vm, ICommand openSettings) =>
     [
         Item("About Scanwise", vm.ShowAboutCommand),
         new NativeMenuItemSeparator(),
         Item("Settings…", openSettings, AppShortcuts.Settings),
     ];
 
-    public static NativeMenu WindowMenu(MainViewModel vm, Window window, ICommand openHelp)
+    /// <param name="openSettings">
+    /// Given for the macOS look on Windows or Linux: the in-window menu bar has no system app menu, so a
+    /// Scanwise menu leads with About, Settings and Quit; otherwise Settings would be unreachable.
+    /// </param>
+    public static NativeMenu WindowMenu(MainViewModel vm, Window window, ICommand openHelp, ICommand? openSettings = null)
     {
         var text = new TextCommands(window);
         var pages = vm.Pages;
@@ -35,7 +41,7 @@ public static class MacMenuBar
                 sidebar.Header = vm.SidebarMenuHeader;
             }
         };
-        return
+        NativeMenu menu =
         [
             Menu("File",
                 Item("Scan", vm.ScanCommand, AppShortcuts.Scan),
@@ -113,6 +119,13 @@ public static class MacMenuBar
             Menu("Help",
                 Item("Scanwise Help", openHelp)),
         ];
+        if (openSettings is not null)
+        {
+            var app = Menu("Scanwise", [.. AppMenuItems(vm, openSettings), new NativeMenuItemSeparator(),
+                Item("Quit Scanwise", new RelayCommand(window.Close))]);
+            menu.Items.Insert(0, app);
+        }
+        return menu;
     }
 
     private static NativeMenuItem Menu(string header, params NativeMenuItemBase[] items)

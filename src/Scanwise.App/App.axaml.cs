@@ -93,7 +93,8 @@ public partial class App : Application
             if (AppShortcuts.IsMac || PlatformLook.IsMac)
             {
                 NativeMenu.SetMenu(this, MacMenuBar.AppMenu(vm, window.OpenSettingsCommand));
-                NativeMenu.SetMenu(window, MacMenuBar.WindowMenu(vm, window, window.OpenHelpCommand));
+                NativeMenu.SetMenu(window, MacMenuBar.WindowMenu(vm, window, window.OpenHelpCommand,
+                    OperatingSystem.IsMacOS() ? null : window.OpenSettingsCommand));
             }
             desktop.MainWindow = window;
             desktop.ShutdownRequested += (_, _) => vm.OnShutdown();

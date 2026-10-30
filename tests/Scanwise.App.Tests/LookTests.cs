@@ -147,6 +147,20 @@ public sealed class LookTests : IDisposable
     });
 
     [AvaloniaFact]
+    public void MacLookOutsideMacOSCanStillOpenSettings() => In(AppLook.MacOS, () =>
+    {
+        var (window, vm, _) = Open(AppLook.MacOS);
+        // The in-window menu bar shows no system app menu, so Settings (and the Look chooser) live in a Scanwise menu.
+        var menu = MacMenuBar.WindowMenu(vm, window, window.OpenHelpCommand, window.OpenSettingsCommand);
+        var app = Assert.IsType<NativeMenuItem>(menu.Items[0]);
+        Assert.Equal("Scanwise", app.Header);
+        var settings = app.Menu!.Items.OfType<NativeMenuItem>().Single(i => i.Header == "Settings…");
+        Assert.Same(window.OpenSettingsCommand, settings.Command);
+        Assert.Contains(window.KeyBindings, b => b.Command == window.OpenSettingsCommand);
+        window.Close();
+    });
+
+    [AvaloniaFact]
     public void WindowsLookKeepsTheFluentShell() => In(AppLook.Windows, () =>
     {
         var (window, _, _) = Open(AppLook.Windows);

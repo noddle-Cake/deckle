@@ -84,8 +84,8 @@ public static class AppShortcuts
             ZoomFit => [new(Key.D0, cmd), new(Key.NumPad0, cmd)],
             PreviousPage => [new(Key.PageUp, none)],
             NextPage => [new(Key.PageDown, none)],
-            // ⌘, on a Mac; Ctrl+, for GNOME's Preferences; Windows apps have no standard shortcut for settings.
-            Settings => IsMac || PlatformLook.IsGnome ? [new(Key.OemComma, cmd)] : [],
+            // ⌘, on a Mac or in the macOS look; Ctrl+, for GNOME's Preferences; Windows apps have no standard shortcut.
+            Settings => IsMac || PlatformLook.IsToolbarLook ? [new(Key.OemComma, cmd)] : [],
             // GNOME's Keyboard Shortcuts window (Ctrl+?); F1 Help and F5 Refresh are Windows and Linux standards.
             KeyboardShortcuts => !IsMac && PlatformLook.IsGnome ? [new(Key.OemQuestion, cmd | shift)] : [],
             Help => IsMac ? [] : [new(Key.F1, none)],
