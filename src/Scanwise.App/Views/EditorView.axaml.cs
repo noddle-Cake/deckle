@@ -10,6 +10,8 @@ public partial class EditorView : UserControl
 {
     private const double MagnifyStep = 0.25;
     private double _magnify;
+    private Point? _pressPoint;
+    private PointerPressedEventArgs? _pressArgs;
 
     public EditorView()
     {
@@ -24,6 +26,9 @@ public partial class EditorView : UserControl
         AddHandler(PointerWheelChangedEvent, OnWheel, Avalonia.Interactivity.RoutingStrategies.Tunnel);
         AddHandler(Gestures.PointerTouchPadGestureMagnifyEvent, OnMagnify);
         KeyDown += OnKeyDown;
+        PageImage.PointerPressed += OnImagePressed;
+        PageImage.PointerMoved += OnImageMoved;
+        PageImage.PointerReleased += (_, _) => _pressPoint = null;
         Focusable = true;
     }
 
@@ -36,6 +41,31 @@ public partial class EditorView : UserControl
         {
             editor.Viewport = Scroller.Bounds.Size;
         }
+    }
+
+    private void OnImagePressed(object? sender, PointerPressedEventArgs e)
+    {
+        if (e.GetCurrentPoint(this).Properties.IsLeftButtonPressed && Editor is { IsCropping: false, IsDrawing: false, Current: not null })
+        {
+            _pressPoint = e.GetPosition(this);
+            _pressArgs = e;
+        }
+    }
+
+    /// <summary>Dragging the shown page gives it to another app or folder as a file, like dragging it from the page grid.</summary>
+    private async void OnImageMoved(object? sender, PointerEventArgs e)
+    {
+        if (_pressPoint is not { } start || _pressArgs is null || DataContext is not MainViewModel vm || vm.Editor.Current is not { } item)
+        {
+            return;
+        }
+        var delta = e.GetPosition(this) - start;
+        if (Math.Abs(delta.X) < 8 && Math.Abs(delta.Y) < 8)
+        {
+            return;
+        }
+        _pressPoint = null;
+        await PageDrag.StartAsync(_pressArgs, this, vm, [item]);
     }
 
     /// <summary>Trackpad pinch zooms one step each time the fingers spread or close by about a quarter.</summary>

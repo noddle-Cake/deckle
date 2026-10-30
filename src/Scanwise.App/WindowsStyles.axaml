@@ -4,19 +4,24 @@
   <!--
     Windows look on Windows 11 (added in App.axaml.cs when Mica is in use). Microsoft: apply Mica "as the base layer
     of your app, and prioritize visibility in the title bar area"; "set the background to transparent for all layers
-    where you want to see Mica". So the title bar, nav pane and scan options pane are transparent; the content keeps
-    its low-opacity layer fill (FluentAvalonia's NavigationView content area).
+    where you want to see Mica". Plain Mica left the window too see-through, so the window paints MicaTint, a
+    90% opaque layer of the Windows base colour, over it: the title bar, nav pane and scan options pane are
+    transparent over that tint, and the content area is solid.
   -->
   <Styles.Resources>
     <ResourceDictionary>
       <ResourceDictionary.ThemeDictionaries>
         <ResourceDictionary x:Key="Light">
+          <SolidColorBrush x:Key="MicaTint" Color="#E6F3F3F3" />
+          <SolidColorBrush x:Key="NavigationViewContentBackground" Color="#FBFBFB" />
           <SolidColorBrush x:Key="SidebarBackground" Color="Transparent" />
           <SolidColorBrush x:Key="NavigationViewDefaultPaneBackground" Color="Transparent" />
           <SolidColorBrush x:Key="NavigationViewExpandedPaneBackground" Color="Transparent" />
           <SolidColorBrush x:Key="NavigationViewTopPaneBackground" Color="Transparent" />
         </ResourceDictionary>
         <ResourceDictionary x:Key="Dark">
+          <SolidColorBrush x:Key="MicaTint" Color="#E6202020" />
+          <SolidColorBrush x:Key="NavigationViewContentBackground" Color="#272727" />
           <SolidColorBrush x:Key="SidebarBackground" Color="Transparent" />
           <SolidColorBrush x:Key="NavigationViewDefaultPaneBackground" Color="Transparent" />
           <SolidColorBrush x:Key="NavigationViewExpandedPaneBackground" Color="Transparent" />

@@ -8,10 +8,9 @@ using Scanwise.App.ViewModels;
 
 namespace Scanwise.App.Views;
 
-/// <summary>Page grid. Code-behind handles drag-to-reorder, file drops and double-click to edit.</summary>
+/// <summary>Page grid. Code-behind handles drag-to-reorder, dragging pages out as files, file drops and double-click to edit.</summary>
 public partial class PageListView : UserControl
 {
-    private const string PageFormat = "application/x-scanwise-pages";
     private Point? _pressPoint;
     private PointerPressedEventArgs? _pressArgs;
 
@@ -80,15 +79,13 @@ public partial class PageListView : UserControl
             return;
         }
         // Drag the whole selection if the pressed page is part of it, otherwise just that page.
-        var ids = vm.Pages.SelectedItems.Contains(item) ? vm.Pages.SelectedIds : [item.Id];
-        var data = new DataObject();
-        data.Set(PageFormat, string.Join(",", ids));
-        await DragDrop.DoDragDrop(_pressArgs, data, DragDropEffects.Move);
+        var items = vm.Pages.SelectedItems.Contains(item) ? vm.Pages.SelectedItems.ToList() : [item];
+        await PageDrag.StartAsync(_pressArgs, List, vm, items);
     }
 
     private void OnDragOver(object? sender, DragEventArgs e)
     {
-        e.DragEffects = e.Data.Contains(PageFormat) ? DragDropEffects.Move
+        e.DragEffects = e.Data.Contains(PageDrag.PageFormat) ? DragDropEffects.Move
             : e.Data.Contains(DataFormats.Files) ? DragDropEffects.Copy
             : DragDropEffects.None;
         e.Handled = true;
@@ -102,7 +99,7 @@ public partial class PageListView : UserControl
         }
         e.Handled = true;
         var index = DropIndex(e.GetPosition(List), vm);
-        if (e.Data.Get(PageFormat) is string idList)
+        if (e.Data.Get(PageDrag.PageFormat) is string idList)
         {
             var ids = idList.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(Guid.Parse).ToList();
             vm.Pages.MoveTo(ids, index);

@@ -706,24 +706,13 @@ public sealed partial class MainViewModel : ObservableObject
         {
             return;
         }
-        var folder = Path.Combine(_services.Paths.TempDir, "share-" + DateTime.Now.ToString("yyyyMMddHHmmssfff"));
         var name = $"Scan {DateTime.Now:yyyy-MM-dd HH.mm}";
-        var format = pages.Count == 1 ? OutputFormat.Jpeg : OutputFormat.Pdf;
-        var path = Path.Combine(folder, name + format.Extension());
+        string path;
         using (var cts = BeginOperation("Preparing to share…", cancellable: true))
         {
             try
             {
-                Directory.CreateDirectory(folder);
-                var images = pages.Select(p => p.Image).ToList();
-                if (format == OutputFormat.Pdf)
-                {
-                    await _services.Export.ExportDocumentAsync(images, path, format, Settings, SaveProgress(), cts.Token);
-                }
-                else
-                {
-                    await _services.Export.ExportPagesAsync(images, [path], format, Settings, SaveProgress(), cts.Token);
-                }
+                path = await ExportToTempAsync(pages, "share", name, SaveProgress(), cts.Token);
             }
             catch (OperationCanceledException)
             {
@@ -747,6 +736,48 @@ public sealed partial class MainViewModel : ObservableObject
         {
             await _ui.ShowMessageAsync("Could not share", ex.Message);
         }
+    }
+
+    /// <summary>
+    /// Writes pages to a temp file that can be dragged out to another app or folder,
+    /// in the same shape as Share. Returns null if the export fails; the drag then stays in the app.
+    /// </summary>
+    public async Task<string?> ExportForDragAsync(IReadOnlyList<PageItemViewModel> items)
+    {
+        if (items.Count == 0 || IsBusy)
+        {
+            return null;
+        }
+        var pages = items.OrderBy(i => i.Number).Select(i => i.Page).ToList();
+        var name = items.Count == 1 ? $"Scan {DateTime.Now:yyyy-MM-dd HH.mm} page {items[0].Number}" : $"Scan {DateTime.Now:yyyy-MM-dd HH.mm}";
+        try
+        {
+            return await ExportToTempAsync(pages, "drag", name, null, CancellationToken.None);
+        }
+        catch (Exception)
+        {
+            return null;
+        }
+    }
+
+    /// <summary>Exports to a fresh temp folder (cleared on next start): one page as a JPEG, several as one PDF.</summary>
+    private async Task<string> ExportToTempAsync(IReadOnlyList<Page> pages, string purpose, string name,
+        IProgress<ExportProgress>? progress, CancellationToken cancel)
+    {
+        var folder = Path.Combine(_services.Paths.TempDir, $"{purpose}-{DateTime.Now:yyyyMMddHHmmssfff}");
+        var format = pages.Count == 1 ? OutputFormat.Jpeg : OutputFormat.Pdf;
+        var path = Path.Combine(folder, name + format.Extension());
+        Directory.CreateDirectory(folder);
+        var images = pages.Select(p => p.Image).ToList();
+        if (format == OutputFormat.Pdf)
+        {
+            await _services.Export.ExportDocumentAsync(images, path, format, Settings, progress, cancel);
+        }
+        else
+        {
+            await _services.Export.ExportPagesAsync(images, [path], format, Settings, progress, cancel);
+        }
+        return path;
     }
 
     [RelayCommand]

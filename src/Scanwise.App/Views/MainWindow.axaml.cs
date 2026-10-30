@@ -123,7 +123,8 @@ public partial class MainWindow : Window
     private void UseMicaTitleBar()
     {
         TransparencyLevelHint = [WindowTransparencyLevel.Mica, WindowTransparencyLevel.None];
-        Background = Brushes.Transparent;
+        _usesMica = true;
+        UpdateMicaBackground();
         ExtendClientAreaToDecorationsHint = true;
         ExtendClientAreaChromeHints = Avalonia.Platform.ExtendClientAreaChromeHints.PreferSystemChrome;
         ExtendClientAreaTitleBarHeightHint = 32;
@@ -144,7 +145,7 @@ public partial class MainWindow : Window
         Content = null;
         DockPanel.SetDock(bar, Dock.Top);
         Content = new DockPanel { Children = { bar, nav } };
-        // Transparent panes so Mica shows through, but only when Mica is actually on.
+        // Transparent panes over the window's tint (or its solid colour when Mica is off).
         if (Application.Current is { } app)
         {
             app.Styles.Add(new Avalonia.Markup.Xaml.Styling.StyleInclude(new Uri("avares://Scanwise/"))
@@ -153,6 +154,16 @@ public partial class MainWindow : Window
             });
         }
     }
+
+    private bool _usesMica;
+
+    /// <summary>
+    /// A mostly opaque tint over Mica so the window stays readable; fully solid when Windows gives no Mica
+    /// (Windows 10, transparency effects off, battery saver), where a transparent background shows the desktop.
+    /// </summary>
+    private void UpdateMicaBackground() =>
+        this[!BackgroundProperty] = this.GetResourceObservable(
+            ActualTransparencyLevel == WindowTransparencyLevel.Mica ? "MicaTint" : "PaneBackground").ToBinding();
 
     private readonly GnomeShell? _gnomeShell;
     internal GnomeShell? GnomeShell => _gnomeShell;
@@ -290,6 +301,10 @@ public partial class MainWindow : Window
         if (change.Property == BoundsProperty && ViewModel is { } vm)
         {
             vm.UpdateLayout(Bounds.Width);
+        }
+        else if (change.Property == ActualTransparencyLevelProperty && _usesMica)
+        {
+            UpdateMicaBackground();
         }
         else if (change.Property == ActualTransparencyLevelProperty && _macShell is not null)
         {
@@ -429,12 +444,15 @@ public partial class MainWindow : Window
 
     private void OnDragOver(object? sender, DragEventArgs e)
     {
-        e.DragEffects = e.Data.Contains(DataFormats.Files) ? DragDropEffects.Copy : e.DragEffects;
+        // A page dragged out of the grid or editor also carries its exported file; don't import it as a copy.
+        e.DragEffects = e.Data.Contains(PageDrag.PageFormat) ? DragDropEffects.None
+            : e.Data.Contains(DataFormats.Files) ? DragDropEffects.Copy
+            : e.DragEffects;
     }
 
     private async void OnDrop(object? sender, DragEventArgs e)
     {
-        if (e.Handled || ViewModel is not { } vm || e.Data.GetFiles() is not { } items)
+        if (e.Handled || ViewModel is not { } vm || e.Data.Contains(PageDrag.PageFormat) || e.Data.GetFiles() is not { } items)
         {
             return;
         }
