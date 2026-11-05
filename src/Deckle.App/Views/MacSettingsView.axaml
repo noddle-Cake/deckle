@@ -1,0 +1,239 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Deckle.App.ViewModels"
+             xmlns:m="using:Deckle.App.Models"
+             xmlns:svc="using:Deckle.App.Services"
+             x:Class="Deckle.App.Views.MacSettingsView"
+             x:DataType="vm:SettingsViewModel">
+  <!--
+    The Settings window on macOS: tabs, then a form with right-aligned labels on the leading side and controls on
+    the trailing side, and checkboxes for options (switches are for major on/off settings on macOS). Same view
+    model as SettingsView, which keeps the Windows Settings look on the other platforms.
+  -->
+  <UserControl.Styles>
+    <!-- Each form row: Grid Classes="row" ColumnDefinitions="170,14,*" (label, gap, controls). -->
+    <Style Selector="Grid.row">
+      <Setter Property="Margin" Value="0,0,0,14" />
+    </Style>
+    <Style Selector="TextBlock.label">
+      <Setter Property="HorizontalAlignment" Value="Right" />
+      <Setter Property="VerticalAlignment" Value="Top" />
+      <Setter Property="Margin" Value="0,6,0,0" />
+      <Setter Property="TextAlignment" Value="Right" />
+      <Setter Property="TextWrapping" Value="Wrap" />
+    </Style>
+    <Style Selector="TextBlock.note">
+      <Setter Property="FontSize" Value="12" />
+      <Setter Property="Opacity" Value="0.7" />
+      <Setter Property="TextWrapping" Value="Wrap" />
+      <Setter Property="Margin" Value="28,0,0,4" />
+    </Style>
+    <!-- Small, centred tabs as in macOS Settings windows, not Fluent's large pivot headers. -->
+    <Style Selector="TabControl /template/ ItemsPresenter#PART_ItemsPresenter">
+      <Setter Property="HorizontalAlignment" Value="Center" />
+    </Style>
+    <Style Selector="TabItem">
+      <Setter Property="FontSize" Value="14" />
+      <Setter Property="MinHeight" Value="34" />
+      <Setter Property="Padding" Value="14,4" />
+    </Style>
+    <Style Selector="StackPanel.controls">
+      <Setter Property="Grid.Column" Value="2" />
+      <Setter Property="Spacing" Value="4" />
+    </Style>
+  </UserControl.Styles>
+
+  <TabControl Padding="0" HorizontalAlignment="Stretch">
+    <TabItem Header="General">
+      <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Margin="24,20,32,12">
+          <Grid Classes="row" ColumnDefinitions="170,14,*">
+            <TextBlock Classes="label" Text="After scanning:" />
+            <StackPanel Classes="controls">
+              <CheckBox Content="Save automatically" IsChecked="{Binding AutoSave}" />
+              <TextBlock Classes="note" Text="{svc:ShortcutTip 'Write every scan to a file straight away. When off, use File ▸ Save', Save}" />
+              <CheckBox Content="Add new scans to the current document" IsChecked="{Binding AddToExisting}" />
+              <TextBlock Classes="note" Text="PDF and TIFF scans keep growing one file. When off, every scan starts a new document." />
+              <CheckBox Content="Reverse page order" IsChecked="{Binding ReverseScanOrder}" />
+              <TextBlock Classes="note" Text="For feeders where the last page comes out first." />
+              <CheckBox Content="Restore pages after closing" IsChecked="{Binding RestoreSession}" />
+            </StackPanel>
+          </Grid>
+
+          <Grid Classes="row" ColumnDefinitions="170,14,*" IsVisible="{Binding HotkeyIsAutomatic}">
+            <TextBlock Classes="label" Text="Scan shortcut:" />
+            <StackPanel Classes="controls">
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <CheckBox Content="Scan with" IsChecked="{Binding ScanHotkey}" />
+                <TextBlock Text="⌃⌥" VerticalAlignment="Center" />
+                <ComboBox ItemsSource="{Binding HotkeyLetters}" SelectedItem="{Binding ScanHotkeyKey}" MinWidth="64" IsEnabled="{Binding ScanHotkey}" />
+              </StackPanel>
+              <TextBlock Classes="note" Text="{Binding HotkeyDescription}" />
+              <TextBlock Classes="note" Text="{Binding LauncherHint}" />
+            </StackPanel>
+          </Grid>
+
+          <Grid Classes="row" ColumnDefinitions="170,14,*">
+            <TextBlock Classes="label" Text="Appearance:" />
+            <StackPanel Classes="controls">
+              <ComboBox ItemsSource="{Binding Themes}" SelectedItem="{Binding Theme}" MinWidth="180" />
+            </StackPanel>
+          </Grid>
+
+          <Grid Classes="row" ColumnDefinitions="170,14,*">
+            <TextBlock Classes="label" Text="Look:" />
+            <StackPanel Classes="controls">
+              <ComboBox ItemsSource="{Binding Looks}" SelectedItem="{Binding Look}" MinWidth="180" />
+              <TextBlock Classes="note" Margin="0,2,0,0" Text="Window layout and conventions. Automatic follows this computer." />
+              <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding LookNeedsRestart}" Margin="0,4,0,0">
+                <TextBlock Classes="note" Margin="0" VerticalAlignment="Center" Text="Takes effect after Deckle restarts." />
+                <Button Content="Restart Now" Command="{Binding RestartNowCommand}" />
+              </StackPanel>
+            </StackPanel>
+          </Grid>
+        </StackPanel>
+      </ScrollViewer>
+    </TabItem>
+
+    <TabItem Header="Saving">
+      <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Margin="24,20,32,12">
+          <Grid Classes="row" ColumnDefinitions="170,14,*">
+            <TextBlock Classes="label" Text="Save scans to:" />
+            <StackPanel Classes="controls">
+              <TextBlock Text="{Binding SaveFolder}" TextWrapping="Wrap" Margin="0,6,0,4" />
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <Button Content="Choose…" Command="{Binding ChooseFolderCommand}" />
+                <Button Content="Show in Finder" Command="{Binding OpenFolderCommand}" />
+              </StackPanel>
+              <CheckBox Content="Ask where to save every time" IsChecked="{Binding AskEveryTime}" Margin="0,6,0,0" />
+            </StackPanel>
+          </Grid>
+
+          <Grid Classes="row" ColumnDefinitions="170,14,*">
+            <TextBlock Classes="label" Text="File names:" />
+            <StackPanel Classes="controls">
+              <ComboBox ItemsSource="{Binding NamingPresets}" SelectedItem="{Binding NamingPreset}" MinWidth="180" />
+              <TextBlock Classes="note" Margin="0,2,0,6" Text="{Binding NamingPreview, StringFormat='Example: {0}'}" />
+              <StackPanel Spacing="8" IsVisible="{Binding IsCustomNaming}">
+                <TextBox Text="{Binding CustomPattern}" PlaceholderText="e.g. Invoice {year}-{month}-{day} {nnn}" />
+                <TextBlock Classes="note" Margin="0" Text="Click a building block to add it. {n} and {nnn} count up to the first free number." />
+                <ItemsControl ItemsSource="{Binding Tokens}">
+                  <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                      <WrapPanel />
+                    </ItemsPanelTemplate>
+                  </ItemsControl.ItemsPanel>
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="m:NamingTokenChip">
+                      <Button Margin="0,0,6,6" Padding="10,3" CornerRadius="10" Content="{Binding Label}" ToolTip.Tip="{Binding Token}"
+                              Command="{Binding $parent[ItemsControl].((vm:SettingsViewModel)DataContext).InsertTokenCommand}"
+                              CommandParameter="{Binding Token}" />
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </StackPanel>
+            </StackPanel>
+          </Grid>
+        </StackPanel>
+      </ScrollViewer>
+    </TabItem>
+
+    <TabItem Header="Text Recognition">
+      <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Margin="24,20,32,12">
+          <Grid Classes="row" ColumnDefinitions="170,14,*">
+            <TextBlock Classes="label" Text="Rotation:" />
+            <StackPanel Classes="controls">
+              <CheckBox Content="Rotate pages automatically" IsChecked="{Binding AutoRotate}" IsEnabled="{Binding OcrAvailable}" />
+              <TextBlock Classes="note" Text="Turns upside-down and sideways pages upright after scanning." />
+              <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding !HasOsd}" Margin="28,4,0,0">
+                <Button Content="Download Orientation Data" Command="{Binding DownloadOcrLanguageCommand}" CommandParameter="osd" IsEnabled="{Binding OcrAvailable}" />
+                <TextBlock Classes="note" Margin="0" VerticalAlignment="Center" Text="About 10 MB; faster and more reliable." />
+              </StackPanel>
+            </StackPanel>
+          </Grid>
+
+          <Grid Classes="row" ColumnDefinitions="170,14,*">
+            <TextBlock Classes="label" Text="Language:" />
+            <StackPanel Classes="controls">
+              <ComboBox ItemsSource="{Binding OcrLanguages}" SelectedItem="{Binding OcrLanguage}" MinWidth="120" IsEnabled="{Binding OcrAvailable}" />
+              <TextBlock Classes="note" Margin="0,2,0,0" Text="{Binding OcrStatus}" />
+            </StackPanel>
+          </Grid>
+
+          <Grid Classes="row" ColumnDefinitions="170,14,*">
+            <TextBlock Classes="label" Text="Add a language:" />
+            <StackPanel Classes="controls">
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <TextBox Text="{Binding DownloadLanguage}" Width="100" PlaceholderText="deu" />
+                <Button Content="Download" Command="{Binding DownloadOcrLanguageCommand}" CommandParameter="{x:Null}" IsEnabled="{Binding OcrAvailable}" />
+              </StackPanel>
+              <TextBlock Classes="note" Margin="0,2,0,0" Text="Three-letter Tesseract code, e.g. deu, fra, spa, ita, por, chi_sim, jpn." />
+              <ProgressBar Value="{Binding DownloadProgress}" Maximum="100" IsVisible="{Binding IsDownloading}" />
+            </StackPanel>
+          </Grid>
+        </StackPanel>
+      </ScrollViewer>
+    </TabItem>
+
+    <TabItem Header="PDF &amp; Images">
+      <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Margin="24,20,32,12">
+          <Grid Classes="row" ColumnDefinitions="170,14,*">
+            <TextBlock Classes="label" Text="PDF:" />
+            <StackPanel Classes="controls">
+              <CheckBox Content="Make PDFs searchable" IsChecked="{Binding PdfOcr}" IsEnabled="{Binding OcrAvailable}" />
+              <TextBlock Classes="note" Text="Adds an invisible text layer so you can search and copy text. Slower to save." />
+            </StackPanel>
+          </Grid>
+          <Grid Classes="row" ColumnDefinitions="170,14,*">
+            <TextBlock Classes="label" Text="PDF type:" />
+            <StackPanel Classes="controls">
+              <ComboBox ItemsSource="{Binding PdfStandards}" SelectedItem="{Binding PdfStandard}" MinWidth="200" />
+            </StackPanel>
+          </Grid>
+          <Grid Classes="row" ColumnDefinitions="170,14,*">
+            <TextBlock Classes="label" Text="Title:" />
+            <StackPanel Classes="controls">
+              <TextBox Text="{Binding PdfTitle}" MaxWidth="320" HorizontalAlignment="Left" Width="320" />
+            </StackPanel>
+          </Grid>
+          <Grid Classes="row" ColumnDefinitions="170,14,*">
+            <TextBlock Classes="label" Text="Author:" />
+            <StackPanel Classes="controls">
+              <TextBox Text="{Binding PdfAuthor}" MaxWidth="320" HorizontalAlignment="Left" Width="320" />
+            </StackPanel>
+          </Grid>
+          <Grid Classes="row" ColumnDefinitions="170,14,*">
+            <TextBlock Classes="label" Text="Password:" />
+            <StackPanel Classes="controls" IsEnabled="{Binding CanEncrypt}">
+              <CheckBox Content="Protect with a password" IsChecked="{Binding PdfEncrypt}" />
+              <TextBox Text="{Binding PdfPassword}" PasswordChar="•" Width="200" HorizontalAlignment="Left" PlaceholderText="Password" IsEnabled="{Binding PdfEncrypt}" Margin="28,0,0,0" />
+              <TextBlock Classes="note" Text="Not available for PDF/A." />
+            </StackPanel>
+          </Grid>
+
+          <Separator Margin="0,4,0,18" />
+
+          <Grid Classes="row" ColumnDefinitions="170,14,*">
+            <TextBlock Classes="label" Text="JPG quality:" />
+            <StackPanel Classes="controls">
+              <StackPanel Orientation="Horizontal" Spacing="12">
+                <Slider Minimum="30" Maximum="100" Value="{Binding JpegQuality}" Width="220" />
+                <TextBlock Text="{Binding JpegQuality}" VerticalAlignment="Center" />
+              </StackPanel>
+              <TextBlock Classes="note" Margin="0" Text="Higher means better quality and larger files." />
+            </StackPanel>
+          </Grid>
+          <Grid Classes="row" ColumnDefinitions="170,14,*">
+            <TextBlock Classes="label" Text="TIFF compression:" />
+            <StackPanel Classes="controls">
+              <ComboBox ItemsSource="{Binding TiffCompressions}" SelectedItem="{Binding TiffCompression}" MaxWidth="320" />
+            </StackPanel>
+          </Grid>
+        </StackPanel>
+      </ScrollViewer>
+    </TabItem>
+  </TabControl>
+</UserControl>

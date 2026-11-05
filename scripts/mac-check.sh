@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # macOS verification for tasks.md 9.5. Run on a Mac, from the repository:
 #   scripts/mac-check.sh [output-folder]
-# It runs the test suite, builds Scanwise.app, runs the app's self-check (menu bar, Dock menu, pasteboard,
+# It runs the test suite, builds Deckle.app, runs the app's self-check (menu bar, Dock menu, pasteboard,
 # edited dot, Dock badge, Liquid Glass panel) with and without Liquid Glass, and screenshots the window each time.
 # Then work through docs/MAC-VERIFICATION.md for what has to be looked at.
 # Needs: .NET 10 SDK, Xcode command line tools. The screenshots need Screen Recording permission for the terminal
@@ -28,9 +28,9 @@ cat "$out/system.txt"
 echo "== tests"
 if scripts/test.sh > "$out/tests.txt" 2>&1; then echo "tests passed"; else echo "TESTS FAILED (see $out/tests.txt)"; fi
 
-echo "== Scanwise.app ($rid)"
+echo "== Deckle.app ($rid)"
 scripts/publish.sh "$rid" > "$out/publish.txt" 2>&1
-app="publish/$rid/Scanwise.app"
+app="publish/$rid/Deckle.app"
 {
   plutil -lint "$app/Contents/Info.plist"
   plutil -p "$app/Contents/Info.plist"
@@ -43,7 +43,7 @@ for glass in 1 0; do
   report="$out/self-check-glass$glass.txt"
   rm -f "$report"
   echo "== self-check, Liquid Glass $([ $glass = 1 ] && echo on || echo off)"
-  SCANWISE_LIQUID_GLASS=$glass "$app/Contents/MacOS/Scanwise" --self-check="$report" --keep-open=4 &
+  DECKLE_LIQUID_GLASS=$glass "$app/Contents/MacOS/Deckle" --self-check="$report" --keep-open=4 &
   pid=$!
   for _ in $(seq 60); do [ -s "$report" ] && break; sleep 0.5; done
   if [ -s "$report" ]; then

@@ -1,0 +1,21 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    # GitHub-hosted on purpose: this repository is public, so fork pull requests must never reach a self-hosted runner.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - run: sudo apt-get update && sudo apt-get install -y libsane1 sane-utils
+      - run: scripts/test.sh --nologo

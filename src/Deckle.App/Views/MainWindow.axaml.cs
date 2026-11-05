@@ -1,0 +1,461 @@
+using System.ComponentModel;
+using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
+using System.Windows.Input;
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Input;
+using Avalonia.Media;
+using Avalonia.Platform.Storage;
+using CommunityToolkit.Mvvm.Input;
+using FluentAvalonia.UI.Controls;
+using Deckle.App.Controls;
+using Deckle.App.Services;
+using Deckle.App.Services.Platform;
+using Deckle.App.ViewModels;
+
+namespace Deckle.App.Views;
+
+public partial class MainWindow : Window
+{
+    private SettingsWindow? _settingsWindow;
+    private HelpWindow? _helpWindow;
+    private readonly MacShell? _macShell;
+
+    public MainWindow()
+    {
+        InitializeComponent();
+        OpenSettingsCommand = new RelayCommand(OpenSettings);
+        OpenHelpCommand = new RelayCommand(OpenHelp);
+        if (PlatformLook.IsMac)
+        {
+            _macShell = UseMacShell();
+        }
+        else if (PlatformLook.IsGnome)
+        {
+            _gnomeShell = UseGnomeShell();
+        }
+        else if (OperatingSystem.IsWindows())
+        {
+            UseMicaTitleBar();
+        }
+        Closed += (_, _) =>
+        {
+            _settingsWindow?.Close();
+            _helpWindow?.Close();
+            if (OperatingSystem.IsMacOS())
+            {
+                RemoveSidebarGlass();
+            }
+        };
+        Opened += (_, _) =>
+        {
+            UpdateMacDocumentState();
+            UpdateSidebarGlass();
+        };
+        Nav.ItemInvoked += OnNavItemInvoked;
+        AddHandler(DragDrop.DragOverEvent, OnDragOver);
+        AddHandler(DragDrop.DropEvent, OnDrop);
+        DataContextChanged += (_, _) =>
+        {
+            if (DataContext is MainViewModel vm)
+            {
+                BindKeys(vm);
+                _gnomeShell?.SetPrimaryMenu(vm, OpenSettingsCommand, OpenShortcutsCommand, OpenHelpCommand);
+                vm.PropertyChanged += OnViewModelChanged;
+                vm.UpdateLayout(Bounds.Width);
+                ApplyLayout(vm);
+                SyncNavSelection(vm);
+            }
+        };
+    }
+
+    private MainViewModel? ViewModel => DataContext as MainViewModel;
+
+    /// <summary>A Settings window on macOS (one at a time), the Settings page elsewhere.</summary>
+    public ICommand OpenSettingsCommand { get; }
+
+    /// <summary>A Help window on macOS (Help ▸ Deckle Help), the Help page elsewhere.</summary>
+    public ICommand OpenHelpCommand { get; }
+
+    internal SettingsWindow? OpenSettingsWindow => _settingsWindow;
+    internal HelpWindow? OpenHelpWindow => _helpWindow;
+    internal MacShell? MacShell => _macShell;
+
+    /// <summary>
+    /// The macOS window (Toolbars, Sidebars and Materials HIG): no Fluent nav rail; the title bar and toolbar are
+    /// one row; the scan options are a sidebar over the window's blurred, vibrant background.
+    /// </summary>
+    private MacShell UseMacShell()
+    {
+        var body = (Control)Nav.Content!;
+        Nav.Content = null;
+        // Progress shows in the toolbar and on the Dock icon instead of a bar that pushes the content down.
+        BusyBar.IsVisible = false;
+        var shell = new MacShell { Body = body };
+        // Narrowest width at which the toolbar's title, Pages | Editor switch, Share and Scan still fit.
+        MinWidth = 560;
+        if (!OperatingSystem.IsMacOS())
+        {
+            // The macOS look on Windows or Linux: no native traffic lights or global menu bar, so draw the
+            // buttons and show the menu bar inside the window. Background stays solid (no vibrancy here).
+            shell.UseOwnWindowButtons();
+            var menuBar = new NativeMenuBar();
+            DockPanel.SetDock(menuBar, Dock.Top);
+            ClientDecorations.Apply(this, new DockPanel { Children = { menuBar, shell } });
+            this[!BackgroundProperty] = this.GetResourceObservable("PaneBackground").ToBinding();
+            return shell;
+        }
+        Content = shell;
+        ExtendClientAreaToDecorationsHint = true;
+        ExtendClientAreaTitleBarHeightHint = 52;
+        TransparencyLevelHint = [WindowTransparencyLevel.AcrylicBlur, WindowTransparencyLevel.None];
+        Background = Brushes.Transparent;
+        return shell;
+    }
+
+    /// <summary>
+    /// Windows look on Windows (Microsoft title bar and Mica guidance): Mica behind the whole window, extended into
+    /// a 32 px title bar with the 16 px icon 16 px from the edge and the title 16 px after it in caption style; the
+    /// system caption buttons stay. Windows 10 or transparency off: Mica falls back to a solid colour by itself.
+    /// </summary>
+    private void UseMicaTitleBar()
+    {
+        TransparencyLevelHint = [WindowTransparencyLevel.Mica, WindowTransparencyLevel.None];
+        _usesMica = true;
+        UpdateMicaBackground();
+        ExtendClientAreaToDecorationsHint = true;
+        ExtendClientAreaTitleBarHeightHint = 32;
+        var title = new TextBlock { FontSize = 12, VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center, Margin = new Thickness(16, 0, 0, 0) };
+        title.Bind(TextBlock.TextProperty, this.GetObservable(TitleProperty));
+        var bar = new StackPanel
+        {
+            Orientation = Avalonia.Layout.Orientation.Horizontal,
+            Height = 32,
+            IsHitTestVisible = false, // The system handles dragging, the window menu and double-click here.
+            Children =
+            {
+                new Image { Source = new Avalonia.Media.Imaging.Bitmap(Avalonia.Platform.AssetLoader.Open(new Uri("avares://Deckle/Assets/deckle.png"))), Width = 16, Height = 16, Margin = new Thickness(16, 0, 0, 0) },
+                title,
+            },
+        };
+        var nav = (Control)Content!;
+        Content = null;
+        DockPanel.SetDock(bar, Dock.Top);
+        Content = new DockPanel { Children = { bar, nav } };
+        // Transparent panes over the window's tint (or its solid colour when Mica is off).
+        if (Application.Current is { } app)
+        {
+            app.Styles.Add(new Avalonia.Markup.Xaml.Styling.StyleInclude(new Uri("avares://Deckle/"))
+            {
+                Source = new Uri("avares://Deckle/WindowsStyles.axaml"),
+            });
+        }
+    }
+
+    private bool _usesMica;
+
+    /// <summary>
+    /// A mostly opaque tint over Mica so the window stays readable; fully solid when Windows gives no Mica
+    /// (Windows 10, transparency effects off, battery saver), where a transparent background shows the desktop.
+    /// </summary>
+    private void UpdateMicaBackground() =>
+        this[!BackgroundProperty] = this.GetResourceObservable(
+            ActualTransparencyLevel == WindowTransparencyLevel.Mica ? "MicaTint" : "PaneBackground").ToBinding();
+
+    private readonly GnomeShell? _gnomeShell;
+    internal GnomeShell? GnomeShell => _gnomeShell;
+
+    /// <summary>
+    /// The GNOME window (GNOME HIG): the header bar is the title bar, so the window draws its own frame on every
+    /// OS; the scan options become a sidebar; Settings, Help and the save folder move to the primary menu.
+    /// </summary>
+    private GnomeShell UseGnomeShell()
+    {
+        var body = (Control)Nav.Content!;
+        Nav.Content = null;
+        var shell = new GnomeShell { Body = body };
+        ClientDecorations.Apply(this, shell);
+        this[!BackgroundProperty] = this.GetResourceObservable("ContentBackground").ToBinding();
+        MinWidth = 480;
+        return shell;
+    }
+
+    private void OpenSettings()
+    {
+        if (ViewModel is not { } vm)
+        {
+            return;
+        }
+        if (!PlatformLook.IsToolbarLook)
+        {
+            vm.Section = Section.Settings;
+            return;
+        }
+        _settingsWindow = ShowSingle(_settingsWindow, () => new SettingsWindow { DataContext = vm.SettingsPage }, () => _settingsWindow = null);
+    }
+
+    /// <summary>GNOME's Keyboard Shortcuts window (primary menu, Ctrl+?).</summary>
+    public ICommand OpenShortcutsCommand => new RelayCommand(() =>
+        _shortcutsWindow = ShowSingle(_shortcutsWindow, () => new ShortcutsWindow(), () => _shortcutsWindow = null));
+
+    private ShortcutsWindow? _shortcutsWindow;
+
+    private void OpenHelp()
+    {
+        if (ViewModel is not { } vm)
+        {
+            return;
+        }
+        if (!PlatformLook.IsToolbarLook)
+        {
+            vm.Section = Section.Help;
+            return;
+        }
+        _helpWindow = ShowSingle(_helpWindow, () => new HelpWindow(), () => _helpWindow = null);
+    }
+
+    /// <summary>Opens a window once; asking again brings the open one to the front.</summary>
+    private static T ShowSingle<T>(T? open, Func<T> create, Action onClosed) where T : Window
+    {
+        if (open is null)
+        {
+            open = create();
+            open.Closed += (_, _) => onClosed();
+            open.Show();
+        }
+        open.Activate();
+        return open;
+    }
+
+    /// <summary>macOS shows unsaved changes as the dot in the close button and the saved file as a proxy icon.</summary>
+    private void UpdateMacDocumentState()
+    {
+        if (!OperatingSystem.IsMacOS() || ViewModel is not { } vm
+            || TryGetPlatformHandle() is not { HandleDescriptor: "NSView", Handle: var view } || view == IntPtr.Zero)
+        {
+            return;
+        }
+        SetDocumentState(view, vm.HasUnsavedChanges, vm.DocumentPath);
+    }
+
+    [SupportedOSPlatform("macos")]
+    private static void SetDocumentState(IntPtr view, bool edited, string? path) =>
+        CallMac(() => MacIntegration.SetDocumentState(view, edited, path));
+
+    [SupportedOSPlatform("macos")]
+    private static void SetDockBadge(string? label) => CallMac(() => MacIntegration.SetDockBadge(label));
+
+    /// <summary>Scan and save progress on the Dock icon, so it shows while the window is in the background.</summary>
+    private static void UpdateDockBadge(MainViewModel vm)
+    {
+        if (!OperatingSystem.IsMacOS())
+        {
+            return;
+        }
+        var label = !vm.IsBusy ? null : vm.IsProgressIndeterminate ? "…" : $"{vm.Progress:0}%";
+        SetDockBadge(label);
+    }
+
+    /// <summary>Native macOS extras are nice to have; a failure there must never take the window down.</summary>
+    private static void CallMac(Action call)
+    {
+        try
+        {
+            call();
+        }
+        catch (Exception ex) when (ex is EntryPointNotFoundException or DllNotFoundException or MarshalDirectiveException)
+        {
+            System.Diagnostics.Trace.WriteLine($"Deckle: {ex.Message}");
+        }
+    }
+
+    private void BindKeys(MainViewModel vm)
+    {
+        KeyBindings.Clear();
+        AppShortcuts.Bind(this, AppShortcuts.Settings, OpenSettingsCommand);
+        AppShortcuts.Bind(this, AppShortcuts.Scan, vm.ScanCommand);
+        AppShortcuts.Bind(this, AppShortcuts.ScanNew, vm.ScanStartFreshCommand);
+        AppShortcuts.Bind(this, AppShortcuts.Save, vm.SaveCommand);
+        AppShortcuts.Bind(this, AppShortcuts.SaveAs, vm.SaveAsCommand);
+        AppShortcuts.Bind(this, AppShortcuts.Import, vm.ImportCommand);
+        AppShortcuts.Bind(this, AppShortcuts.Copy, vm.CopyPageCommand);
+        AppShortcuts.Bind(this, AppShortcuts.Share, vm.ShareCommand);
+        AppShortcuts.Bind(this, AppShortcuts.Undo, vm.UndoCommand);
+        AppShortcuts.Bind(this, AppShortcuts.Redo, vm.RedoCommand);
+        AppShortcuts.Bind(this, AppShortcuts.Cancel, vm.CancelOperationCommand);
+        AppShortcuts.Bind(this, AppShortcuts.Help, OpenHelpCommand);
+        AppShortcuts.Bind(this, AppShortcuts.KeyboardShortcuts, OpenShortcutsCommand);
+        AppShortcuts.Bind(this, AppShortcuts.RefreshScanners, vm.ScanOptions.RefreshScannersCommand);
+        if (!AppShortcuts.IsMac)
+        {
+            AppShortcuts.Bind(this, AppShortcuts.CloseWindow, new RelayCommand(Close)); // On a Mac the menu bar has ⌘W.
+        }
+    }
+
+    protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
+    {
+        base.OnPropertyChanged(change);
+        if (change.Property == BoundsProperty && ViewModel is { } vm)
+        {
+            vm.UpdateLayout(Bounds.Width);
+        }
+        else if (change.Property == ActualTransparencyLevelProperty && _usesMica)
+        {
+            UpdateMicaBackground();
+        }
+        else if (change.Property == ActualTransparencyLevelProperty && _macShell is not null)
+        {
+            // Without blur (Reduce Transparency, or not supported) the sidebar gets a solid background instead.
+            if (ActualTransparencyLevel == WindowTransparencyLevel.None)
+            {
+                this[!BackgroundProperty] = this.GetResourceObservable("PaneBackground").ToBinding();
+            }
+            else
+            {
+                Background = Brushes.Transparent;
+            }
+        }
+    }
+
+    private void OnViewModelChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (ViewModel is not { } vm)
+        {
+            return;
+        }
+        if (e.PropertyName is nameof(MainViewModel.Layout) or nameof(MainViewModel.Section) or nameof(MainViewModel.SidebarHidden))
+        {
+            ApplyLayout(vm);
+            SyncNavSelection(vm);
+        }
+        else if (e.PropertyName is nameof(MainViewModel.HasUnsavedChanges) or nameof(MainViewModel.DocumentPath))
+        {
+            UpdateMacDocumentState();
+        }
+        else if (e.PropertyName is nameof(MainViewModel.IsBusy) or nameof(MainViewModel.Progress) or nameof(MainViewModel.IsProgressIndeterminate))
+        {
+            UpdateDockBadge(vm);
+        }
+    }
+
+    /// <summary>Wide: three columns. Medium: options + pages or editor. Narrow: one pane at a time.</summary>
+    private void ApplyLayout(MainViewModel vm)
+    {
+        var columns = Workspace.ColumnDefinitions;
+        var options = vm.ShowScanPane ? (vm.Layout == LayoutMode.Narrow ? GridLength.Star : new GridLength(340)) : new GridLength(0);
+        GridLength pages;
+        if (!vm.ShowPagesPane)
+        {
+            pages = new GridLength(0);
+        }
+        else
+        {
+            pages = vm.PagesPaneIsColumn ? new GridLength(260) : GridLength.Star;
+        }
+        var editor = vm.ShowEditorPane ? GridLength.Star : new GridLength(0);
+        columns[0].Width = options;
+        columns[1].Width = pages;
+        columns[2].Width = editor;
+        // A narrow window shows the scan options as the only pane, on the content background.
+        _sidebarWidth = vm.ShowScanPane && vm.Layout != LayoutMode.Narrow ? 340 : 0;
+        _macShell?.SetSidebarWidth(_sidebarWidth);
+        _gnomeShell?.SetSidebarWidth(_sidebarWidth);
+        UpdateSidebarGlass();
+    }
+
+    private double _sidebarWidth;
+    private IntPtr _sidebarGlass;
+
+    /// <summary>The native Liquid Glass panel, for the self-check; zero when there isn't one.</summary>
+    internal IntPtr SidebarGlassView => _sidebarGlass;
+
+    /// <summary>
+    /// macOS 26: the Liquid Glass panel behind the sidebar follows its width, and hides with it. Created once the
+    /// window has a native view; does nothing before macOS 26, where the AcrylicBlur vibrancy remains.
+    /// </summary>
+    private void UpdateSidebarGlass()
+    {
+        if (!OperatingSystem.IsMacOS() || _macShell is null || !SidebarGlass.Enabled
+            || TryGetPlatformHandle() is not { HandleDescriptor: "NSView", Handle: var view } || view == IntPtr.Zero)
+        {
+            return;
+        }
+        PlaceSidebarGlass(view, SidebarGlass.Frame(_sidebarWidth, ClientSize.Height));
+    }
+
+    [SupportedOSPlatform("macos")]
+    private void PlaceSidebarGlass(IntPtr view, (double X, double Y, double Width, double Height)? frame) => CallMac(() =>
+    {
+        if (_sidebarGlass == IntPtr.Zero)
+        {
+            _sidebarGlass = MacIntegration.AddGlassPanel(view, SidebarGlass.CornerRadius);
+            if (_sidebarGlass == IntPtr.Zero)
+            {
+                return;
+            }
+            _macShell?.Classes.Add("glass");
+        }
+        MacIntegration.SetGlassPanelFrame(_sidebarGlass, frame);
+    });
+
+    [SupportedOSPlatform("macos")]
+    private void RemoveSidebarGlass()
+    {
+        if (_sidebarGlass != IntPtr.Zero)
+        {
+            var glass = _sidebarGlass;
+            _sidebarGlass = IntPtr.Zero;
+            CallMac(() => MacIntegration.RemoveGlassPanel(glass));
+        }
+    }
+
+    private void SyncNavSelection(MainViewModel vm)
+    {
+        Nav.SelectedItem = vm.Section switch
+        {
+            Section.Pages => NavPages,
+            Section.Editor => NavEditor,
+            Section.Settings => NavSettings,
+            Section.Help => NavHelp,
+            _ => NavScan,
+        };
+    }
+
+    private void OnNavItemInvoked(object? sender, FANavigationViewItemInvokedEventArgs e)
+    {
+        if (ViewModel is not { } vm || e.InvokedItemContainer is not FANavigationViewItem item)
+        {
+            return;
+        }
+        switch (item.Tag as string)
+        {
+            case "Folder":
+                vm.OpenSaveFolderCommand.Execute(null);
+                SyncNavSelection(vm);
+                break;
+            case { } tag when Enum.TryParse<Section>(tag, out var section):
+                vm.Section = section;
+                break;
+        }
+    }
+
+    private void OnDragOver(object? sender, DragEventArgs e)
+    {
+        // A page dragged out of the grid or editor also carries its exported file; don't import it as a copy.
+        e.DragEffects = e.DataTransfer.Contains(PageDrag.PageFormat) ? DragDropEffects.None
+            : e.DataTransfer.Contains(DataFormat.File) ? DragDropEffects.Copy
+            : e.DragEffects;
+    }
+
+    private async void OnDrop(object? sender, DragEventArgs e)
+    {
+        if (e.Handled || ViewModel is not { } vm || e.DataTransfer.Contains(PageDrag.PageFormat) || e.DataTransfer.TryGetFiles() is not { } items)
+        {
+            return;
+        }
+        var files = items.Select(i => i.TryGetLocalPath()).OfType<string>().ToList();
+        e.Handled = true;
+        await vm.ImportFilesAsync(files);
+    }
+}

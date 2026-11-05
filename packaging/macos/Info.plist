@@ -1,22 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<!-- Template for Scanwise.app; scripts/publish.sh replaces @VERSION@. -->
+<!-- Template for Deckle.app; scripts/publish.sh replaces @VERSION@. -->
 <plist version="1.0">
 <dict>
   <key>CFBundleDevelopmentRegion</key>
   <string>en</string>
   <key>CFBundleExecutable</key>
-  <string>Scanwise</string>
+  <string>Deckle</string>
   <key>CFBundleIconFile</key>
-  <string>Scanwise</string>
+  <string>Deckle</string>
   <key>CFBundleIdentifier</key>
-  <string>com.cjservin.scanwise</string>
+  <string>com.cjservin.deckle</string>
   <key>CFBundleInfoDictionaryVersion</key>
   <string>6.0</string>
   <key>CFBundleName</key>
-  <string>Scanwise</string>
+  <string>Deckle</string>
   <key>CFBundleDisplayName</key>
-  <string>Scanwise</string>
+  <string>Deckle</string>
   <key>CFBundlePackageType</key>
   <string>APPL</string>
   <key>CFBundleShortVersionString</key>
@@ -36,7 +36,7 @@
   <string>Mozilla Public License 2.0</string>
   <!-- Driverless network scanners (eSCL/AirScan) are found over Bonjour; macOS 15+ asks for local network access. -->
   <key>NSLocalNetworkUsageDescription</key>
-  <string>Scanwise looks for scanners on your network.</string>
+  <string>Deckle looks for scanners on your network.</string>
   <key>NSBonjourServices</key>
   <array>
     <string>_uscan._tcp</string>

@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# Builds self-contained Scanwise folders (no .NET install needed) for each platform.
+# Builds self-contained Deckle folders (no .NET install needed) for each platform.
 # Usage: scripts/publish.sh [rid ...]   default: linux-x64 linux-arm64 win-x64 osx-x64 osx-arm64
-# Output: publish/<rid>/  plus publish/scanwise-<version>-<rid>.{tar.gz,zip}
-#         macOS: publish/osx-*/Scanwise.app, zipped (unsigned; see README)
+# Output: publish/<rid>/  plus publish/deckle-<version>-<rid>.{tar.gz,zip}
+#         macOS: publish/osx-*/Deckle.app, zipped (unsigned; see README)
 set -euo pipefail
 # Prefer a per-user .NET 10 SDK (dotnet-install.sh) over an older system one.
 if [ -x "$HOME/.dotnet/dotnet" ]; then export DOTNET_ROOT="$HOME/.dotnet" PATH="$HOME/.dotnet:$PATH"; fi
@@ -35,7 +35,7 @@ for rid in "${rids[@]}"; do
   out="publish/$rid"
   rm -rf "$out"
   echo "==> $rid"
-  dotnet publish src/Scanwise.App/Scanwise.App.csproj -c Release -r "$rid" --self-contained true \
+  dotnet publish src/Deckle.App/Deckle.App.csproj -c Release -r "$rid" --self-contained true \
     -p:PublishSingleFile=false -p:DebugType=none -o "$out" --nologo -v q
   # Bundled native helpers for other platforms are not needed in a per-platform build.
   for dir in "$out"/_*; do
@@ -46,23 +46,26 @@ for rid in "${rids[@]}"; do
   done
   mkdir -p "$out/tessdata"
   cp .cache/tessdata/*.traineddata "$out/tessdata/"
+  # Deckle's license and the notices its bundled components require travel with every build.
+  cp -r licenses "$out/licenses"
+  cp LICENSE "$out/licenses/LICENSE"
   case "$rid" in
-    win-*) (cd publish && rm -f "scanwise-$version-$rid.zip" && zip -qr "scanwise-$version-$rid.zip" "$rid") ;;
+    win-*) (cd publish && rm -f "deckle-$version-$rid.zip" && zip -qr "deckle-$version-$rid.zip" "$rid") ;;
     osx-*)
       # A real app bundle (Dock name and icon, bundle ID for permissions such as local network access).
       # Everything the publish produced lives in Contents/MacOS, so the app finds tessdata and natives as before.
-      chmod +x "$out/Scanwise"; find "$out" -path '*/_*/tesseract' -exec chmod +x {} +
-      app="$out/Scanwise.app"
+      chmod +x "$out/Deckle"; find "$out" -path '*/_*/tesseract' -exec chmod +x {} +
+      app="$out/Deckle.app"
       rm -rf "$out.contents"
       mv "$out" "$out.contents"
       mkdir -p "$app/Contents/Resources"
       mv "$out.contents" "$app/Contents/MacOS"
       sed "s/@VERSION@/$version/g" packaging/macos/Info.plist > "$app/Contents/Info.plist"
       printf 'APPL????' > "$app/Contents/PkgInfo"
-      cp packaging/macos/Scanwise.icns "$app/Contents/Resources/Scanwise.icns"
-      (cd "$out" && rm -f "../scanwise-$version-$rid.zip" && zip -qry "../scanwise-$version-$rid.zip" Scanwise.app) ;;
-    *) chmod +x "$out/Scanwise"; find "$out" -path '*/_*/tesseract' -exec chmod +x {} +
-       tar -C publish -czf "publish/scanwise-$version-$rid.tar.gz" "$rid" ;;
+      cp packaging/macos/Deckle.icns "$app/Contents/Resources/Deckle.icns"
+      (cd "$out" && rm -f "../deckle-$version-$rid.zip" && zip -qry "../deckle-$version-$rid.zip" Deckle.app) ;;
+    *) chmod +x "$out/Deckle"; find "$out" -path '*/_*/tesseract' -exec chmod +x {} +
+       tar -C publish -czf "publish/deckle-$version-$rid.tar.gz" "$rid" ;;
   esac
 done
 ls -lh publish/*.tar.gz publish/*.zip 2>/dev/null || true

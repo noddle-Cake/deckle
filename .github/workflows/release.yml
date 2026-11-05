@@ -1,0 +1,79 @@
+name: Release
+
+# Push a tag such as v0.1.0 (matching <Version> in Directory.Build.props) to publish a release.
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - name: Check the tag matches the version
+        run: |
+          version="$(sed -n 's:.*<Version>\(.*\)</Version>.*:\1:p' Directory.Build.props)"
+          test "v$version" = "$GITHUB_REF_NAME"
+      - run: scripts/publish.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: builds
+          path: |
+            publish/*.zip
+            publish/*.tar.gz
+          retention-days: 3
+
+  sign-macos:
+    # Apple Silicon refuses to run unsigned code. An ad-hoc signature lets it start; it is not Apple notarization.
+    needs: build
+    runs-on: macos-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: builds
+          path: builds
+      - name: Ad-hoc sign the app bundles
+        run: |
+          for archive in builds/deckle-*-osx-*.zip; do
+            rm -rf work && mkdir work
+            ditto -x -k "$archive" work
+            find work/Deckle.app/Contents/MacOS -type f ! -name Deckle -print0 | while IFS= read -r -d '' file; do
+              if file -b "$file" | grep -q Mach-O; then codesign --force --sign - "$file"; fi
+            done
+            codesign --force --sign - --identifier com.cjservin.deckle work/Deckle.app/Contents/MacOS/Deckle
+            codesign --verify --strict work/Deckle.app/Contents/MacOS/Deckle
+            rm "$archive"
+            ditto -c -k --keepParent work/Deckle.app "$archive"
+          done
+      - uses: actions/upload-artifact@v4
+        with:
+          name: builds-signed
+          path: builds
+          retention-days: 3
+
+  publish:
+    needs: sign-macos
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: builds-signed
+          path: builds
+      - name: Name files without the version, so releases/latest/download links never change
+        working-directory: builds
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          for file in deckle-"$version"-*; do mv "$file" "deckle-${file#deckle-"$version"-}"; done
+          sha256sum deckle-* > SHA256SUMS.txt
+      - name: Create the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" builds/* --repo "$GITHUB_REPOSITORY" --title "Deckle ${GITHUB_REF_NAME#v}" --generate-notes

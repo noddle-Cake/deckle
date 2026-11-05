@@ -1,14 +1,14 @@
 <Project>
   <PropertyGroup>
     <!-- net10.0: FluentAvalonia 3 (for Avalonia 12) targets only .NET 10. -->
-    <ScanwiseTargetFramework>net10.0</ScanwiseTargetFramework>
-    <TargetFramework>$(ScanwiseTargetFramework)</TargetFramework>
+    <DeckleTargetFramework>net10.0</DeckleTargetFramework>
+    <TargetFramework>$(DeckleTargetFramework)</TargetFramework>
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <Version>0.1.0</Version>
     <Authors>Chris Servin</Authors>
-    <Product>Scanwise</Product>
+    <Product>Deckle</Product>
     <Copyright>Copyright © 2026 Chris Servin</Copyright>
     <PackageLicenseExpression>MPL-2.0</PackageLicenseExpression>
   </PropertyGroup>

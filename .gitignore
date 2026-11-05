@@ -11,3 +11,4 @@ TestResults/
 *.swp
 sixlabors.lic
 .cache/
+.claude/

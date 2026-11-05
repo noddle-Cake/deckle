@@ -1,0 +1,27 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:v="using:Deckle.App.Views">
+
+  <!-- macOS look only (added in App.axaml.cs after ToolbarLookStyles.axaml). -->
+
+  <Styles.Resources>
+    <ResourceDictionary>
+      <ResourceDictionary.ThemeDictionaries>
+        <!-- The sidebar shows the window's vibrancy (Materials HIG); toolbars carry no painted background. -->
+        <ResourceDictionary x:Key="Light">
+          <SolidColorBrush x:Key="SidebarBackground" Color="Transparent" />
+          <SolidColorBrush x:Key="BarBackground" Color="Transparent" />
+        </ResourceDictionary>
+        <ResourceDictionary x:Key="Dark">
+          <SolidColorBrush x:Key="SidebarBackground" Color="Transparent" />
+          <SolidColorBrush x:Key="BarBackground" Color="Transparent" />
+        </ResourceDictionary>
+      </ResourceDictionary.ThemeDictionaries>
+    </ResourceDictionary>
+  </Styles.Resources>
+
+  <!-- macOS 26: the sidebar floats on a Liquid Glass panel, so it needs no divider line. -->
+  <Style Selector="v|MacShell.glass Border.sidebar">
+    <Setter Property="BorderThickness" Value="0" />
+  </Style>
+</Styles>

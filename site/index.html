@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Deckle: free, open-source document scanner</title>
+  <meta name="description" content="Deckle is a free, open-source document scanner for Windows, macOS and Linux. Press Scan and your file is saved.">
+  <meta property="og:title" content="Deckle: free, open-source document scanner">
+  <meta property="og:description" content="Press Scan and your file is saved. For Windows, macOS and Linux.">
+  <meta property="og:image" content="https://deckle.cjservin.com/assets/screens/windows.png">
+  <meta name="theme-color" content="#0A4A42">
+  <link rel="icon" href="assets/icon.png">
+  <link rel="preload" href="assets/fonts/fraunces.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to main content</a>
+
+  <header class="site-header" id="site-header">
+    <div class="wrap header-row">
+      <a class="brand" href="#top"><img src="assets/icon.png" alt="" width="36" height="36"><span>Deckle</span></a>
+      <nav aria-label="Main navigation" class="main-nav">
+        <a href="#features">Features</a>
+        <a href="#how">How it works</a>
+        <a href="#open-source">Open source</a>
+      </nav>
+      <a class="pill pill-reed" href="#download">Download</a>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="hero" id="top">
+      <div class="hero-stage" aria-hidden="true">
+        <div class="hero-window">
+          <img src="assets/screens/windows.png" alt="" width="1400" height="880">
+          <span class="scan-line"></span>
+        </div>
+      </div>
+      <div class="wrap hero-copy">
+        <h1>Paper in. Finished files out.</h1>
+        <p>A free, open-source document scanner for Windows, macOS and Linux. Press Scan and the file is saved.</p>
+        <div class="actions">
+          <a class="pill pill-amber" id="hero-download" href="#download">Download Deckle</a>
+          <a class="text-link" href="https://github.com/noddle-Cake/deckle">View the source →</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="band band-white tour-band" aria-labelledby="tour-heading">
+      <div class="wrap">
+        <header class="section-head">
+          <p class="eyebrow">Made to fit in</p>
+          <h2 id="tour-heading">At home on your computer.</h2>
+          <p>Deckle follows the design of the system it runs on. Prefer another look? Switch in Settings, on any system.</p>
+        </header>
+        <div class="tour">
+          <div class="tabs" role="tablist" aria-label="Choose a look">
+            <button role="tab" id="tab-windows" aria-controls="tour-panel" aria-selected="true" data-shot="windows" data-alt="Deckle with the Windows look: navigation rail, scan options, page list and an invoice in the editor.">Windows</button>
+            <button role="tab" id="tab-macos" aria-controls="tour-panel" aria-selected="false" tabindex="-1" data-shot="macos" data-alt="Deckle with the macOS look: window controls, a toolbar with the Scan button, and a sidebar of scan options.">macOS</button>
+            <button role="tab" id="tab-gnome" aria-controls="tour-panel" aria-selected="false" tabindex="-1" data-shot="gnome" data-alt="Deckle with the GNOME look: a header bar with the Scan button and a primary menu.">GNOME</button>
+            <button role="tab" id="tab-dark" aria-controls="tour-panel" aria-selected="false" tabindex="-1" data-shot="dark" data-alt="Deckle in dark mode with an invoice open in the editor.">Dark</button>
+          </div>
+          <div class="tour-window" id="tour-panel" role="tabpanel" aria-labelledby="tab-windows">
+            <img id="tour-shot" src="assets/screens/windows.png" width="1400" height="880" loading="lazy" alt="Deckle with the Windows look: navigation rail, scan options, page list and an invoice in the editor.">
+          </div>
+          <p class="hint">Try it: pick a look. Shown with sample documents.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="band band-paper" id="features" aria-labelledby="scan-heading">
+      <div class="wrap">
+        <header class="section-head">
+          <p class="eyebrow">Scanning</p>
+          <h2 id="scan-heading">Works with the scanner you have.</h2>
+          <p>USB or network, flatbed or feeder. Set it up once, and the options you used last are ready next time.</p>
+        </header>
+        <ul class="cards">
+          <li class="card">
+            <h3>Finds your scanner</h3>
+            <p>WIA and TWAIN on Windows, SANE on Linux and macOS, and driverless network scanners everywhere.</p>
+          </li>
+          <li class="card">
+            <h3>Fixes pages for you</h3>
+            <p>Turns sideways and upside-down pages upright, straightens crooked ones and skips the blanks.</p>
+          </li>
+          <li class="card">
+            <h3>Handles big jobs</h3>
+            <p>Batch scans, saved profiles and scan merge, which puts two-sided documents in order without a duplex feeder.</p>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="band band-white" aria-labelledby="save-heading">
+      <div class="wrap">
+        <header class="section-head">
+          <p class="eyebrow">Saving</p>
+          <h2 id="save-heading">Files that arrive finished.</h2>
+          <p>No export step to remember. Deckle saves as you scan, in the folder you chose, under a name that makes sense.</p>
+        </header>
+        <ul class="cards">
+          <li class="card">
+            <h3>Searchable PDFs</h3>
+            <p>Text recognition in more than 100 languages, plus PDF/A, metadata and password protection.</p>
+          </li>
+          <li class="card">
+            <h3>Names that mean something</h3>
+            <p>Build file names from the date, a running number, the scanner and your own text.</p>
+          </li>
+          <li class="card">
+            <h3>The format you need</h3>
+            <p>PDF, JPG, PNG, TIF or BMP. Or copy a page to the clipboard and share it without saving at all.</p>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="band band-paper" id="how" aria-labelledby="how-heading">
+      <div class="wrap">
+        <header class="section-head">
+          <p class="eyebrow">How it works</p>
+          <h2 id="how-heading">From paper to PDF in 4 steps.</h2>
+        </header>
+        <ol class="steps">
+          <li><span class="step-no"><span class="sr">Step </span>1</span><h3>Choose</h3><p>Pick your scanner, color and resolution.</p></li>
+          <li><span class="step-no"><span class="sr">Step </span>2</span><h3>Scan</h3><p>Press Scan. Pages appear as they come in.</p></li>
+          <li><span class="step-no"><span class="sr">Step </span>3</span><h3>Tidy</h3><p>Crop, reorder, adjust or draw, if you need to.</p></li>
+          <li><span class="step-no"><span class="sr">Step </span>4</span><h3>Done</h3><p>The file is already saved in your folder.</p></li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="band band-white" id="open-source" aria-labelledby="oss-heading">
+      <div class="wrap">
+        <header class="section-head">
+          <p class="eyebrow">Open source</p>
+          <h2 id="oss-heading">Free to use. Open to everyone.</h2>
+          <p>Deckle costs nothing and has no account, ads or subscription. Your scans stay on your computer: it only goes online to find network scanners and to fetch the language packs you ask for.</p>
+        </header>
+        <div class="oss">
+          <div class="oss-license">
+            <h3>Mozilla Public License 2.0</h3>
+            <p>Use Deckle for anything, including at work. Read the code, change it and share it. If you share changes to Deckle's own files, those files stay open too.</p>
+            <div class="actions">
+              <a class="pill pill-reed" href="https://github.com/noddle-Cake/deckle">Code on GitHub</a>
+              <a class="text-link dark" href="https://github.com/noddle-Cake/deckle/blob/main/LICENSE">Read the license →</a>
+            </div>
+            <p class="support">Deckle is free and always will be. If it saves you time, you can <a href="https://ko-fi.com/cjservin">support it on Ko-fi</a>.</p>
+          </div>
+          <div class="oss-credits">
+            <h3>Built on great open-source work</h3>
+            <ul>
+              <li><a href="https://github.com/cyanfish/naps2">NAPS2</a> <span>The scanning engine, through NAPS2.Sdk</span></li>
+              <li><a href="https://github.com/simon-knuth/scanner">Scanner</a> <span>By Simon Knuth, the inspiration for the simple workflow</span></li>
+              <li><a href="https://github.com/tesseract-ocr/tesseract">Tesseract</a> <span>Text recognition</span></li>
+              <li><a href="https://avaloniaui.net">Avalonia</a> <span>The cross-platform interface</span></li>
+            </ul>
+            <a class="text-link dark" href="https://github.com/noddle-Cake/deckle/blob/main/licenses/THIRD-PARTY-NOTICES.md">All third-party notices →</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="band band-reed" id="download" aria-labelledby="download-heading">
+      <div class="wrap">
+        <header class="section-head">
+          <h2 id="download-heading">Get Deckle.</h2>
+          <p>Always the latest build. Nothing else to install: everything it needs is in the download.</p>
+        </header>
+        <div class="downloads">
+          <div class="dl" data-os="windows">
+            <h3>Windows</h3>
+            <p>Windows 10 and 11. Unzip and run Deckle.exe.</p>
+            <a class="pill pill-amber" href="https://github.com/noddle-Cake/deckle/releases/latest/download/deckle-win-x64.zip">Download for Windows</a>
+          </div>
+          <div class="dl" data-os="macos">
+            <h3>macOS</h3>
+            <p>Move Deckle to Applications. It isn't notarized by Apple yet, so allow it in System Settings ▸ Privacy &amp; Security the first time.</p>
+            <a class="pill pill-amber" href="https://github.com/noddle-Cake/deckle/releases/latest/download/deckle-osx-arm64.zip">Apple Silicon</a>
+            <a class="pill pill-ghost" href="https://github.com/noddle-Cake/deckle/releases/latest/download/deckle-osx-x64.zip">Intel</a>
+          </div>
+          <div class="dl" data-os="linux">
+            <h3>Linux</h3>
+            <p>Unpack and run Deckle. Install SANE and your scanner's backend for USB scanners.</p>
+            <a class="pill pill-amber" href="https://github.com/noddle-Cake/deckle/releases/latest/download/deckle-linux-x64.tar.gz">x64</a>
+            <a class="pill pill-ghost" href="https://github.com/noddle-Cake/deckle/releases/latest/download/deckle-linux-arm64.tar.gz">ARM64</a>
+          </div>
+        </div>
+        <p class="dl-more"><a href="https://github.com/noddle-Cake/deckle/releases">All releases and checksums →</a> <a href="https://ko-fi.com/cjservin">Support Deckle on Ko-fi →</a></p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap footer-grid">
+      <div>
+        <a class="brand" href="#top"><img src="assets/icon.png" alt="" width="32" height="32"><span>Deckle</span></a>
+        <p>A simple document scanner, free and open for everyone.</p>
+      </div>
+      <nav aria-label="Explore">
+        <h2>Explore</h2>
+        <a href="#features">Features</a>
+        <a href="#how">How it works</a>
+        <a href="#download">Download</a>
+      </nav>
+      <nav aria-label="Project">
+        <h2>Project</h2>
+        <a href="https://github.com/noddle-Cake/deckle">GitHub</a>
+        <a href="https://github.com/noddle-Cake/deckle/issues">Report a problem</a>
+        <a href="https://ko-fi.com/cjservin">Support on Ko-fi</a>
+        <a href="https://github.com/noddle-Cake/deckle/blob/main/LICENSE">License</a>
+      </nav>
+    </div>
+    <div class="wrap footer-base"><p>© 2026 Chris Servin. Mozilla Public License 2.0.</p></div>
+  </footer>
+  <script src="main.js"></script>
+</body>
+</html>

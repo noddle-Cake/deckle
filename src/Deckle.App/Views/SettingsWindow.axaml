@@ -1,0 +1,14 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:Deckle.App.ViewModels"
+        xmlns:v="using:Deckle.App.Views"
+        x:Class="Deckle.App.Views.SettingsWindow"
+        x:DataType="vm:SettingsViewModel"
+        Title="Settings"
+        Width="660" Height="560"
+        CanResize="False"
+        WindowStartupLocation="CenterScreen"
+        ShowInTaskbar="False">
+  <!-- macOS only: Settings get their own fixed-size window (Deckle ▸ Settings…, ⌘,) with tabs. -->
+  <v:MacSettingsView />
+</Window>

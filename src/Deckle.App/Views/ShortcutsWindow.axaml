@@ -1,0 +1,11 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:v="using:Deckle.App.Views"
+        x:Class="Deckle.App.Views.ShortcutsWindow"
+        Title="Keyboard Shortcuts"
+        Width="560" SizeToContent="Height" CanResize="False"
+        WindowStartupLocation="CenterOwner" ShowInTaskbar="False"
+        Background="{DynamicResource ContentBackground}">
+  <!-- GNOME look: primary menu ▸ Keyboard Shortcuts, Ctrl+? (GNOME HIG, Menus). -->
+  <v:ShortcutsView Margin="24,20" />
+</Window>

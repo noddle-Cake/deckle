@@ -1,13 +1,17 @@
-# Scanwise
+# Deckle
 
-A simple, cross-platform document scanner for Windows, macOS and Linux.
+A simple, free and open-source document scanner for Windows, macOS and Linux.
 
-Scanwise combines two projects:
+**[Website](https://deckle.cjservin.com)** · **[Download the latest build](https://github.com/noddle-Cake/deckle/releases/latest)** · **[Support on Ko-fi](https://ko-fi.com/cjservin)**
+
+![Deckle showing a scanned invoice](site/assets/screens/windows.png)
+
+Deckle combines two projects:
 
 - **[Scanner](https://github.com/simon-knuth/scanner)** by Simon Knuth: the clean Fluent interface and the
   simple workflow (pick options, press Scan, the file is saved), plus automatic rotation, file naming patterns,
   scan merge, and crop and draw editing.
-- **[NAPS2](https://github.com/cyanfish/naps2)**: the scanning engine and power features. Scanwise uses the
+- **[NAPS2](https://github.com/cyanfish/naps2)**: the scanning engine and power features. Deckle uses the
   official `NAPS2.Sdk` packages for WIA, TWAIN, SANE and driverless network (eSCL/AirScan) scanners, PDF/OCR,
   profiles, batch scanning, deskew, blank-page removal and page reordering.
 
@@ -24,9 +28,9 @@ Scanwise combines two projects:
 - **Scan merge**: insert a second pass between existing pages (two-sided documents without duplex)
 - **Batch scan**: several scans in a row, waiting or asking in between, saved to one file or one file per scan
 - Optional reverse page order, for feeders that deliver the last page first
-- **Scan from outside the app**: right-click Scanwise in the taskbar (Windows), dock or app list (Linux) or Dock
-  (macOS) and choose Scan, or set a Ctrl+Alt+key shortcut in Settings (Windows and GNOME: works even when Scanwise
-  is closed; macOS: Control+Option+key while it runs). Everything runs `Scanwise --scan`, which hands the scan to
+- **Scan from outside the app**: right-click Deckle in the taskbar (Windows), dock or app list (Linux) or Dock
+  (macOS) and choose Scan, or set a Ctrl+Alt+key shortcut in Settings (Windows and GNOME: works even when Deckle
+  is closed; macOS: Control+Option+key while it runs). Everything runs `Deckle --scan`, which hands the scan to
   the open window if there is one
 
 **Saving**
@@ -58,17 +62,21 @@ Scanwise combines two projects:
 
 ## Install
 
-Download the archive for your platform and run `Scanwise` (`Scanwise.exe` on Windows). It is self-contained, so
-no .NET install is needed.
+Download the build for your platform and run `Deckle` (`Deckle.exe` on Windows). It is self-contained, so no .NET
+install is needed.
+
+| Windows | macOS | Linux |
+|---|---|---|
+| [x64](https://github.com/noddle-Cake/deckle/releases/latest/download/deckle-win-x64.zip) | [Apple Silicon](https://github.com/noddle-Cake/deckle/releases/latest/download/deckle-osx-arm64.zip) · [Intel](https://github.com/noddle-Cake/deckle/releases/latest/download/deckle-osx-x64.zip) | [x64](https://github.com/noddle-Cake/deckle/releases/latest/download/deckle-linux-x64.tar.gz) · [ARM64](https://github.com/noddle-Cake/deckle/releases/latest/download/deckle-linux-arm64.tar.gz) |
 
 | Platform | Notes |
 |---|---|
 | Windows 10/11 | WIA works out of the box; install the scanner maker's driver for TWAIN. |
 | Linux | Install SANE (`sudo dnf install sane-backends` / `sudo apt install sane-utils`) plus your scanner's backend (`hplip`, `sane-airscan`, `brscan`, …). Check that `scanimage -L` lists it. |
-| macOS | Unzip and move `Scanwise.app` to Applications. Network scanners work without drivers (allow local network access when asked); USB scanners use the bundled SANE. The download is not signed: right-click → Open the first time. Shortcuts use ⌘ and every command is in the menu bar. |
+| macOS | Unzip and move `Deckle.app` to Applications. Network scanners work without drivers (allow local network access when asked); USB scanners use the bundled SANE. The download is not notarized by Apple: the first time, allow it in System Settings ▸ Privacy & Security. Shortcuts use ⌘ and every command is in the menu bar. |
 
 Text recognition (auto-rotate, searchable PDFs) uses a system Tesseract if one is installed, otherwise the copy
-bundled with Scanwise. English and the orientation data are included; other languages download from Settings.
+bundled with Deckle. English and the orientation data are included; other languages download from Settings.
 
 ## Build
 
@@ -77,18 +85,19 @@ Requires the .NET 10 SDK.
 ```bash
 dotnet build
 scripts/test.sh                       # unit + headless UI tests; enables SANE's virtual test scanner
-SCANWISE_TEST_OSD_DIR=/path/with/osd.traineddata scripts/test.sh   # also covers orientation detection
-SCANWISE_SCREENSHOTS=/tmp/shots scripts/test.sh                    # keep UI screenshots
-SCANWISE_ROTATE_EVAL=1 scripts/test.sh      # also measure auto-rotate accuracy on 28 realistic pages (slow)
-SCANWISE_TEST_GSETTINGS=1 scripts/test.sh   # also the GNOME shortcut (uses a temporary keyfile backend, not dconf)
-dotnet run --project src/Scanwise.App
+DECKLE_TEST_OSD_DIR=/path/with/osd.traineddata scripts/test.sh   # also covers orientation detection
+DECKLE_SCREENSHOTS=/tmp/shots scripts/test.sh                    # keep UI screenshots
+DECKLE_ROTATE_EVAL=1 scripts/test.sh      # also measure auto-rotate accuracy on 28 realistic pages (slow)
+DECKLE_TEST_GSETTINGS=1 scripts/test.sh   # also the GNOME shortcut (uses a temporary keyfile backend, not dconf)
+dotnet run --project src/Deckle.App
+git tag v0.1.0 && git push origin v0.1.0   # GitHub Actions builds, signs and publishes the release
 scripts/publish.sh                    # self-contained builds for linux-x64/arm64, win-x64, osx-x64/arm64
 scripts/make-icon-font.py             # rebuild the Lucide icon font after editing Assets/Fonts/lucide-icons.txt
-dotnet run --project src/Scanwise.App -- --look=gnome   # try another look (windows, macos, gnome) without changing Settings
+dotnet run --project src/Deckle.App -- --look=gnome   # try another look (windows, macos, gnome) without changing Settings
 ```
 
-Layout: `src/Scanwise.Core` (scanning, export, import, page model, no UI), `src/Scanwise.App` (Avalonia +
-FluentAvalonia UI), `tests/`. See `tasks.md` for the design decisions and `docs/SECURITY-NOTES.md` for the
+Layout: `src/Deckle.Core` (scanning, export, import, page model, no UI), `src/Deckle.App` (Avalonia +
+FluentAvalonia UI), `tests/`, `site/` (the website). See `tasks.md` for the design decisions and `docs/SECURITY-NOTES.md` for the
 ImageSharp pin.
 
 ## Known limitations
@@ -99,10 +108,13 @@ ImageSharp pin.
 
 ## License
 
-Mozilla Public License 2.0. Scanwise's code is new; it re-implements the ideas of Scanner (MPL-2.0) and uses
+Mozilla Public License 2.0. Deckle's code is new; it re-implements the ideas of Scanner (MPL-2.0) and uses
 NAPS2.Sdk (LGPL-2.1) as a library. Other components: Tesseract (Apache-2.0), Avalonia and FluentAvalonia (MIT),
-Lucide icons (ISC; `src/Scanwise.App/Assets/Fonts/LICENSE-lucide.txt`), ImageSharp (Six Labors Split License),
-LibTiff.NET (BSD), PDFium (BSD).
+Lucide icons (ISC; `src/Deckle.App/Assets/Fonts/LICENSE-lucide.txt`), ImageSharp (Six Labors Split License),
+LibTiff.NET (BSD), PDFium (BSD). macOS builds also include SANE (GPL-2.0). Every build carries the full list and
+license texts in its `licenses` folder; see [`licenses/THIRD-PARTY-NOTICES.md`](licenses/THIRD-PARTY-NOTICES.md).
+
+Deckle was first called Scanwise; it moves settings and pages from that name on first start.
 
 **Note:** `github.com/naps2-software/naps2-scanner` is an impostor repository, not NAPS2. Get NAPS2 only from
 https://www.naps2.com or https://github.com/cyanfish/naps2.

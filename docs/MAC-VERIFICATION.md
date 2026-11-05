@@ -1,7 +1,7 @@
 # macOS verification (tasks.md 9.5)
 
-Run `scripts/mac-check.sh` first. It runs the tests, builds `Scanwise.app`, runs the app's self-check and
-screenshots the window. Then open the app (`open publish/osx-*/Scanwise.app`) and go through this list. Do it on
+Run `scripts/mac-check.sh` first. It runs the tests, builds `Deckle.app`, runs the app's self-check and
+screenshots the window. Then open the app (`open publish/osx-*/Deckle.app`) and go through this list. Do it on
 **macOS 26** (Liquid Glass) and **macOS 15**. Write anything that fails into the verification log in `tasks.md`.
 
 ## Window and sidebar
@@ -24,7 +24,7 @@ screenshots the window. Then open the app (`open publish/osx-*/Scanwise.app`) an
 - [ ] Text uses the system font (San Francisco), the same as the menu bar.
 
 ## Menus and keyboard
-- [ ] Menus: Scanwise, File, Edit, View, Page, Window, Help, in title case. No item shows a Ctrl shortcut.
+- [ ] Menus: Deckle, File, Edit, View, Page, Window, Help, in title case. No item shows a Ctrl shortcut.
 - [ ] ⌘N scans, ⌘S saves, ⇧⌘S Save As, ⌘O imports, ⌘Z / ⇧⌘Z undo and redo, ⌘⌫ deletes the selected pages,
       ⌘, opens Settings, ⌘1–⌘3 switch panes.
 - [ ] Each shortcut runs its action **once** (the window and the menu bar both know it; only one may act).

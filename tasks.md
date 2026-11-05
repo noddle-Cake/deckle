@@ -1,4 +1,4 @@
-# Scanwise: work plan
+# Deckle: work plan
 
 One cross-platform desktop scanner app. It combines:
 
@@ -78,18 +78,18 @@ as a feature checklist, and it matches upstream NAPS2.
 | Profiles | NAPS2 profiles kept, but shown Scanner-style: the scan pane **is** the active profile. A small profile dropdown at the top with Save as / Rename / Delete. The last-used options are always remembered. | Keeps Scanner's simplicity and NAPS2's power. |
 | Editor | Scanner's editor (crop with aspect presets, rotate, delete, zoom) + NAPS2 adjustments (brightness/contrast/hue/saturation/sharpen/grayscale/B&W, deskew). Draw/highlight is a later phase. | |
 | Not ported | Share/Open-with Store dialog, AppCenter telemetry, surveys, donate dialog, UWP printing | Windows-only or not wanted. Printing → "Open in default app". |
-| Persistence | `settings.json` + `profiles.json` in the OS config dir (`%APPDATA%/Scanwise`, `~/Library/Application Support/Scanwise`, `$XDG_CONFIG_HOME/scanwise`) | |
+| Persistence | `settings.json` + `profiles.json` in the OS config dir (`%APPDATA%/Deckle`, `~/Library/Application Support/Deckle`, `$XDG_CONFIG_HOME/deckle`) | |
 | Session recovery | Pages live in NAPS2's file storage under the app data dir. The page list is restored on next start (NAPS2-style recovery). | |
 | License | MPL-2.0 (same as Scanner). Dependencies: NAPS2.Sdk LGPL-2.1, Avalonia MIT, FluentAvalonia MIT, ImageSharp Six Labors Split (Apache-2.0 for OSS). No source copied from either app; the UI is re-implemented. | |
-| Name | **Scanwise** | Neutral name that avoids both trademarks. |
+| Name | **Deckle** | Neutral name that avoids both trademarks. |
 | Commits | Authored as the repo owner, no Claude attribution | User instruction. |
 
 ## Architecture
 
 ```
-Scanwise.sln
+Deckle.sln
 ├── Directory.Build.props          TargetFramework, nullable, versions
-├── src/Scanwise.Core              no UI; fully unit-tested
+├── src/Deckle.Core              no UI; fully unit-tested
 │   ├── Scanning/                  ScannerService (discovery, caps, scan), ScanSettings, Profiles
 │   ├── Pages/                     PageDocument (ordered pages, selection-free ops, undo)
 │   ├── Processing/                AutoRotateService, Tesseract locator
@@ -97,11 +97,11 @@ Scanwise.sln
 │   ├── Import/                    ImportService (images, pdf)
 │   ├── Settings/                  AppSettings, SettingsStore (JSON), AppPaths
 │   └── Batch/                     BatchScanner
-├── src/Scanwise.App               Avalonia UI
+├── src/Deckle.App               Avalonia UI
 │   ├── Views/                     ShellWindow, ScanOptionsView, PageListView, EditorView, SettingsView, dialogs
 │   ├── ViewModels/
 │   └── Assets/
-└── tests/Scanwise.Core.Tests      xUnit, plus SANE test-backend integration tests
+└── tests/Deckle.Core.Tests      xUnit, plus SANE test-backend integration tests
 ```
 
 ## Tasks
@@ -224,7 +224,7 @@ Status 2026-10-29: implemented and unit-tested on Linux with `AppShortcuts.IsMac
   *Fix:* on macOS only, set `NativeMenu.Menu` on the `Application` and on `MainWindow`, bound to the existing
   commands so each item's enabled state follows `CanExecute`. Disable items that can't run; don't hide them
   ("Always show the same set of menu items"). Proposed menus:
-  - **Scanwise:** About Scanwise · Settings… ⌘, · Services · Hide / Hide Others / Show All · Quit ⌘Q
+  - **Deckle:** About Deckle · Settings… ⌘, · Services · Hide / Hide Others / Show All · Quit ⌘Q
   - **File:** Scan ⌘N · Scan into New Document ⇧⌘N · Scan and Insert Between Pages… · Batch Scan… ·
     Preview · — · Import… ⌘O · — · Save ⌘S · Save As… ⇧⌘S · Save Selected Pages As… · Open in Another
     App · Share ▸ · Show Save Folder in Finder · — · Close Window ⌘W
@@ -235,10 +235,10 @@ Status 2026-10-29: implemented and unit-tested on Linux with `AppShortcuts.IsMac
   - **View:** Scan / Pages / Editor ⌘1–⌘3 · Show/Hide Sidebar ⌃⌘S · Zoom In ⌘+ · Zoom Out ⌘− · Fit ⌘0 ·
     Previous/Next Page · Enter Full Screen ⌃⌘F
   - **Window:** Minimize ⌘M · Zoom · Bring All to Front
-  - **Help:** Scanwise Help (opens the Help view)
+  - **Help:** Deckle Help (opens the Help view)
 - [x] **Settings is a page inside the main window.** Done: `SettingsWindow`, one at a time, closes with the
   main window. It stays resizable until 9.2 splits the long page into tabs. On macOS it belongs in its own window, opened with
-  Scanwise ▸ Settings… or ⌘, (Menu bar and Keyboards pages). Today it also replaces the scan workspace while
+  Deckle ▸ Settings… or ⌘, (Menu bar and Keyboards pages). Today it also replaces the scan workspace while
   it's open.
   *Fix (Mac):* host `SettingsView` in a single non-resizable `Window` titled "Settings" (a second ⌘, brings it
   to the front). Remove Settings from the nav rail on Mac.
@@ -253,19 +253,19 @@ Status 2026-10-29: implemented and unit-tested on Linux with `AppShortcuts.IsMac
   *Fix (Mac):* a small dialog window shown with `ShowDialog(owner)` and laid out Cancel · secondary ·
   default, from leading to trailing. Use the destructive style for "Clear all pages". Keep `ContentDialog`
   on Windows.
-- [x] **Ship a real `.app` bundle.** Done: `publish.sh` builds `Scanwise.app` (bundle ID
-  `com.cjservin.scanwise`, plus `NSLocalNetworkUsageDescription` and the eSCL Bonjour types so macOS 15+
+- [x] **Ship a real `.app` bundle.** Done: `publish.sh` builds `Deckle.app` (bundle ID
+  `com.cjservin.deckle`, plus `NSLocalNetworkUsageDescription` and the eSCL Bonjour types so macOS 15+
   allows network scanner discovery) and zips it with `zip -y`, since `ditto` isn't available on Linux.
   Signing and notarization still wait for a Developer ID. `scripts/publish.sh` makes a bare folder and a tar.gz for `osx-*`. With
-  no `Scanwise.app` and no `Info.plist`, the Dock shows no proper name or icon, Finder treats the binary as a
+  no `Deckle.app` and no `Info.plist`, the Dock shows no proper name or icon, Finder treats the binary as a
   Unix executable, and macOS has no bundle ID for permissions or the share sheet.
-  *Fix:* build `Scanwise.app/Contents/{MacOS,Resources,Info.plist}` with `CFBundleIdentifier`,
+  *Fix:* build `Deckle.app/Contents/{MacOS,Resources,Info.plist}` with `CFBundleIdentifier`,
   `CFBundleName`, `CFBundleIconFile`, `LSApplicationCategoryType=public.app-category.productivity`,
   `NSHighResolutionCapable` and `LSMinimumSystemVersion`. Archive it with `ditto -c -k --keepParent` (not
   tar) and sign/notarize once a Developer ID is available.
 - [~] **No macOS app icon.** Partly done: `packaging/macos/icon.svg` redraws the icon on the 1024 px grid
-  (824 px body, shadow) and `scripts/make-icns.py` builds `Scanwise.icns` (16–1024 at @1x/@2x). Still to do:
-  the layered Icon Composer `.icon` for macOS 26, which needs a Mac. There's only `scanwise.ico`/`.png`. App icons page: use Apple's
+  (824 px body, shadow) and `scripts/make-icns.py` builds `Deckle.icns` (16–1024 at @1x/@2x). Still to do:
+  the layered Icon Composer `.icon` for macOS 26, which needs a Mac. There's only `deckle.ico`/`.png`. App icons page: use Apple's
   rounded-rectangle grid and let the system apply the shape. On macOS 26 the icon is layered (Icon Composer
   `.icon`), so the system can render it in Liquid Glass and in the dark, clear and tinted appearances.
   *Fix:* separate foreground/background layers on the 1024 px template, exported with Icon Composer, plus an
@@ -280,9 +280,9 @@ On a Mac, check: blur behind the sidebar, the window dragging from the toolbar, 
 share menu's position, and that pasted images arrive in Preview/Pages.
 
 - [x] **Unified title bar and window title.** Done: 52 px title bar holding the toolbar; title = file name,
-  "Untitled" or "Scanwise" with no pages; `NSWindow.documentEdited` and `representedFilename` (proxy icon).
+  "Untitled" or "Deckle" with no pages; `NSWindow.documentEdited` and `representedFilename` (proxy icon).
   The page count moved to the toolbar subtitle. The app uses a standard title bar over a Fluent nav rail, and
-  the title is "Scanwise · 3 pages •". Toolbars page: "Don't title windows with your app name" and keep titles
+  the title is "Deckle · 3 pages •". Toolbars page: "Don't title windows with your app name" and keep titles
   short. On macOS unsaved changes appear as the dot in the close button, not in the title.
   *Fix (Mac):* `ExtendClientAreaToDecorationsHint=true` with a ~78 px leading inset for the traffic lights.
   Title = document name ("Untitled" until saved, then the file name). Show the page count in the Pages
@@ -386,7 +386,7 @@ Tested on Linux with `AppShortcuts.IsMac` on (`MacConventionTests`, 24 tests).
   rounded panel behind the sidebar (8 pt from the top, leading and bottom edges; `SidebarGlass.Frame`,
   unit-tested). It follows the sidebar width and hides with it, and the window's AcrylicBlur stays underneath.
   So if the glass doesn't appear, the window looks as in 9.2, and before macOS 26 (no such class) nothing
-  changes. The sidebar's divider line goes away while the panel is shown. `SCANWISE_LIQUID_GLASS=0` turns
+  changes. The sidebar's divider line goes away while the panel is shown. `DECKLE_LIQUID_GLASS=0` turns
   it off for comparison.
   **Check on macOS 26:** the panel shows and sits behind the controls; the traffic lights land on it; it
   tracks window resizes and Hide Sidebar; light and dark; Reduce Transparency. If Avalonia's container turns
@@ -405,11 +405,11 @@ Tested on Linux with `AppShortcuts.IsMac` on (`MacConventionTests`, 24 tests).
 
 Prepared 2026-10-29; **the Mac run itself is still to do.** On a Mac: `scripts/mac-check.sh`, then
 `docs/MAC-VERIFICATION.md`.
-- `Scanwise --self-check[=report.txt] [--keep-open=N]` (`MacSelfCheck`) reads back from AppKit what the
+- `Deckle --self-check[=report.txt] [--keep-open=N]` (`MacSelfCheck`) reads back from AppKit what the
   app installed and writes PASS/FAIL lines. It checks: menu order, ⌘ on every key equivalent, Save/Import/
   Settings/Redo shortcuts, no ⌘E, the Dock menu, the edited dot, the Dock badge, PNG+TIFF on the pasteboard,
   the bundle ID, and the Liquid Glass panel's container, order and width. It exits with the number of failures.
-- `scripts/mac-check.sh` runs the tests, builds `Scanwise.app`, lints `Info.plist`, runs the self-check with
+- `scripts/mac-check.sh` runs the tests, builds `Deckle.app`, lints `Info.plist`, runs the self-check with
   Liquid Glass on and off, and screenshots the native window each time (glass included).
 - The test app now starts with Windows/Linux conventions on every OS, so the suite gives the same results on a
   Mac.
@@ -456,7 +456,7 @@ preferences, keyboard). On GNOME the app looks like a Windows app inside a syste
   bar holds Scan (with its menu) and Import at the start, the document title (and a Pages | Editor switcher when
   narrow) in the centre, Share and the primary menu at the end, and the window buttons from the user's GNOME
   `button-layout` setting (close only by default). Drag, double-click to maximize, resize grips on the edges.
-- [x] **Primary menu.** "Preferences", "Keyboard Shortcuts", "Help", "About Scanwise" grouped at the end; no
+- [x] **Primary menu.** "Preferences", "Keyboard Shortcuts", "Help", "About Deckle" grouped at the end; no
   Quit or Close. Ctrl+, Preferences, Ctrl+? Keyboard Shortcuts, F1 Help.
 - [x] **No nav rail.** The scan options are a sidebar beside the pages (`AdwNavigationSplitView`-like) that
   collapses in narrow windows; Help, Settings and the save folder move to the primary menu.
@@ -495,7 +495,7 @@ Windows, macOS, GNOME. Applied on restart (the window structure differs per look
 ## Verification log
 
 - 2026-10-29: Auto-rotate (user report: about 80% of pages right, landscape pages scanned in portrait).
-  New `AutoRotateAccuracyTests` (opt-in, `SCANWISE_ROTATE_EVAL=1`): 28 pages covering six landscape layouts
+  New `AutoRotateAccuracyTests` (opt-in, `DECKLE_ROTATE_EVAL=1`): 28 pages covering six landscape layouts
   (letter, table, slide, photo with caption, small print, three columns) turned 90° and 270°, clean and rough
   (grey, noise, blur, 1.5–2.5° skew), plus portrait pages at 0°/180°.
   Before: 24/28 (86%). All four misses were small print where OSD picked the wrong direction (90↔270, so
@@ -511,7 +511,7 @@ Windows, macOS, GNOME. Applied on restart (the window structure differs per look
 - 2026-10-29: Phase 9.1 (macOS HIG). App tests 19/19 (8 new in `MacConventionTests`: ⌘ gestures and labels,
   window bindings, Settings window, menu bar contents and order, Edit menu on a text field, dialog button
   order with and without `MacStyles.axaml`); core 47 passed, 4 skipped (OSD/GNOME env not set). `publish.sh
-  osx-arm64` produced `Scanwise.app` (Info.plist, PkgInfo, 10-size `.icns`, executable bit kept in the zip).
+  osx-arm64` produced `Deckle.app` (Info.plist, PkgInfo, 10-size `.icns`, executable bit kept in the zip).
   Not run on a Mac.
 
 - 2026-10-28: Full suite 57/57 with no skips (51 core + 6 UI). `scripts/publish.sh` produces Release
@@ -524,12 +524,12 @@ Windows, macOS, GNOME. Applied on restart (the window structure differs per look
 - 2026-10-28: Headless UI tests (Avalonia.Headless + Skia, real rendering) 6/6: layout breakpoints, SANE scan →
   auto-save PDF, append to the same PDF, crop, adjust, save, feeder → one JPG per page, delete + undo of a
   multi-selection, session restore after restart, and the merge/batch/region dialogs. I reviewed the screenshots
-  (`SCANWISE_SCREENSHOTS=dir scripts/test.sh`).
+  (`DECKLE_SCREENSHOTS=dir scripts/test.sh`).
 - 2026-10-28: Bug found by the UI test and fixed: binding ListBox.SelectedItem collapsed a multi-selection to one
   page, so Delete removed one page instead of the whole selection. The editor's page is now derived from
   selection changes instead.
 
-- 2026-10-28: Core test suite: 50/50 passing (`scripts/test.sh`, with `SCANWISE_TEST_OSD_DIR` set). Covers the
+- 2026-10-28: Core test suite: 50/50 passing (`scripts/test.sh`, with `DECKLE_TEST_OSD_DIR` set). Covers the
   SANE test device (flatbed, feeder, region crop), OSD and text-comparison auto-rotate at 0/90/180/270, OCR PDF,
   encrypted PDF, multi-page TIFF of mixed sizes with CCITT for B&W, JPG/PNG/BMP, TIFF import via LibTiff, session
   round-trip, save flows, batch.

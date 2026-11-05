@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  Scanwise macOS app icon on Apple's 1024 px grid: an 824 px rounded rectangle (radius 185) centred at 100,100 with
-  the standard drop shadow, as the HIG's macOS icon template asks for. Same design as Assets/scanwise.png.
-  Rendered to packaging/macos/Scanwise.icns by scripts/make-icns.py.
+  Deckle macOS app icon on Apple's 1024 px grid: an 824 px rounded rectangle (radius 185) centred at 100,100 with
+  the standard drop shadow, as the HIG's macOS icon template asks for. Same design as Assets/deckle.png.
+  Rendered to packaging/macos/Deckle.icns by scripts/make-icns.py.
 -->
 <svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
   <defs>
     <linearGradient id="body" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#1E7BE0" />
-      <stop offset="1" stop-color="#0058B8" />
+      <stop offset="0" stop-color="#178571" />
+      <stop offset="1" stop-color="#0A4A42" />
     </linearGradient>
     <linearGradient id="paper" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#FFFFFF" />
-      <stop offset="1" stop-color="#EAF1FA" />
+      <stop offset="0" stop-color="#FFFBF0" />
+      <stop offset="1" stop-color="#F1E9D6" />
     </linearGradient>
     <filter id="shadow" x="-10%" y="-10%" width="120%" height="130%">
       <feGaussianBlur in="SourceAlpha" stdDeviation="14" />
@@ -33,14 +33,15 @@
   <rect x="100" y="100" width="824" height="824" rx="185" fill="url(#body)" filter="url(#shadow)" />
 
   <!-- Page -->
-  <rect x="291" y="192" width="442" height="618" rx="34" fill="url(#paper)" />
-  <g stroke="#6FA6DC" stroke-width="30" stroke-linecap="round">
-    <line x1="368" y1="329" x2="656" y2="329" />
+  <path d="M325 192H615L733 310V776a34 34 0 0 1-34 34H325a34 34 0 0 1-34-34V226a34 34 0 0 1 34-34Z" fill="url(#paper)" />
+  <path d="M615 192L733 310H643a28 28 0 0 1-28-28Z" fill="#CFC3A6" />
+  <g stroke="#9DB8A6" stroke-width="30" stroke-linecap="round">
+    <line x1="368" y1="329" x2="560" y2="329" />
     <line x1="368" y1="413" x2="656" y2="413" />
     <line x1="368" y1="504" x2="580" y2="504" />
   </g>
 
   <!-- Scan bar -->
-  <line x1="200" y1="627" x2="824" y2="627" stroke="#5AD2FA" stroke-width="70" stroke-linecap="round" opacity="0.55" filter="url(#glow)" />
-  <line x1="200" y1="627" x2="824" y2="627" stroke="#5AD2FA" stroke-width="52" stroke-linecap="round" />
+  <line x1="200" y1="627" x2="824" y2="627" stroke="#F5B041" stroke-width="70" stroke-linecap="round" opacity="0.55" filter="url(#glow)" />
+  <line x1="200" y1="627" x2="824" y2="627" stroke="#F5B041" stroke-width="52" stroke-linecap="round" />
 </svg>
