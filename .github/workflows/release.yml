@@ -46,11 +46,21 @@ jobs:
             find work/Deckle.app/Contents/MacOS -type f ! -name Deckle -print0 | while IFS= read -r -d '' file; do
               if file -b "$file" | grep -q Mach-O; then codesign --force --sign - "$file"; fi
             done
-            codesign --force --sign - --identifier com.cjservin.deckle work/Deckle.app/Contents/MacOS/Deckle
-            codesign --verify --strict work/Deckle.app/Contents/MacOS/Deckle
+            # Outside the bundle: codesign would otherwise seal Contents/MacOS, where .NET keeps unsigned .dll files.
+            cp work/Deckle.app/Contents/MacOS/Deckle main-executable
+            codesign --force --sign - --identifier com.cjservin.deckle main-executable
+            codesign --verify --strict main-executable
+            mv main-executable work/Deckle.app/Contents/MacOS/Deckle
             rm "$archive"
             ditto -c -k --keepParent work/Deckle.app "$archive"
           done
+      - name: Start the Apple Silicon build
+        continue-on-error: true
+        run: |
+          rm -rf smoke && mkdir smoke
+          ditto -x -k builds/deckle-*-osx-arm64.zip smoke
+          perl -e 'alarm 90; exec @ARGV' smoke/Deckle.app/Contents/MacOS/Deckle --self-check="$PWD/self-check.txt"
+          cat self-check.txt
       - uses: actions/upload-artifact@v4
         with:
           name: builds-signed
