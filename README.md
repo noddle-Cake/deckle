@@ -65,12 +65,12 @@ Deckle combines two projects:
 
 ## Install
 
-Download the build for your platform and run `Deckle` (`Deckle.exe` on Windows). It is self-contained, so no .NET
-install is needed.
+Download the build for your platform: the installer on Windows (per user, no administrator rights), an archive
+to unpack elsewhere. Everything is self-contained, so no .NET install is needed.
 
 | Windows | macOS | Linux |
 |---|---|---|
-| [x64](https://github.com/noddle-Cake/deckle/releases/latest/download/deckle-win-x64.zip) | [Apple Silicon](https://github.com/noddle-Cake/deckle/releases/latest/download/deckle-osx-arm64.zip) · [Intel](https://github.com/noddle-Cake/deckle/releases/latest/download/deckle-osx-x64.zip) | [x64](https://github.com/noddle-Cake/deckle/releases/latest/download/deckle-linux-x64.tar.gz) · [ARM64](https://github.com/noddle-Cake/deckle/releases/latest/download/deckle-linux-arm64.tar.gz) |
+| [Installer](https://github.com/noddle-Cake/deckle/releases/latest/download/deckle-win-x64-setup.exe) · [zip](https://github.com/noddle-Cake/deckle/releases/latest/download/deckle-win-x64.zip) | [Apple Silicon](https://github.com/noddle-Cake/deckle/releases/latest/download/deckle-osx-arm64.zip) · [Intel](https://github.com/noddle-Cake/deckle/releases/latest/download/deckle-osx-x64.zip) | [x64](https://github.com/noddle-Cake/deckle/releases/latest/download/deckle-linux-x64.tar.gz) · [ARM64](https://github.com/noddle-Cake/deckle/releases/latest/download/deckle-linux-arm64.tar.gz) |
 
 | Platform | Notes |
 |---|---|
@@ -93,7 +93,7 @@ DECKLE_SCREENSHOTS=/tmp/shots scripts/test.sh                    # keep UI scree
 DECKLE_ROTATE_EVAL=1 scripts/test.sh      # also measure auto-rotate accuracy on 28 realistic pages (slow)
 DECKLE_TEST_GSETTINGS=1 scripts/test.sh   # also the GNOME shortcut (uses a temporary keyfile backend, not dconf)
 dotnet run --project src/Deckle.App
-git tag v0.1.0 && git push origin v0.1.0   # GitHub Actions builds, signs and publishes the release
+git tag v0.2.0 && git push origin v0.2.0   # GitHub Actions builds, signs and publishes the release
 scripts/publish.sh                    # self-contained builds for linux-x64/arm64, win-x64, osx-x64/arm64
 scripts/make-icon-font.py             # rebuild the Lucide icon font after editing Assets/Fonts/lucide-icons.txt
 dotnet run --project src/Deckle.App -- --look=gnome   # try another look (windows, macos, gnome) without changing Settings

@@ -1,9 +1,13 @@
 name: Release
 
-# Push a tag such as v0.1.0 (matching <Version> in Directory.Build.props) to publish a release.
+# Push a tag such as v0.2.0 (matching <Version> in Directory.Build.props) to publish a release.
+# Rehearsal: push a branch named release-test (or run the workflow by hand). Everything is built, signed and
+# packaged, and kept as workflow artifacts for 3 days, but no release is created.
 on:
   push:
     tags: ['v*']
+    branches: [release-test]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -17,6 +21,7 @@ jobs:
         with:
           dotnet-version: 10.0.x
       - name: Check the tag matches the version
+        if: startsWith(github.ref, 'refs/tags/')
         run: |
           version="$(sed -n 's:.*<Version>\(.*\)</Version>.*:\1:p' Directory.Build.props)"
           test "v$version" = "$GITHUB_REF_NAME"
@@ -67,8 +72,49 @@ jobs:
           path: builds
           retention-days: 3
 
+  installer:
+    # Inno Setup runs on Windows only. Wraps the same win-x64 build that ships as a zip.
+    needs: build
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: builds
+          path: builds
+      - name: Build the Windows installer
+        shell: pwsh
+        run: |
+          $version = (Select-String -Path Directory.Build.props -Pattern '<Version>(.*)</Version>').Matches[0].Groups[1].Value
+          Expand-Archive "builds/deckle-$version-win-x64.zip" -DestinationPath unpacked
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) { choco install innosetup -y --no-progress }
+          & $iscc "/DAppVersion=$version" "/DSourceDir=$PWD\unpacked\win-x64" "/O$PWD\out" packaging\windows\deckle.iss
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Get-ChildItem out
+      - name: Install it silently and check the files landed
+        shell: pwsh
+        run: |
+          $setup = (Get-ChildItem out\*.exe)[0].FullName
+          $target = "$env:RUNNER_TEMP\DeckleInstall"
+          $run = Start-Process $setup -ArgumentList '/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART','/CURRENTUSER',"/DIR=$target" -Wait -PassThru
+          if ($run.ExitCode -ne 0) { throw "Setup exited with $($run.ExitCode)" }
+          foreach ($file in 'Deckle.exe', 'Deckle.dll', 'tessdata\eng.traineddata', 'licenses\LICENSE', 'unins000.exe') {
+            if (-not (Test-Path "$target\$file")) { throw "Missing after install: $file" }
+          }
+          $shortcut = "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Deckle.lnk"
+          if (-not (Test-Path $shortcut)) { throw "No Start menu shortcut" }
+          $remove = Start-Process "$target\unins000.exe" -ArgumentList '/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART' -Wait -PassThru
+          if ($remove.ExitCode -ne 0) { throw "Uninstall exited with $($remove.ExitCode)" }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: installer
+          path: out/*.exe
+          retention-days: 3
+
   publish:
-    needs: sign-macos
+    needs: [sign-macos, installer]
+    if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -76,6 +122,10 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: builds-signed
+          path: builds
+      - uses: actions/download-artifact@v4
+        with:
+          name: installer
           path: builds
       - name: Name files without the version, so releases/latest/download links never change
         working-directory: builds

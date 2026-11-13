@@ -6,7 +6,7 @@
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <Version>0.1.0</Version>
+    <Version>0.2.0</Version>
     <Authors>Chris Servin</Authors>
     <Product>Deckle</Product>
     <Copyright>Copyright © 2026 Chris Servin</Copyright>
