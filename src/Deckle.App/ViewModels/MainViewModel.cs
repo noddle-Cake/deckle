@@ -29,6 +29,8 @@ public sealed partial class MainViewModel : ObservableObject
     private CancellationTokenSource? _operationCts;
     private Timer? _sessionTimer;
     private bool _shuttingDown;
+    private CancellationTokenSource? _paperWatchCts;
+    private bool _batchRunning;
 
     public MainViewModel(AppServices services, IUiServices ui)
     {
@@ -176,6 +178,7 @@ public sealed partial class MainViewModel : ObservableObject
             // Continuations run after DiscoverAsync has started searching (asynchronous continuations).
             _discoveryStarted.TrySetResult();
         }
+        StartPaperWatch();
         await ScanOptions.DiscoverAsync();
         OnPropertyChanged(nameof(CanScan));
     }
@@ -262,7 +265,80 @@ public sealed partial class MainViewModel : ObservableObject
     [RelayCommand]
     private Task ScanMerge() => RunScanAsync(ScanMode.Merge);
 
-    private async Task RunScanAsync(ScanMode mode)
+    /// <summary>How often the feeder's paper sensor is read while "scan when paper is loaded" is on.</summary>
+    public TimeSpan PaperPollInterval { get; set; } = TimeSpan.FromSeconds(1.5);
+
+    /// <summary>
+    /// "Scan when paper is loaded": reads the selected scanner's feeder sensor while the app is open and idle, and
+    /// starts a normal scan once paper has been in for two readings. Also finds out whether the scanner has a
+    /// sensor at all, which is what enables the option.
+    /// </summary>
+    public void StartPaperWatch()
+    {
+        if (_paperWatchCts is null && !_shuttingDown)
+        {
+            _paperWatchCts = new CancellationTokenSource();
+            _ = WatchPaperAsync(_paperWatchCts.Token);
+        }
+    }
+
+    private async Task WatchPaperAsync(CancellationToken stop)
+    {
+        var trigger = new PaperTrigger();
+        DiscoveredScanner? watched = null;
+        var retryAt = 0L;
+        while (!stop.IsCancellationRequested)
+        {
+            try
+            {
+                await Task.Delay(PaperPollInterval, stop);
+                var scanner = ScanOptions.SelectedScanner;
+                if (scanner != watched)
+                {
+                    watched = scanner;
+                    retryAt = 0;
+                    trigger.Reset();
+                }
+                if (scanner is null || !ScanOptions.WantsPaperReading)
+                {
+                    // Off: when it is switched on again, paper already in the feeder counts.
+                    trigger.Reset();
+                    continue;
+                }
+                // Never under a dialog, during other work or while a page is being cropped or drawn on.
+                // A batch scan owns the scanner between its scans too.
+                if (IsBusy || _batchRunning || _ui.IsDialogOpen || ScanOptions.IsLoadingCapabilities || Editor.Tool != EditorTool.None
+                    || Environment.TickCount64 < retryAt)
+                {
+                    continue;
+                }
+                var state = await _services.Scanner.GetPaperStateAsync(scanner, stop);
+                if (scanner != ScanOptions.SelectedScanner)
+                {
+                    continue;
+                }
+                ScanOptions.ReportPaperState(state);
+                if (state == PaperState.Unavailable)
+                {
+                    // Asleep, unplugged or in use: ask less often until it answers again.
+                    retryAt = Environment.TickCount64 + 8000;
+                }
+                if (ScanOptions.IsWaitingForPaper && trigger.Observe(state) && !IsBusy && !_batchRunning && !_ui.IsDialogOpen)
+                {
+                    await RunScanAsync(ScanMode.Default, unattended: true);
+                }
+            }
+            catch (OperationCanceledException) when (stop.IsCancellationRequested)
+            {
+            }
+            catch (Exception)
+            {
+                // The watch must outlive any one bad reading or scan.
+            }
+        }
+    }
+
+    private async Task RunScanAsync(ScanMode mode, bool unattended = false)
     {
         if (IsBusy || ScanOptions.SelectedScanner is not { } scanner)
         {
@@ -302,7 +378,13 @@ public sealed partial class MainViewModel : ObservableObject
         }
 
         var settings = ScanOptions.Settings.Clone();
-        var newPages = await ScanPagesAsync(scanner, settings, addToDocument: merge is null);
+        if (unattended && settings.Source is ScanSource.Auto or ScanSource.Flatbed)
+        {
+            // The paper is in the feeder, whatever the source option says.
+            settings.Source = ScanSource.Feeder;
+            settings.Dpi = ScanOptions.Capabilities.NearestResolution(ScanSource.Feeder, settings.Dpi);
+        }
+        var newPages = await ScanPagesAsync(scanner, settings, addToDocument: merge is null, unattended);
         if (merge is { } m && newPages.Count > 0)
         {
             Document.MergeInto(newPages, m.AfterIndex, m.Reverse);
@@ -318,7 +400,7 @@ public sealed partial class MainViewModel : ObservableObject
     }
 
     /// <summary>Scans, auto-rotates and (optionally) appends pages as they arrive. Errors are shown, partial results kept.</summary>
-    private async Task<List<Page>> ScanPagesAsync(DiscoveredScanner scanner, ScanSettings settings, bool addToDocument)
+    private async Task<List<Page>> ScanPagesAsync(DiscoveredScanner scanner, ScanSettings settings, bool addToDocument, bool unattended = false)
     {
         var newPages = new List<Page>();
         using var cts = BeginOperation("Scanning…", cancellable: true);
@@ -375,8 +457,17 @@ public sealed partial class MainViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            var kept = newPages.Count > 0 ? $"\n\n{newPages.Count} page(s) scanned before the error were kept." : "";
-            await _ui.ShowMessageAsync("Scanning failed", ScanErrors.Describe(ex) + kept);
+            if (unattended)
+            {
+                // Nobody asked for this scan: report in the status bar instead of stopping the app with a dialog.
+                var keptPages = newPages.Count > 0 ? $" {newPages.Count} page(s) scanned before the error were kept." : "";
+                ShowStatus("Scanning failed", ScanErrors.Describe(ex) + keptPages, FAInfoBarSeverity.Error);
+            }
+            else
+            {
+                var kept = newPages.Count > 0 ? $"\n\n{newPages.Count} page(s) scanned before the error were kept." : "";
+                await _ui.ShowMessageAsync("Scanning failed", ScanErrors.Describe(ex) + kept);
+            }
         }
         finally
         {
@@ -497,7 +588,15 @@ public sealed partial class MainViewModel : ObservableObject
             },
             Prompt = async n => await _ui.ConfirmAsync("Next scan", $"Ready for scan {n} of {options.ScanCount}? Load the next document, then continue.", "Scan", "Stop"),
         };
-        await batch.RunAsync(options, new Progress<BatchStatus>(s => ShowStatus("Batch scan", s.Message, FAInfoBarSeverity.Informational)), CancellationToken.None);
+        _batchRunning = true;
+        try
+        {
+            await batch.RunAsync(options, new Progress<BatchStatus>(s => ShowStatus("Batch scan", s.Message, FAInfoBarSeverity.Informational)), CancellationToken.None);
+        }
+        finally
+        {
+            _batchRunning = false;
+        }
     }
 
     [RelayCommand]
@@ -883,6 +982,7 @@ public sealed partial class MainViewModel : ObservableObject
     public void OnShutdown()
     {
         _shuttingDown = true;
+        _paperWatchCts?.Cancel();
         _sessionTimer?.Dispose();
         ScanOptions.SaveNow();
         _services.SaveSettings();

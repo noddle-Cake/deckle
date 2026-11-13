@@ -24,6 +24,12 @@ public sealed class ScanSettings
     public Driver? DeviceDriver { get; set; }
 
     public ScanSource Source { get; set; } = ScanSource.Auto;
+
+    /// <summary>
+    /// Scan by itself as soon as the feeder reports paper, while the app is open. Only takes effect on scanners
+    /// whose paper sensor can be read (see <see cref="ScannerService.GetPaperStateAsync"/>).
+    /// </summary>
+    public bool ScanWhenPaperLoaded { get; set; }
     public ColorMode Color { get; set; } = ColorMode.Color;
     public int Dpi { get; set; } = 300;
     public OutputFormat Format { get; set; } = OutputFormat.Pdf;

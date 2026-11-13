@@ -246,6 +246,99 @@ public sealed class ShellTests : IDisposable
     }
 
     [AvaloniaFact]
+    public async Task ScansByItselfWhenPaperIsLoaded()
+    {
+        if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("SANE_CONFIG_DIR")))
+        {
+            return; // SANE test backend not enabled (see scripts/test.sh)
+        }
+        var (window, vm, services, ui) = Open(1400, 860);
+        using (services)
+        {
+            // The test device has no hopper sensor, so the readings come from here.
+            var paper = PaperState.Unsupported;
+            var readings = 0;
+            services.Scanner.PaperSensorOverride = (_, _) =>
+            {
+                readings++;
+                return Task.FromResult(paper);
+            };
+            vm.PaperPollInterval = TimeSpan.FromMilliseconds(40);
+
+            await vm.ScanOptions.DiscoverAsync();
+            vm.ScanOptions.SelectedScanner = vm.ScanOptions.Scanners.First(s => s.Id == "test:0");
+            await WaitUntil(() => !vm.ScanOptions.IsLoadingCapabilities);
+            vm.ScanOptions.IsFlatbed = true;
+            vm.ScanOptions.Dpi = 50;
+            vm.ScanOptions.Format = vm.ScanOptions.Formats.First(f => f.Value == OutputFormat.Jpeg);
+            var box = window.GetVisualDescendants().OfType<CheckBox>().First(c => c.Name == "ScanWhenPaperLoadedBox");
+
+            // No sensor: the option is shown but can't be used, and the scanner isn't asked again.
+            vm.StartPaperWatch();
+            await WaitUntil(() => vm.ScanOptions.PaperSensor == PaperSensorStatus.None);
+            Assert.True(box.IsVisible);
+            Assert.False(box.IsEnabled);
+            var asked = readings;
+            await Task.Delay(300);
+            Pump();
+            Assert.Equal(asked, readings);
+            vm.ScanOptions.ScanWhenPaperLoaded = true;
+            Assert.False(vm.ScanOptions.IsWaitingForPaper);
+
+            // A scanner with a sensor (selecting it again asks afresh) and an empty feeder: waiting, no scan.
+            paper = PaperState.Empty;
+            vm.ScanOptions.ScanWhenPaperLoaded = false;
+            vm.ScanOptions.SelectedScanner = null;
+            vm.ScanOptions.SelectedScanner = vm.ScanOptions.Scanners.First(s => s.Id == "test:0");
+            await WaitUntil(() => vm.ScanOptions.PaperSensor == PaperSensorStatus.Available && !vm.ScanOptions.IsLoadingCapabilities);
+            Assert.True(box.IsEnabled);
+
+            // Off: paper in the feeder is not even looked at.
+            paper = PaperState.Loaded;
+            asked = readings;
+            await Task.Delay(300);
+            Pump();
+            Assert.Equal(asked, readings);
+            Assert.Equal(0, vm.Pages.Count);
+
+            // On: the feeder is scanned although Flatbed is the chosen source (the test feeder holds 10 sheets).
+            vm.ScanOptions.ScanWhenPaperLoaded = true;
+            Screenshot(window, "13-scan-when-paper-loaded");
+            await WaitUntil(() => vm.Pages.Count > 0 && !vm.IsBusy);
+            var firstScan = vm.Pages.Count;
+            Assert.True(firstScan > 1, $"expected the feeder's pages, got {firstScan}");
+            Assert.Empty(ui.Messages);
+            Assert.True(vm.ScanOptions.IsFlatbed);
+            Assert.NotNull(vm.LastSavedPath);
+
+            // The sensor still says "loaded" (a jam, say): no second scan until the feeder has been empty.
+            await Task.Delay(500);
+            Pump();
+            Assert.False(vm.IsBusy);
+            Assert.Equal(firstScan, vm.Pages.Count);
+
+            // A dialog is open when the next stack goes in: the scan waits for it.
+            ui.IsDialogOpen = true;
+            paper = PaperState.Empty;
+            await Task.Delay(200);
+            Pump();
+            ui.IsDialogOpen = false;
+            asked = readings;
+            await WaitUntil(() => readings > asked);
+            ui.IsDialogOpen = true;
+            paper = PaperState.Loaded;
+            await Task.Delay(400);
+            Pump();
+            Assert.Equal(firstScan, vm.Pages.Count);
+            ui.IsDialogOpen = false;
+            await WaitUntil(() => vm.Pages.Count > firstScan && !vm.IsBusy);
+
+            vm.OnShutdown();
+            window.Close();
+        }
+    }
+
+    [AvaloniaFact]
     public async Task SessionIsRestoredOnNextStart()
     {
         if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("SANE_CONFIG_DIR")))

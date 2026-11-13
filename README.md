@@ -28,6 +28,9 @@ Deckle combines two projects:
 - **Scan merge**: insert a second pass between existing pages (two-sided documents without duplex)
 - **Batch scan**: several scans in a row, waiting or asking in between, saved to one file or one file per scan
 - Optional reverse page order, for feeders that deliver the last page first
+- **Scan when paper is loaded**: with the app open, loading the feeder starts the scan by itself. Needs a scanner
+  that reports its feeder sensor: network scanners (eSCL `AdfState`), WIA on Windows, and SANE backends with a
+  `page-loaded` option on Linux (fujitsu/ScanSnap, epjitsu, canon_dr and others). Not available over TWAIN
 - **Scan from outside the app**: right-click Deckle in the taskbar (Windows), dock or app list (Linux) or Dock
   (macOS) and choose Scan, or set a Ctrl+Alt+key shortcut in Settings (Windows and GNOME: works even when Deckle
   is closed; macOS: Control+Option+key while it runs). Everything runs `Deckle --scan`, which hands the scan to

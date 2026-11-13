@@ -40,6 +40,9 @@ public interface IUiServices
     Task<(ScanRegion? Region, bool Ok)?> AskRegionAsync(Avalonia.Media.Imaging.Bitmap preview, ScanRegion? current);
 
     Task<BatchOptions?> AskBatchOptionsAsync();
+
+    /// <summary>True while a dialog is waiting for an answer; nothing unattended should start then.</summary>
+    bool IsDialogOpen { get; }
 }
 
 public sealed class UiServices : IUiServices
@@ -52,6 +55,9 @@ public sealed class UiServices : IUiServices
     }
 
     private IStorageProvider Storage => _window.StorageProvider;
+    private int _openDialogs;
+
+    public bool IsDialogOpen => _openDialogs > 0;
 
     public async Task<string?> PickSaveFileAsync(string suggestedName, OutputFormat format, string? startFolder)
     {
@@ -149,7 +155,7 @@ public sealed class UiServices : IUiServices
         return result == FAContentDialogResult.Primary ? box.Text ?? "" : null;
     }
 
-    public Task<FAContentDialogResult> ShowDialogAsync(FAContentDialog dialog)
+    public async Task<FAContentDialogResult> ShowDialogAsync(FAContentDialog dialog)
     {
         if (AppShortcuts.IsMac)
         {
@@ -160,7 +166,15 @@ public sealed class UiServices : IUiServices
                 Command = new CommunityToolkit.Mvvm.Input.RelayCommand(dialog.Hide),
             });
         }
-        return dialog.ShowAsync(_window);
+        _openDialogs++;
+        try
+        {
+            return await dialog.ShowAsync(_window);
+        }
+        finally
+        {
+            _openDialogs--;
+        }
     }
 
     public async Task OpenFileAsync(string path)

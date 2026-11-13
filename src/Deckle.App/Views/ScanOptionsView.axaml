@@ -71,6 +71,14 @@
             <RadioButton GroupName="source" Content="Document feeder" IsChecked="{Binding IsFeeder}" IsEnabled="{Binding FeederSupported}" />
             <CheckBox Margin="28,2,0,0" Content="Both sides (duplex)" IsChecked="{Binding Duplex}"
                       IsVisible="{Binding IsFeeder}" IsEnabled="{Binding DuplexSupported}" />
+            <!-- Only scanners whose feeder sensor can be read (eSCL, WIA, some SANE backends) enable this. -->
+            <CheckBox x:Name="ScanWhenPaperLoadedBox" Margin="0,6,0,0" IsChecked="{Binding ScanWhenPaperLoaded}"
+                      IsVisible="{Binding FeederSupported}" IsEnabled="{Binding CanScanWhenPaperLoaded}">
+              <StackPanel>
+                <TextBlock Text="Scan when paper is loaded" />
+                <TextBlock Classes="caption" Text="{Binding PaperSensorHint}" />
+              </StackPanel>
+            </CheckBox>
           </StackPanel>
 
           <!-- Format -->

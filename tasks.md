@@ -492,6 +492,26 @@ Windows, macOS, GNOME. Applied on restart (the window structure differs per look
 - [x] Tests: each look renders on Linux headless (screenshots), the setting round-trips, Automatic resolves per
   OS.
 
+
+### Phase 13: Scan when paper is loaded (user request 2026-11-13)
+
+- [x] `PaperState` reading per driver (`Scanning/PaperSensor.cs`, `ScannerService.GetPaperStateAsync`):
+  eSCL `ScannerStatus/AdfState`; WIA `FeederReady()` on an STA thread; SANE read-only bool option `page-loaded` /
+  `adf-loaded` / `doc-in-adf` through libsane directly (NAPS2's SANE bindings are internal). TWAIN, Apple and SANE on
+  macOS report Unsupported.
+- [x] `PaperTrigger`: two consecutive "loaded" readings start a scan; the feeder must be seen empty before the
+  next one (a jam, a cancelled scan or a sensor stuck on "loaded" can't loop).
+- [x] Per-profile option `ScanSettings.ScanWhenPaperLoaded`; checkbox under Source, enabled only once the selected
+  scanner's sensor has answered. `MainViewModel.WatchPaperAsync` polls every 1.5 s while idle; the scan always
+  uses the feeder, and errors go to the status bar instead of a dialog.
+- [x] Tests: trigger, eSCL against a local HTTP server, SANE option read on the test backend, headless UI flow.
+- [ ] **Not run on real hardware.** Only the SANE test backend (which has no sensor) and a fake eSCL server were
+  available. Check on: an eSCL scanner with a feeder, a WIA feeder scanner, a ScanSnap/fujitsu on Linux.
+
+Finding 2026-11-13: calling `sane_exit` from our own code breaks NAPS2. Its next device search returns nothing,
+because it assumes the library is still initialized. The sensor therefore calls `sane_init` once and never exits,
+and never runs while a NAPS2 SANE operation is active (process-wide gate in `ScannerService`).
+
 ## Verification log
 
 - 2026-10-29: Auto-rotate (user report: about 80% of pages right, landscape pages scanned in portrait).

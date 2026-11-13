@@ -7,6 +7,9 @@ using Deckle.Core.Scanning;
 
 namespace Deckle.App.ViewModels;
 
+/// <summary>Whether the selected scanner can tell that paper is in its feeder.</summary>
+public enum PaperSensorStatus { Unknown, Available, None }
+
 /// <summary>
 /// The scan options pane (Scanner's left pane). Edits go straight into the active profile, which is saved
 /// automatically, so the last-used options are always remembered.
@@ -71,6 +74,8 @@ public sealed partial class ScanOptionsViewModel : ObservableObject
     [ObservableProperty] private bool _autoDeskew;
     [ObservableProperty] private bool _excludeBlankPages;
     [ObservableProperty] private bool _hasRegion;
+    [ObservableProperty] private bool _scanWhenPaperLoaded;
+    [ObservableProperty] private PaperSensorStatus _paperSensor;
 
     public bool HasScanner => SelectedScanner is not null;
     public bool NoScannerFound => !IsSearching && Scanners.Count == 0;
@@ -104,6 +109,35 @@ public sealed partial class ScanOptionsViewModel : ObservableObject
     public bool IsCustomPageSize => PageSize?.Value == PageSizePreset.Custom;
     public bool CanPreview => HasScanner && Source == ScanSource.Flatbed;
     public bool IsMultiPageFormat => Format?.Value.IsMultiPage() == true;
+
+    /// <summary>The "scan when paper is loaded" box can be used: there is a feeder and its sensor answers.</summary>
+    public bool CanScanWhenPaperLoaded => HasScanner && FeederSupported && PaperSensor == PaperSensorStatus.Available;
+
+    /// <summary>The mode is on and working: the app is waiting for paper.</summary>
+    public bool IsWaitingForPaper => ScanWhenPaperLoaded && CanScanWhenPaperLoaded;
+
+    /// <summary>The sensor should be read now: to find out whether there is one, or because the mode is on.</summary>
+    public bool WantsPaperReading => HasScanner && FeederSupported
+        && (PaperSensor == PaperSensorStatus.Unknown || IsWaitingForPaper);
+
+    public string PaperSensorHint => PaperSensor switch
+    {
+        PaperSensorStatus.None => "This scanner doesn't report when paper is in the feeder.",
+        PaperSensorStatus.Unknown => "Checking whether this scanner can detect paper…",
+        _ when ScanWhenPaperLoaded => "Waiting for paper. Load the feeder and the scan starts by itself.",
+        _ => "Starts a scan by itself when you load the feeder, while Deckle is open.",
+    };
+
+    /// <summary>Takes a sensor reading for the selected scanner; the first real answer settles whether it has one.</summary>
+    public void ReportPaperState(PaperState state)
+    {
+        PaperSensor = state switch
+        {
+            PaperState.Unsupported => PaperSensorStatus.None,
+            PaperState.Empty or PaperState.Loaded => PaperSensorStatus.Available,
+            _ => PaperSensor,
+        };
+    }
 
     /// <summary>
     /// What the resolution box binds to. Rebuilding <see cref="Resolutions"/> makes the ComboBox push a null
@@ -313,6 +347,7 @@ public sealed partial class ScanOptionsViewModel : ObservableObject
         Contrast = Settings.Contrast;
         AutoDeskew = Settings.AutoDeskew;
         ExcludeBlankPages = Settings.ExcludeBlankPages;
+        ScanWhenPaperLoaded = Settings.ScanWhenPaperLoaded;
         HasRegion = Settings.Region is not null;
         RebuildResolutions();
         _loading = false;
@@ -323,6 +358,7 @@ public sealed partial class ScanOptionsViewModel : ObservableObject
     {
         OnPropertyChanged(nameof(HasScanner));
         OnPropertyChanged(nameof(CanPreview));
+        PaperSensor = PaperSensorStatus.Unknown;
         if (value is null)
         {
             return;
@@ -482,6 +518,22 @@ public sealed partial class ScanOptionsViewModel : ObservableObject
         ScheduleSave();
     }
 
+    partial void OnScanWhenPaperLoadedChanged(bool value)
+    {
+        Settings.ScanWhenPaperLoaded = value;
+        RaisePaperSensor();
+        ScheduleSave();
+    }
+
+    partial void OnPaperSensorChanged(PaperSensorStatus value) => RaisePaperSensor();
+
+    private void RaisePaperSensor()
+    {
+        OnPropertyChanged(nameof(CanScanWhenPaperLoaded));
+        OnPropertyChanged(nameof(IsWaitingForPaper));
+        OnPropertyChanged(nameof(PaperSensorHint));
+    }
+
     partial void OnIsSearchingChanged(bool value) => OnPropertyChanged(nameof(NoScannerFound));
 
     private void RaiseDerived()
@@ -491,6 +543,7 @@ public sealed partial class ScanOptionsViewModel : ObservableObject
             nameof(IsAuto), nameof(IsFlatbed), nameof(IsFeeder), nameof(Duplex), nameof(FlatbedSupported), nameof(FeederSupported),
             nameof(DuplexSupported), nameof(ColorSupported), nameof(GrayscaleSupported), nameof(BlackAndWhiteSupported),
             nameof(IsColor), nameof(IsGrayscale), nameof(IsBlackAndWhite), nameof(CanPreview), nameof(IsCustomPageSize),
+            nameof(CanScanWhenPaperLoaded), nameof(IsWaitingForPaper),
         })
         {
             OnPropertyChanged(name);

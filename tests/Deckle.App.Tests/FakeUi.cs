@@ -15,6 +15,7 @@ public sealed class FakeUi : IUiServices
     public string? SavePath { get; set; }
     public (int, bool)? MergeAnswer { get; set; }
     public List<string> Opened { get; } = [];
+    public bool IsDialogOpen { get; set; }
 
     public Task<string?> PickSaveFileAsync(string suggestedName, OutputFormat format, string? startFolder) => Task.FromResult(SavePath);
     public Task<string?> PickFolderAsync(string? startFolder) => Task.FromResult<string?>(null);
